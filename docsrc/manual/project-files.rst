@@ -27,7 +27,6 @@ to a file, it probably is not a good idea to edit yourself unless otherwise note
    src/data/heal_locations.h, yes, yes, 
    src/data/region_map/region_map_entries.h, yes, yes, 
    include/constants/global.h, yes, no, 
-   include/constants/map_groups.h, no, yes, 
    include/constants/items.h, yes, no, 
    include/constants/opponents.h, yes, no, reads max trainers constant
    include/constants/flags.h, yes, no, 

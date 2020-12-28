@@ -816,42 +816,6 @@ void Project::saveWildMonData() {
     wildEncountersFile.close();
 }
 
-void Project::saveMapConstantsHeader() {
-    QString text = QString("#ifndef GUARD_CONSTANTS_MAP_GROUPS_H\n");
-    text += QString("#define GUARD_CONSTANTS_MAP_GROUPS_H\n");
-    text += QString("\n");
-
-    int groupNum = 0;
-    for (QStringList mapNames : groupedMapNames) {
-        text += QString("// Map Group %1\n").arg(groupNum);
-        int maxLength = 0;
-        for (QString mapName : mapNames) {
-            QString mapConstantName = mapNamesToMapConstants->value(mapName);
-            if (mapConstantName.length() > maxLength)
-                maxLength = mapConstantName.length();
-        }
-        int groupIndex = 0;
-        for (QString mapName : mapNames) {
-            QString mapConstantName = mapNamesToMapConstants->value(mapName);
-            text += QString("#define %1%2(%3 | (%4 << 8))\n")
-                    .arg(mapConstantName)
-                    .arg(QString(" ").repeated(maxLength - mapConstantName.length() + 1))
-                    .arg(groupIndex)
-                    .arg(groupNum);
-            groupIndex++;
-        }
-        text += QString("\n");
-        groupNum++;
-    }
-
-    text += QString("#define MAP_GROUPS_COUNT %1\n\n").arg(groupNum);
-    text += QString("#endif // GUARD_CONSTANTS_MAP_GROUPS_H\n");
-
-    QString mapGroupFilepath = root + "/include/constants/map_groups.h";
-    ignoreWatchedFileTemporarily(mapGroupFilepath);
-    saveTextFile(mapGroupFilepath, text);
-}
-
 // saves heal location coords in root + /src/data/heal_locations.h
 // and indexes as defines in root + /include/constants/heal_locations.h
 void Project::saveHealLocationStruct(Map *map) {
@@ -1486,7 +1450,6 @@ void Project::updateMapLayout(Map* map) {
 void Project::saveAllDataStructures() {
     saveMapLayouts();
     saveMapGroups();
-    saveMapConstantsHeader();
     saveWildMonData();
 }
 
