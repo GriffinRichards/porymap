@@ -55,10 +55,6 @@ MainWindow::MainWindow(QWidget *parent) :
     selectedHealspot(nullptr),
     isProgrammaticEventTabChange(false)
 {
-    QCoreApplication::setOrganizationName("pret");
-    QCoreApplication::setApplicationName("porymap");
-    QApplication::setApplicationDisplayName("porymap");
-    QApplication::setWindowIcon(QIcon(":/icons/porymap-icon-2.ico"));
     ui->setupUi(this);
 
     cleanupLargeLog();
