@@ -36,13 +36,13 @@ int main(int argc, char* argv[])
     QScopedPointer<QCoreApplication> app(createApplication(argc, argv));
     QCoreApplication::setOrganizationName("pret");
     QCoreApplication::setApplicationName("porymap");
-    //QCoreApplication::setApplicationVersion("5.2.0");
+    QCoreApplication::setApplicationVersion(PORYMAP_VERSION);
 
     // Set up argument parser
     QCommandLineParser parser;
     parser.setApplicationDescription("Test helper");
     parser.addHelpOption();
-    //parser.addVersionOption();
+    parser.addVersionOption();
 
     QStringList args;
 
