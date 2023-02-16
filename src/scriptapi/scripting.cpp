@@ -44,23 +44,23 @@ Scripting::Scripting(MainWindow *mainWindow) {
 
 void Scripting::loadModules(QStringList moduleFiles) {
     for (QString filepath : moduleFiles) {
+        QString errFilepath = filepath;
+        QFileInfo fileInfo(filepath);
+        if (!fileInfo.exists() || !fileInfo.isFile())
+            filepath = QDir::cleanPath(userConfig.getProjectDir() + QDir::separator() + filepath);
         QJSValue module = this->engine->importModule(filepath);
-        if (module.isError()) {
-            QString relativePath = QDir::cleanPath(userConfig.getProjectDir() + QDir::separator() + filepath);
-            module = this->engine->importModule(relativePath);
-            if (tryErrorJS(module)) {
-                QMessageBox messageBox(this->mainWindow);
-                messageBox.setText("Failed to load script");
-                messageBox.setInformativeText(QString("An error occurred while loading custom script file '%1'").arg(filepath));
-                messageBox.setDetailedText(getMostRecentError());
-                messageBox.setIcon(QMessageBox::Warning);
-                messageBox.addButton(QMessageBox::Ok);
-                messageBox.exec();
-                continue;
-            }
+        if (tryErrorJS(module)) {
+            QMessageBox messageBox(this->mainWindow);
+            messageBox.setText("Failed to load script");
+            messageBox.setInformativeText(QString("An error occurred while loading custom script file '%1'").arg(errFilepath));
+            messageBox.setDetailedText(getMostRecentError());
+            messageBox.setIcon(QMessageBox::Warning);
+            messageBox.addButton(QMessageBox::Ok);
+            messageBox.exec();
+            continue;
         }
 
-        logInfo(QString("Successfully loaded custom script file '%1'").arg(filepath));
+        logInfo(QString("Successfully loaded custom script file '%1'").arg(errFilepath));
         this->modules.append(module);
     }
 }

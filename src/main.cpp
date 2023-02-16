@@ -1,60 +1,44 @@
 #include "mainwindow.h"
+#include "commandline.h"
 #include <QApplication>
 
-const QStringList commands = {
-    "exportmapimage",
-};
-
-const bool USE_CLI = false; // TODO: Remove
-
-QCoreApplication* createApplication(int &argc, char *argv[])
+QApplication* createGUIApplication(int &argc, char *argv[])
 {
-    // Search for commands to determine which application to run.
-    // QCommandLineParser requires an application to already exist, so we don't
-    // use it here to avoid a potentially wasteful QCoreApplication constructor.
-    // TODO
-
-    if (USE_CLI) {
-        // Create Porymap CLI application
-        return new QCoreApplication(argc, argv);
-    }
-
-    // Create Porymap GUI application
-    QApplication * app = new QApplication(argc, argv);
+    QApplication * a = new QApplication(argc, argv);
     QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::Round);
-    QApplication::setApplicationDisplayName("porymap");
     QApplication::setWindowIcon(QIcon(":/icons/porymap-icon-2.ico"));
-    app->setStyle("fusion");
-    return app;
+    a->setStyle("fusion");
+    return a;
 }
 
 int main(int argc, char* argv[])
 {
-    QScopedPointer<MainWindow> w;
+    // QApplication is more expensive to create than a regular QCoreApplication, and is only necessary for the GUI.
+    // If we recognize any Porymap commands in the args then use the latter automatically.
+    bool skipGUI = false;
+    CommandLine cli(nullptr);
+    for (int i = 1; i < argc; i++) {
+        if (cli.isCommand(argv[i])) {
+            skipGUI = true;
+            break;
+        }
+    }
 
     // Initialize application
-    QScopedPointer<QCoreApplication> app(createApplication(argc, argv));
+    QScopedPointer<QCoreApplication> app(skipGUI ? new QCoreApplication(argc, argv) : createGUIApplication(argc, argv));
     QCoreApplication::setOrganizationName("pret");
     QCoreApplication::setApplicationName("porymap");
     QCoreApplication::setApplicationVersion(PORYMAP_VERSION);
 
-    // Set up argument parser
-    QCommandLineParser parser;
-    parser.setApplicationDescription("Test helper");
-    parser.addHelpOption();
-    parser.addVersionOption();
-
-    QStringList args;
-
-    parser.process(*app);
-
-    if (USE_CLI) {
-        // Init Porymap CLI application
-    } else {
-        // Init Porymap GUI application
-        w.reset(new MainWindow(nullptr));
-        w->show();
+    if (cli.parse()) {
+        // Run CLI application
+        cli.run();
+        return app->exec();
     }
+
+    // Run GUI application
+    MainWindow w(nullptr);
+    w.show();
 
     return app->exec();
 }

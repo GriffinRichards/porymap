@@ -18,6 +18,7 @@ VERSION = 5.1.0
 DEFINES += PORYMAP_VERSION=\\\"$$VERSION\\\"
 
 SOURCES += src/core/block.cpp \
+    src/commandline.cpp \
     src/core/blockdata.cpp \
     src/core/events.cpp \
     src/core/heallocation.cpp \
@@ -102,6 +103,7 @@ SOURCES += src/core/block.cpp \
     src/log.cpp
 
 HEADERS  += include/core/block.h \
+    include/commandline.h \
     include/core/blockdata.h \
     include/core/events.h \
     include/core/heallocation.h \
