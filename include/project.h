@@ -34,7 +34,7 @@ class Project : public QObject
 {
     Q_OBJECT
 public:
-    Project(QWidget *parent = nullptr);
+    Project(QObject *parent = nullptr);
     ~Project();
 
     Project(const Project &) = delete;
@@ -91,6 +91,7 @@ public:
     void set_root(QString);
 
     void initSignals();
+    bool readData();
 
     void clearMapCache();
     void clearTilesetCache();

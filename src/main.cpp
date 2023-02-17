@@ -16,13 +16,13 @@ int main(int argc, char* argv[])
     // QApplication is more expensive to create than a regular QCoreApplication, and is only necessary for the GUI.
     // If we recognize any Porymap commands in the args then use the latter automatically.
     bool skipGUI = false;
-    CommandLine cli(nullptr);
-    for (int i = 1; i < argc; i++) {
-        if (cli.isCommand(argv[i])) {
+    // TODO: Now that CommandLine contains Project, this no longer works (it depends on QPixmap somewhere)
+    /*for (int i = 1; i < argc; i++) {
+        if (CommandLine::isCommand(argv[i])) {
             skipGUI = true;
             break;
         }
-    }
+    }*/
 
     // Initialize application
     QScopedPointer<QCoreApplication> app(skipGUI ? new QCoreApplication(argc, argv) : createGUIApplication(argc, argv));
@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     QCoreApplication::setApplicationName("porymap");
     QCoreApplication::setApplicationVersion(PORYMAP_VERSION);
 
+    CommandLine cli(nullptr);
     if (cli.parse()) {
         // Run CLI application
         cli.run();

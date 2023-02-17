@@ -2,8 +2,7 @@
 #define COMMANDLINE_H
 
 #include "project.h"
-
-#include <QCommandLineParser>
+#include "commandlineparser.h"
 
 struct Command {
     QString description;
@@ -14,7 +13,7 @@ class CommandLine : public QObject
 {
     Q_OBJECT
 public:
-    CommandLine(QWidget *parent = nullptr);
+    CommandLine(QObject *parent = nullptr) : QObject(parent) {};
     ~CommandLine();
 
 public:
@@ -23,11 +22,15 @@ public:
     void run();
 
 private:
-    QCommandLineParser parser;
+    bool loadProject();
+
+    void runExportImage();
+
+private:
+    CommandLineParser parser;
     Project * project = nullptr;
     QString commandName;
     QStringList args;
-    QHash<QString, QString> optionValues;
 };
 
 #endif // COMMANDLINE_H

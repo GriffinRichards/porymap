@@ -884,36 +884,7 @@ void MainWindow::on_spinBox_FloorNumber_valueChanged(int offset)
 }
 
 bool MainWindow::loadDataStructures() {
-    Project *project = editor->project;
-    bool success = project->readMapLayouts()
-                && project->readRegionMapSections()
-                && project->readItemNames()
-                && project->readFlagNames()
-                && project->readVarNames()
-                && project->readMovementTypes()
-                && project->readInitialFacingDirections()
-                && project->readMapTypes()
-                && project->readMapBattleScenes()
-                && project->readWeatherNames()
-                && project->readCoordEventWeatherNames()
-                && project->readSecretBaseIds() 
-                && project->readBgEventFacingDirections()
-                && project->readTrainerTypes()
-                && project->readMetatileBehaviors()
-                && project->readTilesetProperties()
-                && project->readTilesetLabels()
-                && project->readTilesetMetatileLabels()
-                && project->readMaxMapDataSize()
-                && project->readHealLocations()
-                && project->readMiscellaneousConstants()
-                && project->readSpeciesIconPaths()
-                && project->readWildMonData()
-                && project->readEventScriptLabels()
-                && project->readObjEventGfxConstants()
-                && project->readEventGraphics()
-                && project->readSongNames();
-
-    Metatile::setCustomLayout(project);
+    bool success = editor->project->readData();
     Scripting::populateGlobalObject(this);
 
     return success && loadProjectCombos();

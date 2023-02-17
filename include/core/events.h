@@ -56,6 +56,8 @@ public:
     // disable assignment operator
     Event& operator=(const Event &other) = delete;
 
+    static const QPixmap entitiesPixmap;
+
 protected:
     Event() {
         this->spriteWidth = 16;

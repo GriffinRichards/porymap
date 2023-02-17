@@ -36,7 +36,7 @@ int Project::max_map_data_size = 10240; // 0x2800
 int Project::default_map_size = 20;
 int Project::max_object_events = 64;
 
-Project::Project(QWidget *parent) :
+Project::Project(QObject *parent) :
     QObject(parent),
     eventScriptLabelModel(this),
     eventScriptLabelCompleter(this)
@@ -93,6 +93,40 @@ void Project::set_root(QString dir) {
     this->root = dir;
     this->importExportPath = dir;
     this->parser.set_root(dir);
+}
+
+bool Project::readData() {
+    bool success = this->readMapLayouts()
+                && this->readRegionMapSections()
+                && this->readItemNames()
+                && this->readFlagNames()
+                && this->readVarNames()
+                && this->readMovementTypes()
+                && this->readInitialFacingDirections()
+                && this->readMapTypes()
+                && this->readMapBattleScenes()
+                && this->readWeatherNames()
+                && this->readCoordEventWeatherNames()
+                && this->readSecretBaseIds() 
+                && this->readBgEventFacingDirections()
+                && this->readTrainerTypes()
+                && this->readMetatileBehaviors()
+                && this->readTilesetProperties()
+                && this->readTilesetLabels()
+                && this->readTilesetMetatileLabels()
+                && this->readMaxMapDataSize()
+                && this->readHealLocations()
+                && this->readMiscellaneousConstants()
+                && this->readSpeciesIconPaths()
+                && this->readWildMonData()
+                && this->readEventScriptLabels()
+                && this->readObjEventGfxConstants()
+                && this->readEventGraphics()
+                && this->readSongNames();
+
+    Metatile::setCustomLayout(this);
+
+    return success;
 }
 
 QString Project::getProjectTitle() {
