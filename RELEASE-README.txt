@@ -1,13 +1,16 @@
-# Changelog
-All notable changes to this project will be documented in this file.
+Version: 5.1.1
+Date: February 20th, 2023
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project somewhat adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).  The MAJOR version number is bumped when there are breaking changes in the pret projects.
+This version of porymap works with pokeruby and pokeemerald as of the following commit hashes:
+* pokeemerald: c76beed98990a57c84d3930190fd194abfedf7e8
+* pokefirered: 52591dcee42933d64f60c59276fc13c3bb89c47b
+* pokeruby: d99cb43736dd1d4ee4820f838cb259d773d8bf25
 
-The **"Breaking Changes"** listed below are changes that have been made in the decompilation projects (e.g. pokeemerald), which porymap requires in order to work properly. It also includes changes to the scripting API that may change the behavior of existing porymap scripts. If porymap is used with a project or API script that is not up-to-date with the breaking changes, then porymap will likely break or behave improperly.
+Official Porymap documentation: https://huderlem.github.io/porymap/
 
-## [Unreleased]
-Nothing, yet.
+Please report any issues on GitHub: [https://github.com/huderlem/porymap/issues](https://github.com/huderlem/porymap/issues)
+
+-------------------------
 
 ## [5.1.1] - 2023-02-20
 ### Added
@@ -393,23 +396,3 @@ Nothing, yet.
 
 ## [1.0.0] - 2018-10-26
 This was the initial release.
-
-[Unreleased]: https://github.com/huderlem/porymap/compare/5.1.1...HEAD
-[5.1.1]: https://github.com/huderlem/porymap/compare/5.1.0...5.1.1
-[5.1.0]: https://github.com/huderlem/porymap/compare/5.0.0...5.1.0
-[5.0.0]: https://github.com/huderlem/porymap/compare/4.5.0...5.0.0
-[4.5.0]: https://github.com/huderlem/porymap/compare/4.4.0...4.5.0
-[4.4.0]: https://github.com/huderlem/porymap/compare/4.3.1...4.4.0
-[4.3.1]: https://github.com/huderlem/porymap/compare/4.3.0...4.3.1
-[4.3.0]: https://github.com/huderlem/porymap/compare/4.2.0...4.3.0
-[4.2.0]: https://github.com/huderlem/porymap/compare/4.1.0...4.2.0
-[4.1.0]: https://github.com/huderlem/porymap/compare/4.0.0...4.1.0
-[4.0.0]: https://github.com/huderlem/porymap/compare/3.0.1...4.0.0
-[3.0.1]: https://github.com/huderlem/porymap/compare/3.0.0...3.0.1
-[3.0.0]: https://github.com/huderlem/porymap/compare/2.0.0...3.0.0
-[2.0.0]: https://github.com/huderlem/porymap/compare/1.2.2...2.0.0
-[1.2.2]: https://github.com/huderlem/porymap/compare/1.2.1...1.2.2
-[1.2.1]: https://github.com/huderlem/porymap/compare/1.2.0...1.2.1
-[1.2.0]: https://github.com/huderlem/porymap/compare/1.1.0...1.2.0
-[1.1.0]: https://github.com/huderlem/porymap/compare/1.0.0...1.1.0
-[1.0.0]: https://github.com/huderlem/porymap/tree/1.0.0

@@ -7,6 +7,7 @@
 #include <QSet>
 #include <QPixmap>
 #include <QJsonObject>
+#include <QPointer>
 
 #include "orderedjson.h"
 using OrderedJson = poryjson::Json;
@@ -200,7 +201,7 @@ protected:
     QPixmap pixmap;
     DraggablePixmapItem *pixmapItem = nullptr;
 
-    EventFrame *eventFrame = nullptr;
+    QPointer<EventFrame> eventFrame;
 };
 
 
