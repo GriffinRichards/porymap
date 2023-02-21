@@ -6,6 +6,10 @@ CommandLineParser::CommandLineParser() :
     this->setApplicationDescription("A map editor for the Pokémon generation 3 decompilation projects pokeruby, pokeemerald, and pokefirered.");
 }
 
+void CommandLineParser::showMessage(const QString &text) {
+    fputs(qPrintable(text + "\n"), stdout);
+}
+
 void CommandLineParser::showError(const QString &text) {
     fputs(qPrintable(text + "\n\n"), stderr);
     this->showHelp(1);

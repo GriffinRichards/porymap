@@ -119,6 +119,10 @@ public:
     void modify();
     void clean();
 
+    static int getBorderDrawDistance(int dimension);
+    int getBorderHorizontalDrawDistance();
+    int getBorderVerticalDrawDistance();
+
 private:
     void setNewDimensionsBlockdata(int newWidth, int newHeight);
     void setNewBorderDimensionsBlockdata(int newWidth, int newHeight);

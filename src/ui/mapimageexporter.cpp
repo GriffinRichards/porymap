@@ -28,12 +28,13 @@ MapImageExporter::MapImageExporter(QWidget *parent_, Editor *editor_, ImageExpor
     ui(new Ui::MapImageExporter)
 {
     ui->setupUi(this);
-    this->map = editor_->map;
     this->editor = editor_;
-    this->mode = mode;
-    this->setWindowTitle(getTitle(this->mode));
-    this->ui->groupBox_Connections->setVisible(this->mode == ImageExporterMode::Normal);
-    this->ui->groupBox_Timelapse->setVisible(this->mode == ImageExporterMode::Timelapse);
+    this->map = this->editor->map;
+    this->settings.collisionOpacity = this->editor->collisionOpacity;
+    this->settings.mode = mode;
+    this->setWindowTitle(getTitle(this->settings.mode));
+    this->ui->groupBox_Connections->setVisible(this->settings.mode == ImageExporterMode::Normal);
+    this->ui->groupBox_Timelapse->setVisible(this->settings.mode == ImageExporterMode::Timelapse);
 
     this->ui->comboBox_MapSelection->addItems(editor->project->mapNames);
     this->ui->comboBox_MapSelection->setCurrentText(map->name);
@@ -48,9 +49,9 @@ MapImageExporter::~MapImageExporter() {
 }
 
 void MapImageExporter::saveImage() {
-    QString title = getTitle(this->mode);
+    QString title = getTitle(this->settings.mode);
     QString defaultFilename;
-    switch (this->mode)
+    switch (this->settings.mode)
     {
         case ImageExporterMode::Normal:
             defaultFilename = map->name;
@@ -66,21 +67,21 @@ void MapImageExporter::saveImage() {
     QString defaultFilepath = QString("%1/%2.%3")
             .arg(editor->project->importExportPath)
             .arg(defaultFilename)
-            .arg(this->mode == ImageExporterMode::Timelapse ? "gif" : "png");
-    QString filter = this->mode == ImageExporterMode::Timelapse ? "Image Files (*.gif)" : "Image Files (*.png *.jpg *.bmp)";
+            .arg(this->settings.mode == ImageExporterMode::Timelapse ? "gif" : "png");
+    QString filter = this->settings.mode == ImageExporterMode::Timelapse ? "Image Files (*.gif)" : "Image Files (*.png *.jpg *.bmp)";
     QString filepath = QFileDialog::getSaveFileName(this, title, defaultFilepath, filter);
     if (!filepath.isEmpty()) {
         editor->project->setImportExportPath(filepath);
-        switch (this->mode) {
+        switch (this->settings.mode) {
             case ImageExporterMode::Normal:
                 this->preview.save(filepath);
                 break;
-        case ImageExporterMode::Stitch: {
+            case ImageExporterMode::Stitch: {
                 QProgressDialog progress("Building map stitch...", "Cancel", 0, 1, this);
                 progress.setAutoClose(true);
                 progress.setWindowModality(Qt::WindowModal);
                 progress.setModal(true);
-                QPixmap pixmap = this->getStitchedImage(&progress, this->showBorder);
+                QPixmap pixmap = this->getStitchedImage(&progress, this->settings.showBorder);
                 if (progress.wasCanceled()) {
                     progress.close();
                     return;
@@ -99,7 +100,7 @@ void MapImageExporter::saveImage() {
 
                 int maxWidth = this->map->getWidth() * 16;
                 int maxHeight = this->map->getHeight() * 16;
-                if (showBorder) {
+                if (settings.showBorder) {
                     maxWidth += 2 * STITCH_MODE_BORDER_DISTANCE * 16;
                     maxHeight += 2 * STITCH_MODE_BORDER_DISTANCE * 16;
                 }
@@ -110,7 +111,7 @@ void MapImageExporter::saveImage() {
                     this->map->editHistory.undo();
                     int width = this->map->getWidth() * 16;
                     int height = this->map->getHeight() * 16;
-                    if (showBorder) {
+                    if (settings.showBorder) {
                         width += 2 * STITCH_MODE_BORDER_DISTANCE * 16;
                         height += 2 * STITCH_MODE_BORDER_DISTANCE * 16;
                     }
@@ -143,7 +144,7 @@ void MapImageExporter::saveImage() {
                         this->map->editHistory.redo();
                     }
                     progress.setValue(progress.maximum() - i);
-                    QPixmap pixmap = this->getFormattedMapPixmap(this->map, !this->showBorder);
+                    QPixmap pixmap = this->getFormattedMapPixmap(this->map, this->settings, !this->settings.showBorder);
                     if (pixmap.width() < maxWidth || pixmap.height() < maxHeight) {
                         QPixmap pixmap2 = QPixmap(maxWidth, maxHeight);
                         QPainter painter(&pixmap2);
@@ -166,7 +167,7 @@ void MapImageExporter::saveImage() {
                     }
                 }
                 // The latest map state is the last animated frame.
-                QPixmap pixmap = this->getFormattedMapPixmap(this->map, !this->showBorder);
+                QPixmap pixmap = this->getFormattedMapPixmap(this->map, this->settings, !this->settings.showBorder);
                 timelapseImg.addFrame(pixmap.toImage());
                 timelapseImg.save(filepath);
                 progress.close();
@@ -188,20 +189,20 @@ bool MapImageExporter::historyItemAppliesToFrame(const QUndoCommand *command) {
         case CommandId::ID_PaintCollision:
         case CommandId::ID_BucketFillCollision:
         case CommandId::ID_MagicFillCollision:
-            return this->showCollision;
+            return this->settings.showCollision;
         case CommandId::ID_PaintBorder:
-            return this->showBorder;
+            return this->settings.showBorder;
         case CommandId::ID_EventMove:
         case CommandId::ID_EventShift:
         case CommandId::ID_EventCreate:
         case CommandId::ID_EventDelete:
         case CommandId::ID_EventDuplicate: {
             bool eventTypeIsApplicable =
-                       (this->showObjects   && (command->id() & IDMask_EventType_Object)  != 0)
-                    || (this->showWarps     && (command->id() & IDMask_EventType_Warp)    != 0)
-                    || (this->showBGs       && (command->id() & IDMask_EventType_BG)      != 0)
-                    || (this->showTriggers  && (command->id() & IDMask_EventType_Trigger) != 0)
-                    || (this->showHealSpots && (command->id() & IDMask_EventType_Heal)    != 0);
+                       (this->settings.showObjects   && (command->id() & IDMask_EventType_Object)  != 0)
+                    || (this->settings.showWarps     && (command->id() & IDMask_EventType_Warp)    != 0)
+                    || (this->settings.showBGs       && (command->id() & IDMask_EventType_BG)      != 0)
+                    || (this->settings.showTriggers  && (command->id() & IDMask_EventType_Trigger) != 0)
+                    || (this->settings.showHealSpots && (command->id() & IDMask_EventType_Heal)    != 0);
             return eventTypeIsApplicable;
         }
         default:
@@ -309,7 +310,7 @@ QPixmap MapImageExporter::getStitchedImage(QProgressDialog *progress, bool inclu
             pixelX -= STITCH_MODE_BORDER_DISTANCE * 16;
             pixelY -= STITCH_MODE_BORDER_DISTANCE * 16;
         }
-        QPixmap pixmap = this->getFormattedMapPixmap(map.map, false);
+        QPixmap pixmap = this->getFormattedMapPixmap(map.map, this->settings);
         painter.drawPixmap(pixelX, pixelY, pixmap);
     }
 
@@ -330,7 +331,7 @@ QPixmap MapImageExporter::getStitchedImage(QProgressDialog *progress, bool inclu
 
             int pixelX = (map.x - minX) * 16;
             int pixelY = (map.y - minY) * 16;
-            QPixmap pixmapWithoutBorders = this->getFormattedMapPixmap(map.map, true);
+            QPixmap pixmapWithoutBorders = this->getFormattedMapPixmap(map.map, this->settings, true);
             painter.drawPixmap(pixelX, pixelY, pixmapWithoutBorders);
         }
     }
@@ -344,7 +345,7 @@ void MapImageExporter::updatePreview() {
         scene = nullptr;
     }
 
-    preview = getFormattedMapPixmap(this->map, false);
+    preview = getFormattedMapPixmap(this->map, this->settings);
     scene = new QGraphicsScene;
     scene->addPixmap(preview);
     this->scene->setSceneRect(this->scene->itemsBoundingRect());
@@ -354,17 +355,17 @@ void MapImageExporter::updatePreview() {
                                                  scene->itemsBoundingRect().height() + 2);
 }
 
-QPixmap MapImageExporter::getFormattedMapPixmap(Map *map, bool ignoreBorder) {
+QPixmap MapImageExporter::getFormattedMapPixmap(Map *map, const MapImageExportSettings &settings, bool ignoreBorder) {
     QPixmap pixmap;
 
     // draw background layer / base image
     map->render(true);
     pixmap = map->pixmap;
 
-    if (showCollision) {
+    if (settings.showCollision) {
         QPainter collisionPainter(&pixmap);
         map->renderCollision(true);
-        collisionPainter.setOpacity(editor->collisionOpacity);
+        collisionPainter.setOpacity(settings.collisionOpacity);
         collisionPainter.drawPixmap(0, 0, map->collision_pixmap);
         collisionPainter.end();
     }
@@ -372,12 +373,12 @@ QPixmap MapImageExporter::getFormattedMapPixmap(Map *map, bool ignoreBorder) {
     // draw map border
     // note: this will break when allowing map to be selected from drop down maybe
     int borderHeight = 0, borderWidth = 0;
-    bool forceDrawBorder = showUpConnections || showDownConnections || showLeftConnections || showRightConnections;
-    if (!ignoreBorder && (showBorder || forceDrawBorder)) {
-        int borderDistance = this->mode ? STITCH_MODE_BORDER_DISTANCE : BORDER_DISTANCE;
+    bool forceDrawBorder = settings.showUpConnections || settings.showDownConnections || settings.showLeftConnections || settings.showRightConnections;
+    if (!ignoreBorder && forceDrawBorder) {
+        int borderDistance = settings.mode ? STITCH_MODE_BORDER_DISTANCE : BORDER_DISTANCE;
         map->renderBorder();
-        int borderHorzDist = editor->getBorderDrawDistance(map->getBorderWidth());
-        int borderVertDist = editor->getBorderDrawDistance(map->getBorderHeight());
+        int borderHorzDist = map->getBorderHorizontalDrawDistance();
+        int borderVertDist = map->getBorderVerticalDrawDistance();
         borderWidth = borderDistance * 16;
         borderHeight = borderDistance * 16;
         QPixmap newPixmap = QPixmap(map->pixmap.width() + borderWidth * 2, map->pixmap.height() + borderHeight * 2);
@@ -392,48 +393,50 @@ QPixmap MapImageExporter::getFormattedMapPixmap(Map *map, bool ignoreBorder) {
         pixmap = newPixmap;
     }
 
-    if (!this->mode) {
+    if (settings.mode == ImageExporterMode::Normal) {
         // if showing connections, draw on outside of image
-        QPainter connectionPainter(&pixmap);
+        // TODO: Re-implement. editor has connection images, but CLI shouldn't use editor
+        /*QPainter connectionPainter(&pixmap);
         for (auto connectionItem : editor->connection_items) {
             QString direction = connectionItem->connection->direction;
-            if ((showUpConnections && direction == "up")
-             || (showDownConnections && direction == "down")
-             || (showLeftConnections && direction == "left")
-             || (showRightConnections && direction == "right"))
+            if ((settings.showUpConnections && direction == "up")
+             || (settings.showDownConnections && direction == "down")
+             || (settings.showLeftConnections && direction == "left")
+             || (settings.showRightConnections && direction == "right"))
                 connectionPainter.drawImage(connectionItem->initialX + borderWidth, connectionItem->initialY + borderHeight,
                                             connectionItem->basePixmap.toImage());
         }
-        connectionPainter.end();
+        connectionPainter.end();*/
     }
 
     // draw events
-    QPainter eventPainter(&pixmap);
+    // TODO: Re-implement, also depends on editor
+    /*QPainter eventPainter(&pixmap);
     QList<Event *> events = map->getAllEvents();
     int pixelOffset = 0;
-    if (!ignoreBorder && showBorder) {
-        pixelOffset = this->mode == ImageExporterMode::Normal ? BORDER_DISTANCE * 16 : STITCH_MODE_BORDER_DISTANCE * 16;
+    if (!ignoreBorder) {
+        pixelOffset = settings.mode == ImageExporterMode::Normal ? BORDER_DISTANCE * 16 : STITCH_MODE_BORDER_DISTANCE * 16;
     }
     for (Event *event : events) {
         editor->project->setEventPixmap(event);
         Event::Group group = event->getEventGroup();
-        if ((showObjects && group == Event::Group::Object)
-         || (showWarps && group == Event::Group::Warp)
-         || (showBGs && group == Event::Group::Bg)
-         || (showTriggers && group == Event::Group::Coord)
-         || (showHealSpots && group == Event::Group::Heal))
+        if ((settings.showObjects && group == Event::Group::Object)
+         || (settings.showWarps && group == Event::Group::Warp)
+         || (settings.showBGs && group == Event::Group::Bg)
+         || (settings.showTriggers && group == Event::Group::Coord)
+         || (settings.showHealSpots && group == Event::Group::Heal))
             eventPainter.drawImage(QPoint(event->getPixelX() + pixelOffset, event->getPixelY() + pixelOffset), event->getPixmap().toImage());
     }
-    eventPainter.end();
+    eventPainter.end();*/
 
     // draw grid directly onto the pixmap
     // since the last grid lines are outside of the pixmap, add a pixel to the bottom and right
-    if (showGrid) {
+    if (settings.showGrid) {
         int addX = 1, addY = 1;
         if (borderHeight) addY = 0;
         if (borderWidth) addX = 0;
 
-        QPixmap newPixmap= QPixmap(pixmap.width() + addX, pixmap.height() + addY);
+        QPixmap newPixmap = QPixmap(pixmap.width() + addX, pixmap.height() + addY);
         QPainter gridPainter(&newPixmap);
         gridPainter.drawImage(QPoint(0, 0), pixmap.toImage());
         for (int x = 0; x < newPixmap.width(); x += 16) {
@@ -450,62 +453,62 @@ QPixmap MapImageExporter::getFormattedMapPixmap(Map *map, bool ignoreBorder) {
 }
 
 void MapImageExporter::on_checkBox_Elevation_stateChanged(int state) {
-    showCollision = (state == Qt::Checked);
+    settings.showCollision = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_Grid_stateChanged(int state) {
-    showGrid = (state == Qt::Checked);
+    settings.showGrid = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_Border_stateChanged(int state) {
-    showBorder = (state == Qt::Checked);
+    settings.showBorder = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_Objects_stateChanged(int state) {
-    showObjects = (state == Qt::Checked);
+    settings.showObjects = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_Warps_stateChanged(int state) {
-    showWarps = (state == Qt::Checked);
+    settings.showWarps = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_BGs_stateChanged(int state) {
-    showBGs = (state == Qt::Checked);
+    settings.showBGs = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_Triggers_stateChanged(int state) {
-    showTriggers = (state == Qt::Checked);
+    settings.showTriggers = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_HealSpots_stateChanged(int state) {
-    showHealSpots = (state == Qt::Checked);
+    settings.showHealSpots = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_ConnectionUp_stateChanged(int state) {
-    showUpConnections = (state == Qt::Checked);
+    settings.showUpConnections = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_ConnectionDown_stateChanged(int state) {
-    showDownConnections = (state == Qt::Checked);
+    settings.showDownConnections = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_ConnectionLeft_stateChanged(int state) {
-    showLeftConnections = (state == Qt::Checked);
+    settings.showLeftConnections = (state == Qt::Checked);
     updatePreview();
 }
 
 void MapImageExporter::on_checkBox_ConnectionRight_stateChanged(int state) {
-    showRightConnections = (state == Qt::Checked);
+    settings.showRightConnections = (state == Qt::Checked);
     updatePreview();
 }
 

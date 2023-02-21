@@ -141,8 +141,6 @@ public:
 
     void objectsView_onMousePress(QMouseEvent *event);
 
-    int getBorderDrawDistance(int dimension);
-
     QUndoGroup editGroup; // Manages the undo history for each map
 
     bool selectingEvent = false;

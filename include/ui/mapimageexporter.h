@@ -16,23 +16,7 @@ enum ImageExporterMode {
     Timelapse,
 };
 
-class MapImageExporter : public QDialog
-{
-    Q_OBJECT
-
-public:
-    explicit MapImageExporter(QWidget *parent, Editor *editor, ImageExporterMode mode);
-    ~MapImageExporter();
-
-private:
-    Ui::MapImageExporter *ui;
-
-    Map *map = nullptr;
-    Editor *editor = nullptr;
-    QGraphicsScene *scene = nullptr;
-
-    QPixmap preview;
-
+struct MapImageExportSettings {
     bool showObjects = false;
     bool showWarps = false;
     bool showBGs = false;
@@ -45,14 +29,34 @@ private:
     bool showGrid = false;
     bool showBorder = false;
     bool showCollision = false;
+    qreal collisionOpacity = 0.5;
+    ImageExporterMode mode = ImageExporterMode::Normal;
+};
+
+class MapImageExporter : public QDialog
+{
+    Q_OBJECT
+
+public:
+    explicit MapImageExporter(QWidget *parent, Editor *editor, ImageExporterMode mode);
+    ~MapImageExporter();
+
+    static QPixmap getFormattedMapPixmap(Map *map, const MapImageExportSettings &settings, bool ignoreBorder = false);
+
+private:
+    Ui::MapImageExporter *ui;
+
+    Map *map = nullptr;
+    Editor *editor = nullptr;
+    QGraphicsScene *scene = nullptr;
+    QPixmap preview;
+    MapImageExportSettings settings;
     int timelapseSkipAmount = 1;
     int timelapseDelayMs = 200;
-    ImageExporterMode mode = ImageExporterMode::Normal;
 
     void updatePreview();
     void saveImage();
     QPixmap getStitchedImage(QProgressDialog *progress, bool includeBorder);
-    QPixmap getFormattedMapPixmap(Map *map, bool ignoreBorder);
     bool historyItemAppliesToFrame(const QUndoCommand *command);
 
 private slots:

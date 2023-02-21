@@ -517,3 +517,22 @@ bool Map::isWithinBounds(int x, int y) {
 bool Map::isWithinBorderBounds(int x, int y) {
     return (x >= 0 && x < this->getBorderWidth() && y >= 0 && y < this->getBorderHeight());
 }
+
+int Map::getBorderDrawDistance(int dimension) {
+    // Draw sufficient border blocks to fill the player's view (BORDER_DISTANCE)
+    if (dimension >= BORDER_DISTANCE) {
+        return dimension;
+    } else if (dimension) {
+        return dimension * (BORDER_DISTANCE / dimension + (BORDER_DISTANCE % dimension ? 1 : 0));
+    } else {
+        return BORDER_DISTANCE;
+    }
+}
+
+int Map::getBorderHorizontalDrawDistance() {
+    return Map::getBorderDrawDistance(this->getBorderWidth());
+}
+
+int Map::getBorderVerticalDrawDistance() {
+    return Map::getBorderDrawDistance(this->getBorderHeight());
+}

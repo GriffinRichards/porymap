@@ -1627,8 +1627,8 @@ void Editor::displayMapBorder() {
 
     int borderWidth = map->getBorderWidth();
     int borderHeight = map->getBorderHeight();
-    int borderHorzDist = getBorderDrawDistance(borderWidth);
-    int borderVertDist = getBorderDrawDistance(borderHeight);
+    int borderHorzDist = map->getBorderHorizontalDrawDistance();
+    int borderVertDist = map->getBorderVerticalDrawDistance();
     QPixmap pixmap = map->renderBorder();
     for (int y = -borderVertDist; y < map->getHeight() + borderVertDist; y += borderHeight)
     for (int x = -borderHorzDist; x < map->getWidth() + borderHorzDist; x += borderWidth) {
@@ -1660,17 +1660,6 @@ void Editor::updateMapConnections() {
     }
 
     maskNonVisibleConnectionTiles();
-}
-
-int Editor::getBorderDrawDistance(int dimension) {
-    // Draw sufficient border blocks to fill the player's view (BORDER_DISTANCE)
-    if (dimension >= BORDER_DISTANCE) {
-        return dimension;
-    } else if (dimension) {
-        return dimension * (BORDER_DISTANCE / dimension + (BORDER_DISTANCE % dimension ? 1 : 0));
-    } else {
-        return BORDER_DISTANCE;
-    }
 }
 
 void Editor::onToggleGridClicked(bool checked) {

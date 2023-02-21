@@ -10,6 +10,7 @@ public:
     CommandLineParser();
 
 public:
+    void showMessage(const QString &text);
     void showError(const QString &text);
     void showError();
     void showHelp(int errCode = 0);

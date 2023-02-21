@@ -1,6 +1,7 @@
 #include "commandline.h"
 #include "config.h"
 #include "log.h"
+#include "mapimageexporter.h"
 
 const QString exportImage = "exportimage";
 const QString convert = "convert";
@@ -60,8 +61,6 @@ bool CommandLine::parse() {
 
 */
 void CommandLine::run() {
-    porymapConfig.load();
-
     this->parser.setOptionsAfterPositionalArgumentsMode(QCommandLineParser::ParseAsOptions);
     this->parser.clearPositionalArguments();
 
@@ -89,6 +88,7 @@ bool CommandLine::loadProject() {
     if (this->project)
         return true;
 
+    porymapConfig.load();
     QString dir = this->parser.value(option_project);
     if (dir.isEmpty())
         dir = porymapConfig.getRecentProject();
@@ -98,6 +98,11 @@ bool CommandLine::loadProject() {
         logError(QString("Project folder '%1' does not exist.").arg(dir));
         return false;
     }
+
+    userConfig.setProjectDir(dir);
+    userConfig.load();
+    projectConfig.setProjectDir(dir);
+    projectConfig.load();
 
     this->project = new Project(this);
     this->project->set_root(dir);
@@ -134,10 +139,10 @@ void CommandLine::runExportImage() {
 
     bool allMaps = this->parser.isSet(option_all);
 
-    const QStringList maps = allMaps ? this->project->mapNames : this->parser.values(option_map);
+    const QStringList mapNames = allMaps ? this->project->mapNames : this->parser.values(option_map);
     const QStringList paths = this->parser.values(option_output);
 
-    if (maps.isEmpty()) {
+    if (mapNames.isEmpty()) {
         this->parser.showError("ERROR: No map specified");
         return;
     }
@@ -148,12 +153,35 @@ void CommandLine::runExportImage() {
             return;
         }
         // TODO: Verify output directory, create it(?)
-    } else if (paths.length() < maps.length()) {
+    } else if (paths.length() < mapNames.length()) {
         // If --all wasn't used, an output path must be specified for every map
         this->parser.showError("ERROR: One '--output' file path must be specified for every map image.");
         return;
     }
 
-    logInfo(maps.join(","));
+    // TODO: Maybe just consume arguments in order? Should options apply universally or to each map?
+    for (int i = 0; i < mapNames.length(); i++) {
+        const QString mapName = mapNames.at(i);
+        if (mapName == DYNAMIC_MAP_NAME)
+            continue;
+
+        Map * map = this->project->getMap(mapName);
+        if (!map) {
+            // TODO: Warning
+            continue;
+        }
+
+        this->parser.showMessage(QString("Exporting image for '%1'...").arg(mapName));
+
+        // Either read the specified path, or create one if --all was used
+        QString outputPath = !allMaps ? paths.at(i) : QString("%1/%2.png").arg(paths.at(0)).arg(mapName);
+
+        // TODO: Update this to get a QImage instead
+        // TODO: Verify the output path is valid (file doesn't already exist ('--overwrite'?), file extension? etc.)
+        MapImageExportSettings settings;
+        QPixmap pixmap = MapImageExporter::getFormattedMapPixmap(map, settings);
+        pixmap.save(outputPath);
+    }
+    this->parser.showMessage("Image export complete!");
 }
 
