@@ -7,11 +7,13 @@ CommandLineParser::CommandLineParser() :
 }
 
 void CommandLineParser::showMessage(const QString &text) {
+    if (this->silent) return;
     fputs(qPrintable(text + "\n"), stdout);
 }
 
 void CommandLineParser::showError(const QString &text) {
-    fputs(qPrintable(text + "\n\n"), stderr);
+    if (this->silent) return;
+    fputs(qPrintable(QString("ERROR: %1\n\n").arg(text)), stderr);
     this->showHelp(1);
 }
 
@@ -30,6 +32,17 @@ void CommandLineParser::addCommandArgument(const QString &name, const QString &d
     // TODO: Explicitly list each option name
     this->addPositionalArgument(name, description, QString("%1 [TODO]").arg(name));
     this->addOptions(options);
+}
+
+const QCommandLineOption option_silent = {{"silent", "s"}, "Stop the command from displaying any messages"};
+
+void CommandLineParser::addSilentOption() {
+    this->addOption(option_silent);
+}
+
+void CommandLineParser::process(const QStringList &arguments) {
+    QCommandLineParser::process(arguments);
+    this->silent = this->isSet(option_silent);
 }
 
 bool CommandLineParser::checkExclusiveOptions(const QCommandLineOption &a, const QCommandLineOption &b) {

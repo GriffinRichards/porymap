@@ -57,12 +57,18 @@ bool CommandLine::parse() {
     return false;
 }
 
+
+// Generic options used by multiple commands
+const QCommandLineOption option_output = {{"output", "o"}, "Output file path", "path"};
+const QCommandLineOption option_project = {{"project", "p"}, "Project file path", "path"};
+
 /*
 
 */
 void CommandLine::run() {
     this->parser.setOptionsAfterPositionalArgumentsMode(QCommandLineParser::ParseAsOptions);
     this->parser.clearPositionalArguments();
+    this->parser.addSilentOption();
 
     // TODO: Handle diverting to command functions more elegantly
     /*
@@ -74,15 +80,10 @@ void CommandLine::run() {
     if (this->commandName == exportImage)
         this->runExportImage();
     else {
-        this->parser.showError(QString("ERROR: Unrecognized command '%1'").arg(this->commandName));
+        this->parser.showError(QString("Unrecognized command '%1'").arg(this->commandName));
         return;
     }
 }
-
-
-// Generic options used by multiple commands
-const QCommandLineOption option_output = {{"output", "o"}, "Output file path", "path"};
-const QCommandLineOption option_project = {{"project", "p"}, "Project file path", "path"};
 
 bool CommandLine::loadProject() {
     if (this->project)
@@ -143,31 +144,34 @@ void CommandLine::runExportImage() {
     const QStringList paths = this->parser.values(option_output);
 
     if (mapNames.isEmpty()) {
-        this->parser.showError("ERROR: No map specified");
+        this->parser.showError("No map specified.");
         return;
     }
 
     if (allMaps) {
         if (paths.length() < 1) {
-            this->parser.showError("ERROR: One '--output' target directory must be specified.");
+            this->parser.showError("An '--output' target directory must be specified.");
             return;
         }
         // TODO: Verify output directory, create it(?)
     } else if (paths.length() < mapNames.length()) {
-        // If --all wasn't used, an output path must be specified for every map
-        this->parser.showError("ERROR: One '--output' file path must be specified for every map image.");
+        this->parser.showError("An '--output' file path must be specified for every map image.");
         return;
     }
 
     // TODO: Maybe just consume arguments in order? Should options apply universally or to each map?
+    int numFailed = 0;
     for (int i = 0; i < mapNames.length(); i++) {
         const QString mapName = mapNames.at(i);
+
+        // TODO: Verify that it's a valid map name
         if (mapName == DYNAMIC_MAP_NAME)
             continue;
 
         Map * map = this->project->getMap(mapName);
         if (!map) {
-            // TODO: Warning
+            // Assume an error was reported by the project
+            numFailed++;
             continue;
         }
 
@@ -175,13 +179,18 @@ void CommandLine::runExportImage() {
 
         // Either read the specified path, or create one if --all was used
         QString outputPath = !allMaps ? paths.at(i) : QString("%1/%2.png").arg(paths.at(0)).arg(mapName);
+        // TODO: Verify the output path is valid (dir exists, file doesn't already exist (--overwrite/--force?), file extension? etc.)
 
-        // TODO: Update this to get a QImage instead
-        // TODO: Verify the output path is valid (file doesn't already exist ('--overwrite'?), file extension? etc.)
         MapImageExportSettings settings;
         QPixmap pixmap = MapImageExporter::getFormattedMapPixmap(map, settings);
-        pixmap.save(outputPath);
+        if (!pixmap.save(outputPath)) {
+            this->parser.showMessage(QString("Unable to write image file '%1'").arg(outputPath));
+            numFailed++;
+        }
     }
-    this->parser.showMessage("Image export complete!");
+
+    QString endMessage = QString("Image export complete!");
+    if (numFailed) endMessage.append(QString(" Failed to export %1 image(s).").arg(numFailed));
+    this->parser.showMessage(endMessage);
 }
 
