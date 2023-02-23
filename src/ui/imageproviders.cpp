@@ -23,11 +23,6 @@ QImage getMetatileImage(
         bool useTruePalettes)
 {
     Metatile* metatile = Tileset::getMetatile(metatileId, primaryTileset, secondaryTileset);
-    if (!metatile) {
-        QImage metatile_image(16, 16, QImage::Format_RGBA8888);
-        metatile_image.fill(Qt::magenta);
-        return metatile_image;
-    }
     return getMetatileImage(metatile, primaryTileset, secondaryTileset, layerOrder, layerOpacity, useTruePalettes);
 }
 
@@ -135,6 +130,41 @@ QImage getMetatileImage(
     metatile_painter.end();
 
     return metatile_image;
+}
+
+// TODO: Add opacity argument
+QImage getMetatileLayerImage(uint16_t metatileId, int layer, Tileset *primaryTileset, Tileset *secondaryTileset, bool useTruePalettes)
+{
+    Metatile* metatile = Tileset::getMetatile(metatileId, primaryTileset, secondaryTileset);
+    return getMetatileLayerImage(metatile, layer, primaryTileset, secondaryTileset, useTruePalettes);
+}
+
+
+QImage getMetatileLayerImage(Metatile *metatile, int layer, Tileset *primaryTileset, Tileset *secondaryTileset, bool useTruePalettes) {
+    const QList<QPoint> tileCoords = QList<QPoint>{
+        QPoint(0, 0),
+        QPoint(8, 0),
+        QPoint(0, 8),
+        QPoint(8, 8),
+    };
+
+    QImage layerImage(16, 16, QImage::Format_RGBA8888);
+    if (!metatile || layer >= projectConfig.getNumLayersInMetatile()) {
+        layerImage.fill(Qt::magenta);
+        return layerImage;
+    }
+    layerImage.fill(Qt::black);
+
+    QPainter painter(&layerImage);
+    const int tilesPerLayer = tileCoords.length();
+    for (int i = 0; i < tilesPerLayer; i++) {
+        int tileIdx = i + layer * tilesPerLayer;
+        Tile tile = metatile->tiles.at(tileIdx);
+        QImage tileImage = getPalettedTileImage(tile.tileId, primaryTileset, secondaryTileset, tile.palette, useTruePalettes)
+                .mirrored(tile.xflip, tile.yflip);
+        painter.drawImage(tileCoords.at(i), tileImage);
+    }
+    return layerImage;
 }
 
 QImage getTileImage(uint16_t tileId, Tileset *primaryTileset, Tileset *secondaryTileset) {

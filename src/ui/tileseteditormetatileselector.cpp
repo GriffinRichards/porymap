@@ -49,6 +49,13 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
                     map->metatileLayerOpacity,
                     true)
                 .scaled(32, 32);
+        /*QImage metatile_image = getMetatileLayerImage(
+                metatileId,
+                0, // layer
+                this->primaryTileset,
+                this->secondaryTileset,
+                true
+            ).scaled(32, 32);*/
         int map_y = i / this->numMetatilesWide;
         int map_x = i % this->numMetatilesWide;
         QPoint metatile_origin = QPoint(map_x * 32, map_y * 32);
