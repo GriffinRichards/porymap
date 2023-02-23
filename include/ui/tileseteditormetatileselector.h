@@ -5,6 +5,13 @@
 #include "tileset.h"
 #include "map.h"
 
+enum MetatileLayerView {
+    Combined,
+    Bottom,
+    Middle,
+    Top,
+};
+
 class TilesetEditorMetatileSelector: public SelectablePixmapItem {
     Q_OBJECT
 public:
@@ -22,6 +29,7 @@ public:
     QVector<uint16_t> usedMetatiles;
     bool selectorShowUnused = false;
     bool selectorShowCounts = false;
+    MetatileLayerView layerView;
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent*);

@@ -92,6 +92,22 @@ void TilesetEditor::setTilesets(QString primaryTilesetLabel, QString secondaryTi
 
 void TilesetEditor::initUi() {
     ui->setupUi(this);
+
+    bool tripleLayersEnabled = projectConfig.getTripleLayerMetatilesEnabled();
+    this->ui->radioButton_Middle->setVisible(tripleLayersEnabled);
+    this->ui->actionMiddle->setVisible(tripleLayersEnabled);
+
+    connect(this->ui->radioButton_Combined, &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Combined); });
+    connect(this->ui->radioButton_Bottom,   &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Bottom); });
+    connect(this->ui->radioButton_Middle,   &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Middle); });
+    connect(this->ui->radioButton_Top,      &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Top); });
+
+    this->ui->actionGrid->setChecked(porymapConfig.getTilesetEditorShowGrid());
+
+    int layerEditLayout = porymapConfig.getTilesetEditorLayerEditLayout();
+    this->ui->actionHorizontal->setChecked(layerEditLayout == 0);
+    this->ui->actionVertical->setChecked(layerEditLayout == 1);
+
     this->tileXFlip = ui->checkBox_xFlip->isChecked();
     this->tileYFlip = ui->checkBox_yFlip->isChecked();
     this->paletteId = ui->spinBox_paletteSelector->value();
@@ -180,6 +196,10 @@ void TilesetEditor::initMetatileSelector()
 
     this->metatilesScene = new QGraphicsScene;
     this->metatilesScene->addItem(this->metatileSelector);
+
+    MetatileLayerView view = static_cast<MetatileLayerView>(porymapConfig.getTilesetEditorLayerView());
+    this->metatileSelector->layerView = view;
+    this->setMetatileLayerView(view);
     this->metatileSelector->draw();
 
     this->ui->graphicsView_Metatiles->setScene(this->metatilesScene);
@@ -234,6 +254,14 @@ void TilesetEditor::initShortcuts() {
 }
 
 void TilesetEditor::initExtraShortcuts() {
+    // TODO: The config will store the incorrect sequence if the value of triple layer metatiles is changed
+    if (!projectConfig.getTripleLayerMetatilesEnabled()) {
+        this->ui->actionBottom->setShortcut(QKeySequence("Ctrl+3"));
+    } else {
+        this->ui->actionMiddle->setShortcut(QKeySequence("Ctrl+3"));
+        this->ui->actionBottom->setShortcut(QKeySequence("Ctrl+4"));
+    }
+
     ui->actionRedo->setShortcuts({ui->actionRedo->shortcut(), QKeySequence("Ctrl+Shift+Z")});
 
     auto *shortcut_xFlip = new Shortcut(QKeySequence(), ui->checkBox_xFlip, SLOT(toggle()));
@@ -1162,4 +1190,59 @@ void TilesetEditor::on_copyButton_metatileLabel_clicked() {
         label.prepend(tileset->getMetatileLabelPrefix());
     QGuiApplication::clipboard()->setText(label);
     QToolTip::showText(this->ui->copyButton_metatileLabel->mapToGlobal(QPoint(0, 0)), "Copied!");
+}
+
+void TilesetEditor::setMetatileLayerView(MetatileLayerView view) {
+    if (this->metatileSelector->layerView != view) {
+        this->metatileSelector->layerView = view;
+        this->metatileSelector->draw();
+    }
+    porymapConfig.setTilesetEditorLayerView(static_cast<int>(view));
+
+    // Update radio buttons
+    if (view == MetatileLayerView::Combined) {
+        this->ui->radioButton_Combined->setChecked(true);
+    } else if (view == MetatileLayerView::Bottom) {
+        this->ui->radioButton_Bottom->setChecked(true);
+    } else if (view == MetatileLayerView::Middle) {
+        this->ui->radioButton_Middle->setChecked(true);
+    } else if (view == MetatileLayerView::Top) {
+        this->ui->radioButton_Top->setChecked(true);
+    }
+
+    // Update action checks
+    this->ui->actionCombined->setChecked(view == MetatileLayerView::Combined);
+    this->ui->actionBottom->setChecked(view == MetatileLayerView::Bottom);
+    this->ui->actionMiddle->setChecked(view == MetatileLayerView::Middle);
+    this->ui->actionTop->setChecked(view == MetatileLayerView::Top);
+
+    // TODO: Disable/reenable other parts of the UI as applicable
+}
+
+void TilesetEditor::on_actionCombined_triggered() {
+    this->setMetatileLayerView(MetatileLayerView::Combined);
+}
+
+void TilesetEditor::on_actionBottom_triggered() {
+    this->setMetatileLayerView(MetatileLayerView::Bottom);
+}
+
+void TilesetEditor::on_actionMiddle_triggered() {
+    this->setMetatileLayerView(MetatileLayerView::Middle);
+}
+
+void TilesetEditor::on_actionTop_triggered() {
+    this->setMetatileLayerView(MetatileLayerView::Top);
+}
+
+void TilesetEditor::on_actionHorizontal_triggered() {
+    // TODO
+}
+
+void TilesetEditor::on_actionVertical_triggered() {
+    // TODO
+}
+
+void TilesetEditor::on_actionGrid_triggered() {
+    // TODO
 }

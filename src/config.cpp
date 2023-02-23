@@ -251,6 +251,12 @@ void PorymapConfig::parseConfigKeyValue(QString key, QString value) {
         if (this->paletteEditorBitDepth != 15 && this->paletteEditorBitDepth != 24){
             this->paletteEditorBitDepth = 24;
         }
+    } else if (key == "tileset_editor_layer_view") {
+        this->tilesetEditorLayerView = getConfigInteger(key, value, 0, 3, 0);
+    } else if (key == "tileset_editor_layer_edit_layout") {
+        this->tilesetEditorLayerEditLayout = getConfigInteger(key, value, 0, 1, 0);
+    } else if (key == "tileset_editor_show_grid") {
+        this->tilesetEditorShowGrid = getConfigBool(key, value);
     } else {
         logWarn(QString("Invalid config key found in config file %1: '%2'").arg(this->getConfigFilepath()).arg(key));
     }
@@ -284,6 +290,9 @@ QMap<QString, QString> PorymapConfig::getKeyValueMap() {
     map.insert("text_editor_open_directory", this->textEditorOpenFolder);
     map.insert("text_editor_goto_line", this->textEditorGotoLine);
     map.insert("palette_editor_bit_depth", QString("%1").arg(this->paletteEditorBitDepth));
+    map.insert("tileset_editor_layer_view", QString("%1").arg(this->tilesetEditorLayerView));
+    map.insert("tileset_editor_layer_edit_layout", QString("%1").arg(this->tilesetEditorLayerEditLayout));
+    map.insert("tileset_editor_show_grid", this->tilesetEditorShowGrid ? "1" : "0");
     
     return map;
 }
@@ -411,6 +420,21 @@ void PorymapConfig::setPaletteEditorBitDepth(int bitDepth) {
     this->save();
 }
 
+void PorymapConfig::setTilesetEditorLayerView(int layerView) {
+    this->tilesetEditorLayerView = layerView;
+    this->save();
+}
+
+void PorymapConfig::setTilesetEditorLayerEditLayout(int layerEditLayout) {
+    this->tilesetEditorLayerEditLayout = layerEditLayout;
+    this->save();
+}
+
+void PorymapConfig::setTilesetEditorShowGrid(bool enabled) {
+    this->tilesetEditorShowGrid = enabled;
+    this->save();
+}
+
 QString PorymapConfig::getRecentProject() {
     return this->recentProject;
 }
@@ -511,6 +535,18 @@ QString PorymapConfig::getTextEditorGotoLine() {
 
 int PorymapConfig::getPaletteEditorBitDepth() {
     return this->paletteEditorBitDepth;
+}
+
+int PorymapConfig::getTilesetEditorLayerView() {
+    return this->tilesetEditorLayerView;
+}
+
+int PorymapConfig::getTilesetEditorLayerEditLayout() {
+    return this->tilesetEditorLayerEditLayout;
+}
+
+bool PorymapConfig::getTilesetEditorShowGrid() {
+    return this->tilesetEditorShowGrid;
 }
 
 const QMap<BaseGameVersion, QString> baseGameVersionMap = {

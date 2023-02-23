@@ -112,6 +112,13 @@ private slots:
     void on_actionCut_triggered();
     void on_actionCopy_triggered();
     void on_actionPaste_triggered();
+    void on_actionCombined_triggered();
+    void on_actionBottom_triggered();
+    void on_actionMiddle_triggered();
+    void on_actionTop_triggered();
+    void on_actionHorizontal_triggered();
+    void on_actionVertical_triggered();
+    void on_actionGrid_triggered();
 
 private:
     void initUi();
@@ -141,6 +148,7 @@ private:
     void setComboValue(QComboBox * combo, int value);
     void commitMetatileChange(Metatile * prevMetatile);
     void commitMetatileAndLabelChange(Metatile * prevMetatile, QString prevLabel);
+    void setMetatileLayerView(MetatileLayerView view);
 
     Ui::TilesetEditor *ui;
     History<MetatileHistoryItem*> metatileHistory;

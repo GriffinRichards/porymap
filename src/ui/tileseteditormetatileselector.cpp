@@ -8,6 +8,7 @@ TilesetEditorMetatileSelector::TilesetEditorMetatileSelector(Tileset *primaryTil
     this->setTilesets(primaryTileset, secondaryTileset, false);
     this->numMetatilesWide = 8;
     this->map = map;
+    this->layerView = MetatileLayerView::Combined;
     setAcceptHoverEvents(true);
     this->usedMetatiles.resize(Project::getNumMetatilesTotal());
 }
@@ -41,21 +42,34 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
         int metatileId = i + metatileIdStart;
         if (includesPrimary && metatileId >= numPrimary)
             metatileId += maxPrimary - numPrimary; // Skip over unused region of primary tileset
-        QImage metatile_image = getMetatileImage(
-                    metatileId,
-                    this->primaryTileset,
-                    this->secondaryTileset,
-                    map->metatileLayerOrder,
-                    map->metatileLayerOpacity,
-                    true)
-                .scaled(32, 32);
-        /*QImage metatile_image = getMetatileLayerImage(
-                metatileId,
-                0, // layer
-                this->primaryTileset,
-                this->secondaryTileset,
-                true
-            ).scaled(32, 32);*/
+        QImage metatile_image;
+
+        // TODO: Do this more gracefully
+        if (this->layerView == MetatileLayerView::Combined) {
+            metatile_image = getMetatileImage(
+                        metatileId,
+                        this->primaryTileset,
+                        this->secondaryTileset,
+                        map->metatileLayerOrder,
+                        map->metatileLayerOpacity,
+                        true)
+                    .scaled(32, 32);
+        } else {
+            // TODO: Handle triple layer metatiles
+            const QMap<MetatileLayerView,int> layerViewToIdx = {
+                {MetatileLayerView::Bottom, 0},
+                {MetatileLayerView::Middle, 0},
+                {MetatileLayerView::Top, 1},
+            };
+            metatile_image = getMetatileLayerImage(
+                        metatileId,
+                        layerViewToIdx.value(this->layerView),
+                        this->primaryTileset,
+                        this->secondaryTileset,
+                        true
+                    ).scaled(32, 32);
+        }
+
         int map_y = i / this->numMetatilesWide;
         int map_x = i % this->numMetatilesWide;
         QPoint metatile_origin = QPoint(map_x * 32, map_y * 32);
