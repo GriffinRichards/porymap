@@ -10,8 +10,10 @@ QImage getCollisionMetatileImage(Block);
 QImage getCollisionMetatileImage(int, int);
 QImage getMetatileImage(uint16_t, Tileset*, Tileset*, QList<int>, QList<float>, bool useTruePalettes = false);
 QImage getMetatileImage(Metatile*, Tileset*, Tileset*, QList<int>, QList<float>, bool useTruePalettes = false);
-QImage getMetatileLayerImage(uint16_t, int, Tileset *, Tileset *, bool useTruePalettes = false);
-QImage getMetatileLayerImage(Metatile *, int, Tileset *, Tileset *, bool useTruePalettes = false);
+QImage getMetatileLayerImage(Metatile *, int, Tileset *, Tileset *,
+                                qreal opacity = 1.0,
+                                bool allowTransparency = true,
+                                bool useTruePalettes = false);
 QImage getTileImage(uint16_t, Tileset*, Tileset*);
 QImage getPalettedTileImage(uint16_t, Tileset*, Tileset*, int, bool useTruePalettes = false);
 QImage getGreyscaleTileImage(uint16_t tile, Tileset *primaryTileset, Tileset *secondaryTileset);

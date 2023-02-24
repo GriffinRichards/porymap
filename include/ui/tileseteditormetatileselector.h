@@ -52,7 +52,8 @@ private:
     void drawUnused();
     void drawCounts();
     QImage buildAllMetatilesImage();
-    QImage buildImage(int metatileIdStart, int numMetatiles);
+    QImage buildImage(Tileset *);
+    int getLayerToDraw(Metatile * metatile);
 
 signals:
     void hoveredMetatileChanged(uint16_t);

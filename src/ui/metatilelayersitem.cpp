@@ -5,13 +5,30 @@
 
 void MetatileLayersItem::draw() {
     // TODO: Handle vertical layout
-    const int numLayers = projectConfig.getNumLayersInMetatile();
-    QPixmap pixmap(numLayers * 32, 32);
+    const QList<QPoint> tileCoords = QList<QPoint>{
+        QPoint(0, 0),
+        QPoint(16, 0),
+        QPoint(0, 16),
+        QPoint(16, 16),
+        QPoint(32, 0),
+        QPoint(48, 0),
+        QPoint(32, 16),
+        QPoint(48, 16),
+        QPoint(64, 0),
+        QPoint(80, 0),
+        QPoint(64, 16),
+        QPoint(80, 16),
+    };
+
+    QPixmap pixmap(projectConfig.getNumLayersInMetatile() * 32, 32);
     QPainter painter(&pixmap);
-    for (int i = 0; i < numLayers; i++) {
-        QImage layerImage = getMetatileLayerImage(this->metatile, i, this->primaryTileset, this->secondaryTileset, true)
-                            .scaled(32, 32);
-        painter.drawImage(QPoint(i * 32, 0), layerImage);
+    int numTiles = projectConfig.getNumTilesInMetatile();
+    for (int i = 0; i < numTiles; i++) {
+        Tile tile = this->metatile->tiles.at(i);
+        QImage tileImage = getPalettedTileImage(tile.tileId, this->primaryTileset, this->secondaryTileset, tile.palette, true)
+                .mirrored(tile.xflip, tile.yflip)
+                .scaled(16, 16);
+        painter.drawImage(tileCoords.at(i), tileImage);
     }
 
     this->setPixmap(pixmap);

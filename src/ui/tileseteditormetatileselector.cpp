@@ -3,8 +3,11 @@
 #include "project.h"
 #include <QPainter>
 
+static const int mWidth = 32;
+static const int mHeight = 32;
+
 TilesetEditorMetatileSelector::TilesetEditorMetatileSelector(Tileset *primaryTileset, Tileset *secondaryTileset, Map *map)
-  : SelectablePixmapItem(32, 32, 1, 1) {
+  : SelectablePixmapItem(mWidth, mHeight, 1, 1) {
     this->setTilesets(primaryTileset, secondaryTileset, false);
     this->numMetatilesWide = 8;
     this->map = map;
@@ -14,42 +17,45 @@ TilesetEditorMetatileSelector::TilesetEditorMetatileSelector(Tileset *primaryTil
 }
 
 QImage TilesetEditorMetatileSelector::buildAllMetatilesImage() {
-    return this->buildImage(0, this->primaryTileset->metatiles.length() + this->secondaryTileset->metatiles.length());
+    // TODO: Add toggle to hide primary/secodary
+    QImage primaryImage = this->buildPrimaryMetatilesImage();
+    QImage secondaryImage = this->buildSecondaryMetatilesImage();
+    QImage image(this->numMetatilesWide * mWidth, primaryImage.height() + secondaryImage.height(), QImage::Format_RGBA8888);
+    image.fill(Qt::magenta);
+    QPainter painter(&image);
+    painter.drawImage(QPoint(0, 0), primaryImage);
+    painter.drawImage(QPoint(0, primaryImage.height()), secondaryImage);
+    return image;
 }
 
 QImage TilesetEditorMetatileSelector::buildPrimaryMetatilesImage() {
-    return this->buildImage(0, this->primaryTileset->metatiles.length());
+    return this->buildImage(this->primaryTileset);
 }
 
 QImage TilesetEditorMetatileSelector::buildSecondaryMetatilesImage() {
-    return this->buildImage(Project::getNumMetatilesPrimary(), this->secondaryTileset->metatiles.length());
+    return this->buildImage(this->secondaryTileset);
 }
 
-QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMetatiles) {
-    const int mWidth = 32;
-    const int mHeight = 32;
-    int numMetatilesHigh = numMetatiles / this->numMetatilesWide;
-    if (numMetatiles % this->numMetatilesWide != 0) {
+QImage TilesetEditorMetatileSelector::buildImage(Tileset * tileset) {
+    if (!tileset)
+        return QImage();
+
+    int numMetatilesHigh = tileset->metatiles.length() / this->numMetatilesWide;
+    if (tileset->metatiles.length() % this->numMetatilesWide != 0) {
         // Round up height for incomplete last row
         numMetatilesHigh++;
     }
-    int numPrimary = this->primaryTileset->metatiles.length();
-    int maxPrimary = Project::getNumMetatilesPrimary();
-    bool includesPrimary = metatileIdStart < maxPrimary;
 
     QImage image(this->numMetatilesWide * mWidth, numMetatilesHigh * mHeight, QImage::Format_RGBA8888);
     image.fill(Qt::magenta);
     QPainter painter(&image);
-    for (int i = 0; i < numMetatiles; i++) {
-        int metatileId = i + metatileIdStart;
-        if (includesPrimary && metatileId >= numPrimary)
-            metatileId += maxPrimary - numPrimary; // Skip over unused region of primary tileset
+    for (int i = 0; i < tileset->metatiles.length(); i++) {
         QImage metatile_image;
 
         // TODO: Do this more gracefully
         if (this->layerView == MetatileLayerView::Combined) {
             metatile_image = getMetatileImage(
-                        metatileId,
+                        tileset->metatiles.at(i),
                         this->primaryTileset,
                         this->secondaryTileset,
                         map->metatileLayerOrder,
@@ -57,17 +63,17 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
                         true)
                     .scaled(mWidth, mHeight);
         } else {
-            // TODO: Handle triple layer metatiles
-            const QMap<MetatileLayerView,int> layerViewToIdx = {
-                {MetatileLayerView::Bottom, 0},
-                {MetatileLayerView::Middle, 0},
-                {MetatileLayerView::Top, 1},
-            };
+            // TODO: Test triple layer metatiles
+            // TODO: Handle layer ghosts
+            int layer = getLayerToDraw(tileset->metatiles.at(i));
+            qreal opacity = map->metatileLayerOpacity.value(layer, 1.0);
             metatile_image = getMetatileLayerImage(
-                        metatileId,
-                        layerViewToIdx.value(this->layerView),
+                        tileset->metatiles.at(i),
+                        layer,
                         this->primaryTileset,
                         this->secondaryTileset,
+                        opacity,
+                        false,
                         true
                     ).scaled(mWidth, mHeight);
         }
@@ -91,6 +97,35 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
     }
     painter.end();
     return image;
+}
+
+// When triple layer metatiles is enabled, the layer view name (Top/Middle/Bottom) corresponds to the actual rendered layer.
+// When it's not enabled, "Top"/"Bottom" refer to the upper/lowermost layers, i.e. "Top" may be Top or Middle and "Bottom" may be Middle or Bottom
+// TODO: Refactor this garbage away
+int TilesetEditorMetatileSelector::getLayerToDraw(Metatile * metatile) {
+    const QHash<int, QHash<MetatileLayerView, int>> viewToLayer_Normal = {
+        {METATILE_LAYER_MIDDLE_TOP, {
+            {MetatileLayerView::Bottom, 1}, // Middle
+            {MetatileLayerView::Top, 2},    // Top
+        }},
+        {METATILE_LAYER_BOTTOM_MIDDLE, {
+            {MetatileLayerView::Bottom, 0}, // Bottom
+            {MetatileLayerView::Top, 1},    // Middle
+        }},
+        {METATILE_LAYER_BOTTOM_TOP, {
+            {MetatileLayerView::Bottom, 0}, // Bottom
+            {MetatileLayerView::Top, 2},    // Top
+        }},
+    };
+    const QHash<MetatileLayerView, int> viewToLayer_TripleLayer = {
+        {MetatileLayerView::Bottom, 0},
+        {MetatileLayerView::Middle, 1},
+        {MetatileLayerView::Top, 2},
+    };
+
+    return projectConfig.getTripleLayerMetatilesEnabled()
+         ? viewToLayer_TripleLayer.value(this->layerView, 0)
+         : viewToLayer_Normal.value(metatile->layerType).value(this->layerView, 0);
 }
 
 void TilesetEditorMetatileSelector::draw() {
@@ -203,7 +238,7 @@ void TilesetEditorMetatileSelector::drawFilters() {
 
 void TilesetEditorMetatileSelector::drawUnused() {
     // setup the circle with a line through it image to layer above unused metatiles
-    QPixmap redX(32, 32);
+    QPixmap redX(mWidth, mHeight);
     redX.fill(Qt::transparent);
 
     QPen whitePen(Qt::white);
@@ -251,7 +286,7 @@ void TilesetEditorMetatileSelector::drawUnused() {
             tile += Project::getNumMetatilesPrimary() - primaryLength;
         }
         if (!usedMetatiles[tile]) {
-            unusedPainter.drawPixmap((i % 8) * 32, (i / 8) * 32, redX);
+            unusedPainter.drawPixmap((i % 8) * mWidth, (i / 8) * mHeight, redX);
         }
     }
 
