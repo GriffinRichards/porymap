@@ -173,7 +173,6 @@ void TilesetEditor::setAttributesUi() {
     } else {
         this->ui->comboBox_layerType->setVisible(false);
         this->ui->label_layerType->setVisible(false);
-        this->ui->label_BottomTop->setText("Bottom/Middle/Top");
     }
 }
 
@@ -197,9 +196,10 @@ void TilesetEditor::initMetatileSelector()
     this->metatilesScene = new QGraphicsScene;
     this->metatilesScene->addItem(this->metatileSelector);
 
-    MetatileLayerView view = static_cast<MetatileLayerView>(porymapConfig.getTilesetEditorLayerView());
-    this->metatileSelector->layerView = view;
-    this->setMetatileLayerView(view);
+    // TODO: Remove config option
+    //MetatileLayerView view = static_cast<MetatileLayerView>(porymapConfig.getTilesetEditorLayerView());
+    this->metatileSelector->layerView = MetatileLayerView::Combined;
+    this->setMetatileLayerView(this->metatileSelector->layerView);
     this->metatileSelector->showGrid = this->ui->actionGrid->isChecked();
     this->metatileSelector->draw();
 
@@ -255,14 +255,6 @@ void TilesetEditor::initShortcuts() {
 }
 
 void TilesetEditor::initExtraShortcuts() {
-    // TODO: The config will store the incorrect sequence if the value of triple layer metatiles is changed
-    /*if (!projectConfig.getTripleLayerMetatilesEnabled()) {
-        this->ui->actionBottom->setShortcut(QKeySequence("Ctrl+3"));
-    } else {*/
-        this->ui->actionMiddle->setShortcut(QKeySequence("Ctrl+3"));
-        this->ui->actionBottom->setShortcut(QKeySequence("Ctrl+4"));
-    //}
-
     ui->actionRedo->setShortcuts({ui->actionRedo->shortcut(), QKeySequence("Ctrl+Shift+Z")});
 
     auto *shortcut_xFlip = new Shortcut(QKeySequence(), ui->checkBox_xFlip, SLOT(toggle()));
@@ -1245,6 +1237,7 @@ void TilesetEditor::on_actionVertical_triggered() {
 }
 
 void TilesetEditor::on_actionGrid_triggered(bool checked) {
+    this->ui->checkBox_Grid->setChecked(checked);
     this->metatileSelector->showGrid = checked;
     this->metatileSelector->draw();
     porymapConfig.setTilesetEditorShowGrid(checked);

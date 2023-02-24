@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>754</width>
+    <width>832</width>
     <height>700</height>
    </rect>
   </property>
@@ -73,7 +73,7 @@
               <x>0</x>
               <y>0</y>
               <width>272</width>
-              <height>587</height>
+              <height>623</height>
              </rect>
             </property>
             <layout class="QGridLayout" name="gridLayout">
@@ -161,7 +161,7 @@
         </layout>
        </item>
        <item alignment="Qt::AlignTop">
-        <widget class="QFrame" name="frame_RadioButtons">
+        <widget class="QFrame" name="frame_MetatilesOptions">
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
@@ -181,6 +181,13 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <item>
+           <widget class="QLabel" name="label_LayerView">
+            <property name="text">
+             <string>Layer View</string>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QRadioButton" name="radioButton_Combined">
             <property name="text">
@@ -206,6 +213,147 @@
            <widget class="QRadioButton" name="radioButton_Bottom">
             <property name="text">
              <string>Bottom</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Opacity">
+            <property name="text">
+             <string>Opacity</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_OpacityTop">
+            <property name="text">
+             <string>Top</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="slider_OpacityTop">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="sliderPosition">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_OpacityMiddle">
+            <property name="text">
+             <string>Middle</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="slider_OpacityMiddle">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="sliderPosition">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_OpacityBottom">
+            <property name="text">
+             <string>Bottom</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSlider" name="slider_OpacityBottom">
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="sliderPosition">
+             <number>100</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="invertedAppearance">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_Grid">
+            <property name="text">
+             <string>Grid</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_4">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="label_Hide">
+            <property name="text">
+             <string>Hide</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_HidePrimary">
+            <property name="text">
+             <string>Primary</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="checkBox_HideSecondary">
+            <property name="text">
+             <string>Secondary</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
             </property>
            </widget>
           </item>
@@ -313,9 +461,9 @@
               </widget>
              </item>
              <item row="0" column="0">
-              <widget class="QLabel" name="label_BottomTop">
+              <widget class="QLabel" name="label_BottomMiddleTop">
                <property name="text">
-                <string>Bottom/Top</string>
+                <string>Bottom/Middle/Top</string>
                </property>
               </widget>
              </item>
@@ -425,9 +573,6 @@
              </item>
              <item row="1" column="1">
               <widget class="QCheckBox" name="checkBox_xFlip">
-               <property name="layoutDirection">
-                <enum>Qt::LeftToRight</enum>
-               </property>
                <property name="text">
                 <string/>
                </property>
@@ -594,7 +739,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>754</width>
+     <width>832</width>
      <height>22</height>
     </rect>
    </property>
@@ -656,8 +801,12 @@
      <addaction name="actionVertical"/>
     </widget>
     <addaction name="actionGrid"/>
+    <addaction name="actionHide_Primary_Metatiles"/>
+    <addaction name="actionHide_Secondary_Metatiles"/>
+    <addaction name="separator"/>
     <addaction name="menuLayer_View"/>
     <addaction name="menuLayer_Edit_Layout"/>
+    <addaction name="separator"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -827,6 +976,9 @@
    <property name="text">
     <string>Middle</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
+   </property>
   </action>
   <action name="actionBottom">
    <property name="checkable">
@@ -834,6 +986,9 @@
    </property>
    <property name="text">
     <string>Bottom</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+4</string>
    </property>
   </action>
   <action name="actionHorizontal">
@@ -850,6 +1005,22 @@
    </property>
    <property name="text">
     <string>Vertical</string>
+   </property>
+  </action>
+  <action name="actionHide_Primary_Metatiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide Primary Metatiles</string>
+   </property>
+  </action>
+  <action name="actionHide_Secondary_Metatiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hide Secondary Metatiles</string>
    </property>
   </action>
  </widget>
