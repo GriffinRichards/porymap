@@ -200,6 +200,7 @@ void TilesetEditor::initMetatileSelector()
     MetatileLayerView view = static_cast<MetatileLayerView>(porymapConfig.getTilesetEditorLayerView());
     this->metatileSelector->layerView = view;
     this->setMetatileLayerView(view);
+    this->metatileSelector->showGrid = this->ui->actionGrid->isChecked();
     this->metatileSelector->draw();
 
     this->ui->graphicsView_Metatiles->setScene(this->metatilesScene);
@@ -1243,6 +1244,8 @@ void TilesetEditor::on_actionVertical_triggered() {
     // TODO
 }
 
-void TilesetEditor::on_actionGrid_triggered() {
-    // TODO
+void TilesetEditor::on_actionGrid_triggered(bool checked) {
+    this->metatileSelector->showGrid = checked;
+    this->metatileSelector->draw();
+    porymapConfig.setTilesetEditorShowGrid(checked);
 }

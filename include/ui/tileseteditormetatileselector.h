@@ -29,6 +29,7 @@ public:
     QVector<uint16_t> usedMetatiles;
     bool selectorShowUnused = false;
     bool selectorShowCounts = false;
+    bool showGrid = false;
     MetatileLayerView layerView;
 
 protected:

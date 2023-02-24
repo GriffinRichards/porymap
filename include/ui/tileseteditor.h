@@ -118,7 +118,7 @@ private slots:
     void on_actionTop_triggered();
     void on_actionHorizontal_triggered();
     void on_actionVertical_triggered();
-    void on_actionGrid_triggered();
+    void on_actionGrid_triggered(bool checked);
 
 private:
     void initUi();

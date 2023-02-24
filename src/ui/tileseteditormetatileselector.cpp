@@ -26,6 +26,8 @@ QImage TilesetEditorMetatileSelector::buildSecondaryMetatilesImage() {
 }
 
 QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMetatiles) {
+    const int mWidth = 32;
+    const int mHeight = 32;
     int numMetatilesHigh = numMetatiles / this->numMetatilesWide;
     if (numMetatiles % this->numMetatilesWide != 0) {
         // Round up height for incomplete last row
@@ -35,7 +37,7 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
     int maxPrimary = Project::getNumMetatilesPrimary();
     bool includesPrimary = metatileIdStart < maxPrimary;
 
-    QImage image(this->numMetatilesWide * 32, numMetatilesHigh * 32, QImage::Format_RGBA8888);
+    QImage image(this->numMetatilesWide * mWidth, numMetatilesHigh * mHeight, QImage::Format_RGBA8888);
     image.fill(Qt::magenta);
     QPainter painter(&image);
     for (int i = 0; i < numMetatiles; i++) {
@@ -53,7 +55,7 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
                         map->metatileLayerOrder,
                         map->metatileLayerOpacity,
                         true)
-                    .scaled(32, 32);
+                    .scaled(mWidth, mHeight);
         } else {
             // TODO: Handle triple layer metatiles
             const QMap<MetatileLayerView,int> layerViewToIdx = {
@@ -67,13 +69,25 @@ QImage TilesetEditorMetatileSelector::buildImage(int metatileIdStart, int numMet
                         this->primaryTileset,
                         this->secondaryTileset,
                         true
-                    ).scaled(32, 32);
+                    ).scaled(mWidth, mHeight);
         }
 
         int map_y = i / this->numMetatilesWide;
         int map_x = i % this->numMetatilesWide;
-        QPoint metatile_origin = QPoint(map_x * 32, map_y * 32);
+        QPoint metatile_origin = QPoint(map_x * mWidth, map_y * mHeight);
         painter.drawImage(metatile_origin, metatile_image);
+    }
+    if (this->showGrid) {
+        for (int column = 0; column < this->numMetatilesWide; column++) {
+            int x = column * mWidth;
+            int y = numMetatilesHigh * mHeight;
+            painter.drawLine(x, 0, x, y);
+        }
+        for (int row = 0; row < numMetatilesHigh; row++) {
+            int x = this->numMetatilesWide * mWidth;
+            int y = row * mHeight;
+            painter.drawLine(0, y, x, y);
+        }
     }
     painter.end();
     return image;
