@@ -93,9 +93,9 @@ void TilesetEditor::setTilesets(QString primaryTilesetLabel, QString secondaryTi
 void TilesetEditor::initUi() {
     ui->setupUi(this);
 
-    bool tripleLayersEnabled = projectConfig.getTripleLayerMetatilesEnabled();
+    /*bool tripleLayersEnabled = projectConfig.getTripleLayerMetatilesEnabled();
     this->ui->radioButton_Middle->setVisible(tripleLayersEnabled);
-    this->ui->actionMiddle->setVisible(tripleLayersEnabled);
+    this->ui->actionMiddle->setVisible(tripleLayersEnabled);*/
 
     connect(this->ui->radioButton_Combined, &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Combined); });
     connect(this->ui->radioButton_Bottom,   &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Bottom); });
@@ -256,12 +256,12 @@ void TilesetEditor::initShortcuts() {
 
 void TilesetEditor::initExtraShortcuts() {
     // TODO: The config will store the incorrect sequence if the value of triple layer metatiles is changed
-    if (!projectConfig.getTripleLayerMetatilesEnabled()) {
+    /*if (!projectConfig.getTripleLayerMetatilesEnabled()) {
         this->ui->actionBottom->setShortcut(QKeySequence("Ctrl+3"));
-    } else {
+    } else {*/
         this->ui->actionMiddle->setShortcut(QKeySequence("Ctrl+3"));
         this->ui->actionBottom->setShortcut(QKeySequence("Ctrl+4"));
-    }
+    //}
 
     ui->actionRedo->setShortcuts({ui->actionRedo->shortcut(), QKeySequence("Ctrl+Shift+Z")});
 

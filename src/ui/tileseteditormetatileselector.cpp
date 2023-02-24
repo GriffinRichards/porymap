@@ -65,7 +65,12 @@ QImage TilesetEditorMetatileSelector::buildImage(Tileset * tileset) {
         } else {
             // TODO: Test triple layer metatiles
             // TODO: Handle layer ghosts
-            int layer = getLayerToDraw(tileset->metatiles.at(i));
+            const QHash<MetatileLayerView, int> viewToLayer = {
+                {MetatileLayerView::Bottom, 0},
+                {MetatileLayerView::Middle, 1},
+                {MetatileLayerView::Top, 2},
+            };
+            int layer = viewToLayer.value(this->layerView);
             qreal opacity = map->metatileLayerOpacity.value(layer, 1.0);
             metatile_image = getMetatileLayerImage(
                         tileset->metatiles.at(i),
@@ -97,35 +102,6 @@ QImage TilesetEditorMetatileSelector::buildImage(Tileset * tileset) {
     }
     painter.end();
     return image;
-}
-
-// When triple layer metatiles is enabled, the layer view name (Top/Middle/Bottom) corresponds to the actual rendered layer.
-// When it's not enabled, "Top"/"Bottom" refer to the upper/lowermost layers, i.e. "Top" may be Top or Middle and "Bottom" may be Middle or Bottom
-// TODO: Refactor this garbage away
-int TilesetEditorMetatileSelector::getLayerToDraw(Metatile * metatile) {
-    const QHash<int, QHash<MetatileLayerView, int>> viewToLayer_Normal = {
-        {METATILE_LAYER_MIDDLE_TOP, {
-            {MetatileLayerView::Bottom, 1}, // Middle
-            {MetatileLayerView::Top, 2},    // Top
-        }},
-        {METATILE_LAYER_BOTTOM_MIDDLE, {
-            {MetatileLayerView::Bottom, 0}, // Bottom
-            {MetatileLayerView::Top, 1},    // Middle
-        }},
-        {METATILE_LAYER_BOTTOM_TOP, {
-            {MetatileLayerView::Bottom, 0}, // Bottom
-            {MetatileLayerView::Top, 2},    // Top
-        }},
-    };
-    const QHash<MetatileLayerView, int> viewToLayer_TripleLayer = {
-        {MetatileLayerView::Bottom, 0},
-        {MetatileLayerView::Middle, 1},
-        {MetatileLayerView::Top, 2},
-    };
-
-    return projectConfig.getTripleLayerMetatilesEnabled()
-         ? viewToLayer_TripleLayer.value(this->layerView, 0)
-         : viewToLayer_Normal.value(metatile->layerType).value(this->layerView, 0);
 }
 
 void TilesetEditorMetatileSelector::draw() {

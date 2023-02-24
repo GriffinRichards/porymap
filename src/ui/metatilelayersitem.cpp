@@ -3,32 +3,24 @@
 #include "imageproviders.h"
 #include <QPainter>
 
+// TODO: Handle unused layer
+
 void MetatileLayersItem::draw() {
     // TODO: Handle vertical layout
-    const QList<QPoint> tileCoords = QList<QPoint>{
-        QPoint(0, 0),
-        QPoint(16, 0),
-        QPoint(0, 16),
-        QPoint(16, 16),
-        QPoint(32, 0),
-        QPoint(48, 0),
-        QPoint(32, 16),
-        QPoint(48, 16),
-        QPoint(64, 0),
-        QPoint(80, 0),
-        QPoint(64, 16),
-        QPoint(80, 16),
-    };
+    QPixmap pixmap(this->layers.length() * 32, 32);
 
-    QPixmap pixmap(projectConfig.getNumLayersInMetatile() * 32, 32);
     QPainter painter(&pixmap);
-    int numTiles = projectConfig.getNumTilesInMetatile();
-    for (int i = 0; i < numTiles; i++) {
-        Tile tile = this->metatile->tiles.at(i);
-        QImage tileImage = getPalettedTileImage(tile.tileId, this->primaryTileset, this->secondaryTileset, tile.palette, true)
-                .mirrored(tile.xflip, tile.yflip)
-                .scaled(16, 16);
-        painter.drawImage(tileCoords.at(i), tileImage);
+    for (int i = 0; i < this->layers.length(); i++) {
+        QImage layerImage = getMetatileLayerImage(this->metatile,
+                                                  this->layers.at(i),
+                                                  this->primaryTileset,
+                                                  this->secondaryTileset,
+                                                  1.0, // opacity
+                                                  false, // allowTransparency
+                                                  true // useTruePalettes
+                                                  )
+                            .scaled(32, 32);
+        painter.drawImage(QPoint(i * 32, 0), layerImage);
     }
 
     this->setPixmap(pixmap);
@@ -97,7 +89,7 @@ void MetatileLayersItem::clearLastModifiedCoords() {
 }
 
 void MetatileLayersItem::getBoundedCoords(QPointF pos, int *x, int *y) {
-    int maxX = (projectConfig.getNumLayersInMetatile() * 2) - 1;
+    int maxX = (this->layers.length() * 2) - 1;
     *x = static_cast<int>(pos.x()) / 16;
     *y = static_cast<int>(pos.y()) / 16;
     if (*x < 0) *x = 0;

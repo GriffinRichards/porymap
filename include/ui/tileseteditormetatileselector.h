@@ -6,10 +6,10 @@
 #include "map.h"
 
 enum MetatileLayerView {
-    Combined,
     Bottom,
     Middle,
     Top,
+    Combined,
 };
 
 class TilesetEditorMetatileSelector: public SelectablePixmapItem {
