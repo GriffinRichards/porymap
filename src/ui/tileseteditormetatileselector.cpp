@@ -11,15 +11,16 @@ TilesetEditorMetatileSelector::TilesetEditorMetatileSelector(Tileset *primaryTil
     this->setTilesets(primaryTileset, secondaryTileset, false);
     this->numMetatilesWide = 8;
     this->map = map;
-    this->layerView = MetatileLayerView::Combined;
     setAcceptHoverEvents(true);
     this->usedMetatiles.resize(Project::getNumMetatilesTotal());
 }
 
 QImage TilesetEditorMetatileSelector::buildAllMetatilesImage() {
-    // TODO: Add toggle to hide primary/secodary
-    QImage primaryImage = this->buildPrimaryMetatilesImage();
-    QImage secondaryImage = this->buildSecondaryMetatilesImage();
+    QImage primaryImage = this->showPrimary ? this->buildPrimaryMetatilesImage() : QImage();
+    QImage secondaryImage = this->showSecondary ? this->buildSecondaryMetatilesImage() : QImage();
+    if (primaryImage.isNull() && secondaryImage.isNull())
+        return QImage();
+
     QImage image(this->numMetatilesWide * mWidth, primaryImage.height() + secondaryImage.height(), QImage::Format_RGBA8888);
     image.fill(Qt::magenta);
     QPainter painter(&image);
@@ -50,44 +51,32 @@ QImage TilesetEditorMetatileSelector::buildImage(Tileset * tileset) {
     image.fill(Qt::magenta);
     QPainter painter(&image);
     for (int i = 0; i < tileset->metatiles.length(); i++) {
-        QImage metatile_image;
+        int layersDrawn = 0;
+        for (int layer = 0; layer < layerOpacities.length(); layer++) {
+            // TODO: Initialize layerOpacities using map->metatileLayerOpacity
+            // TODO: Respect render order specified by map->metatileLayerOrder
+            qreal opacity = layerOpacities.at(layer);
+            if (opacity == 0)
+                continue;
 
-        // TODO: Do this more gracefully
-        if (this->layerView == MetatileLayerView::Combined) {
-            metatile_image = getMetatileImage(
-                        tileset->metatiles.at(i),
-                        this->primaryTileset,
-                        this->secondaryTileset,
-                        map->metatileLayerOrder,
-                        map->metatileLayerOpacity,
-                        true)
-                    .scaled(mWidth, mHeight);
-        } else {
-            // TODO: Test triple layer metatiles
-            // TODO: Handle layer ghosts
-            const QHash<MetatileLayerView, int> viewToLayer = {
-                {MetatileLayerView::Bottom, 0},
-                {MetatileLayerView::Middle, 1},
-                {MetatileLayerView::Top, 2},
-            };
-            int layer = viewToLayer.value(this->layerView);
-            qreal opacity = map->metatileLayerOpacity.value(layer, 1.0);
-            metatile_image = getMetatileLayerImage(
-                        tileset->metatiles.at(i),
-                        layer,
-                        this->primaryTileset,
-                        this->secondaryTileset,
-                        opacity,
-                        false,
-                        true
-                    ).scaled(mWidth, mHeight);
+            QImage metatile_image = getMetatileLayerImage(
+                            tileset->metatiles.at(i),
+                            layer,
+                            this->primaryTileset,
+                            this->secondaryTileset,
+                            opacity,
+                            layersDrawn != 0, // allowTransparency
+                            true // useTruePalettes
+                        ).scaled(mWidth, mHeight);
+
+            int map_y = i / this->numMetatilesWide;
+            int map_x = i % this->numMetatilesWide;
+            QPoint metatile_origin = QPoint(map_x * mWidth, map_y * mHeight);
+            painter.drawImage(metatile_origin, metatile_image);
+            layersDrawn++;
         }
-
-        int map_y = i / this->numMetatilesWide;
-        int map_x = i % this->numMetatilesWide;
-        QPoint metatile_origin = QPoint(map_x * mWidth, map_y * mHeight);
-        painter.drawImage(metatile_origin, metatile_image);
     }
+
     if (this->showGrid) {
         for (int column = 0; column < this->numMetatilesWide; column++) {
             int x = column * mWidth;
@@ -102,6 +91,17 @@ QImage TilesetEditorMetatileSelector::buildImage(Tileset * tileset) {
     }
     painter.end();
     return image;
+}
+
+void TilesetEditorMetatileSelector::setLayerOpacity(int layer, qreal opacity) {
+    if (layer <= this->layerOpacities.length())
+        this->layerOpacities[layer] = qMax(0.0, qMin(opacity, 1.0));
+}
+
+void TilesetEditorMetatileSelector::setLayerOpacities(qreal bottom, qreal middle, qreal top) {
+    this->layerOpacities[0] = qMax(0.0, qMin(bottom, 1.0));
+    this->layerOpacities[1] = qMax(0.0, qMin(middle, 1.0));
+    this->layerOpacities[2] = qMax(0.0, qMin(top, 1.0));
 }
 
 void TilesetEditorMetatileSelector::draw() {

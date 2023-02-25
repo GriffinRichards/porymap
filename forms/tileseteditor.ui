@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>832</width>
+    <width>863</width>
     <height>700</height>
    </rect>
   </property>
@@ -245,14 +245,11 @@
             <property name="maximum">
              <number>100</number>
             </property>
-            <property name="sliderPosition">
-             <number>100</number>
-            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
             <property name="invertedAppearance">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -271,14 +268,11 @@
             <property name="maximum">
              <number>100</number>
             </property>
-            <property name="sliderPosition">
-             <number>100</number>
-            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
             <property name="invertedAppearance">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -297,14 +291,11 @@
             <property name="maximum">
              <number>100</number>
             </property>
-            <property name="sliderPosition">
-             <number>100</number>
-            </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
             </property>
             <property name="invertedAppearance">
-             <bool>true</bool>
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -330,23 +321,29 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_Hide">
+           <widget class="QLabel" name="label_Show">
             <property name="text">
-             <string>Hide</string>
+             <string>Show</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_HidePrimary">
+           <widget class="QCheckBox" name="checkBox_ShowPrimary">
             <property name="text">
              <string>Primary</string>
             </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBox_HideSecondary">
+           <widget class="QCheckBox" name="checkBox_ShowSecondary">
             <property name="text">
              <string>Secondary</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -646,8 +643,8 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>411</width>
-            <height>247</height>
+            <width>432</width>
+            <height>272</height>
            </rect>
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
@@ -739,7 +736,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>832</width>
+     <width>863</width>
      <height>22</height>
     </rect>
    </property>
@@ -801,8 +798,8 @@
      <addaction name="actionVertical"/>
     </widget>
     <addaction name="actionGrid"/>
-    <addaction name="actionHide_Primary_Metatiles"/>
-    <addaction name="actionHide_Secondary_Metatiles"/>
+    <addaction name="actionShow_Primary_Metatiles"/>
+    <addaction name="actionShow_Secondary_Metatiles"/>
     <addaction name="separator"/>
     <addaction name="menuLayer_View"/>
     <addaction name="menuLayer_Edit_Layout"/>
@@ -1007,20 +1004,26 @@
     <string>Vertical</string>
    </property>
   </action>
-  <action name="actionHide_Primary_Metatiles">
+  <action name="actionShow_Primary_Metatiles">
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Hide Primary Metatiles</string>
+    <string>Show Primary Metatiles</string>
    </property>
   </action>
-  <action name="actionHide_Secondary_Metatiles">
+  <action name="actionShow_Secondary_Metatiles">
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>Hide Secondary Metatiles</string>
+    <string>Show Secondary Metatiles</string>
    </property>
   </action>
  </widget>

@@ -10,6 +10,13 @@
 #include "metatilelayersitem.h"
 #include "map.h"
 
+enum MetatileLayerView {
+    Bottom,
+    Middle,
+    Top,
+    Combined,
+};
+
 namespace Ui {
 class TilesetEditor;
 }
@@ -119,6 +126,11 @@ private slots:
     void on_actionHorizontal_triggered();
     void on_actionVertical_triggered();
     void on_actionGrid_triggered(bool checked);
+    void on_checkBox_Grid_stateChanged(int selected);
+    void on_actionShow_Primary_Metatiles_triggered(bool checked);
+    void on_actionShow_Secondary_Metatiles_triggered(bool checked);
+    void on_checkBox_ShowPrimary_stateChanged(int selected);
+    void on_checkBox_ShowSecondary_stateChanged(int selected);
 
 private:
     void initUi();
@@ -149,6 +161,9 @@ private:
     void commitMetatileChange(Metatile * prevMetatile);
     void commitMetatileAndLabelChange(Metatile * prevMetatile, QString prevLabel);
     void setMetatileLayerView(MetatileLayerView view);
+    void setGridVisible(bool visible);
+    void setSliderLocked(QSlider * slider, QLabel * label, bool locked);
+    void setLayerOpacity(int layer, int sliderValue);
 
     Ui::TilesetEditor *ui;
     History<MetatileHistoryItem*> metatileHistory;

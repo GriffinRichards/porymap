@@ -5,13 +5,6 @@
 #include "tileset.h"
 #include "map.h"
 
-enum MetatileLayerView {
-    Bottom,
-    Middle,
-    Top,
-    Combined,
-};
-
 class TilesetEditorMetatileSelector: public SelectablePixmapItem {
     Q_OBJECT
 public:
@@ -25,12 +18,15 @@ public:
     QPoint getMetatileIdCoordsOnWidget(uint16_t metatileId);
     QImage buildPrimaryMetatilesImage();
     QImage buildSecondaryMetatilesImage();
+    void setLayerOpacity(int layer, qreal opacity);
+    void setLayerOpacities(qreal bottom, qreal middle, qreal top);
 
     QVector<uint16_t> usedMetatiles;
     bool selectorShowUnused = false;
     bool selectorShowCounts = false;
     bool showGrid = false;
-    MetatileLayerView layerView;
+    bool showPrimary = true;
+    bool showSecondary = true;
 
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent*);
@@ -44,6 +40,7 @@ private:
     Tileset *secondaryTileset = nullptr;
     uint16_t selectedMetatile;
     int numMetatilesWide;
+    QList<qreal> layerOpacities = {1.0, 1.0, 1.0};
     uint16_t getMetatileId(int x, int y);
     QPoint getMetatileIdCoords(uint16_t);
     bool shouldAcceptEvent(QGraphicsSceneMouseEvent*);

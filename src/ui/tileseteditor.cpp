@@ -102,7 +102,11 @@ void TilesetEditor::initUi() {
     connect(this->ui->radioButton_Middle,   &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Middle); });
     connect(this->ui->radioButton_Top,      &QRadioButton::clicked, [this](bool checked){ if (checked) this->setMetatileLayerView(MetatileLayerView::Top); });
 
-    this->ui->actionGrid->setChecked(porymapConfig.getTilesetEditorShowGrid());
+    connect(this->ui->slider_OpacityBottom, &QSlider::sliderMoved, [this](int value){ this->setLayerOpacity(0, value); });
+    connect(this->ui->slider_OpacityMiddle, &QSlider::sliderMoved, [this](int value){ this->setLayerOpacity(1, value); });
+    connect(this->ui->slider_OpacityTop,    &QSlider::sliderMoved, [this](int value){ this->setLayerOpacity(2, value); });
+
+    this->ui->checkBox_Grid->setChecked(porymapConfig.getTilesetEditorShowGrid());
 
     int layerEditLayout = porymapConfig.getTilesetEditorLayerEditLayout();
     this->ui->actionHorizontal->setChecked(layerEditLayout == 0);
@@ -198,10 +202,8 @@ void TilesetEditor::initMetatileSelector()
 
     // TODO: Remove config option
     //MetatileLayerView view = static_cast<MetatileLayerView>(porymapConfig.getTilesetEditorLayerView());
-    this->metatileSelector->layerView = MetatileLayerView::Combined;
-    this->setMetatileLayerView(this->metatileSelector->layerView);
     this->metatileSelector->showGrid = this->ui->actionGrid->isChecked();
-    this->metatileSelector->draw();
+    this->setMetatileLayerView(MetatileLayerView::Combined);
 
     this->ui->graphicsView_Metatiles->setScene(this->metatilesScene);
     this->ui->graphicsView_Metatiles->setFixedSize(this->metatileSelector->pixmap().width() + 2, this->metatileSelector->pixmap().height() + 2);
@@ -316,18 +318,14 @@ void TilesetEditor::refresh() {
     this->metatileSelector->select(this->getSelectedMetatileId());
     this->drawSelectedTiles();
 
-    if (metatileSelector) {
-        if (metatileSelector->selectorShowUnused || metatileSelector->selectorShowCounts) {
-            countMetatileUsage();
-            this->metatileSelector->draw();
-        }
+    if (this->metatileSelector->selectorShowUnused || this->metatileSelector->selectorShowCounts) {
+        countMetatileUsage();
+        this->metatileSelector->draw();
     }
 
-    if (tileSelector) {
-        if (tileSelector->showUnused) {
-            countTileUsage();
-            this->tileSelector->draw();
-        }
+    if (this->tileSelector->showUnused) {
+        countTileUsage();
+        this->tileSelector->draw();
     }
 
     this->ui->graphicsView_Tiles->setSceneRect(0, 0, this->tileSelector->pixmap().width() + 2, this->tileSelector->pixmap().height() + 2);
@@ -1185,11 +1183,24 @@ void TilesetEditor::on_copyButton_metatileLabel_clicked() {
     QToolTip::showText(this->ui->copyButton_metatileLabel->mapToGlobal(QPoint(0, 0)), "Copied!");
 }
 
-void TilesetEditor::setMetatileLayerView(MetatileLayerView view) {
-    if (this->metatileSelector->layerView != view) {
-        this->metatileSelector->layerView = view;
-        this->metatileSelector->draw();
+// Lock opacity slider at max when the corresponding layer view is active
+// (or unlock it and return it to its previous value when its not active)
+void TilesetEditor::setSliderLocked(QSlider * slider, QLabel * label, bool locked) {
+    if (locked) {
+        // Qt doesn't change the style of disabled sliders, so we do it ourselves
+        // TODO: Adjust handle style
+        slider->setValue(slider->maximum());
+        slider->setStyleSheet("QSlider::groove:horizontal {border: 1px solid #999999; border-radius: 3px; height: 2px; background: #B1B1B1;}"
+                              "QSlider::handle:horizontal {border: 1px solid #444444; border-radius: 3px; width: 10px; height: 9px; margin: -5px -1px; background: #5C5C5C; }");
+    } else {
+        slider->setValue(slider->minimum()); // TODO: Set original value
+        slider->setStyleSheet("");
     }
+    slider->setDisabled(locked);
+    label->setDisabled(locked);
+}
+
+void TilesetEditor::setMetatileLayerView(MetatileLayerView view) {
     porymapConfig.setTilesetEditorLayerView(static_cast<int>(view));
 
     // Update radio buttons
@@ -1209,7 +1220,25 @@ void TilesetEditor::setMetatileLayerView(MetatileLayerView view) {
     this->ui->actionMiddle->setChecked(view == MetatileLayerView::Middle);
     this->ui->actionTop->setChecked(view == MetatileLayerView::Top);
 
+    // Update opacity sliders
+    this->setSliderLocked(this->ui->slider_OpacityBottom, this->ui->label_OpacityBottom, view == MetatileLayerView::Combined || view == MetatileLayerView::Bottom);
+    this->setSliderLocked(this->ui->slider_OpacityMiddle, this->ui->label_OpacityMiddle, view == MetatileLayerView::Combined || view == MetatileLayerView::Middle);
+    this->setSliderLocked(this->ui->slider_OpacityTop,    this->ui->label_OpacityTop,    view == MetatileLayerView::Combined || view == MetatileLayerView::Top);
+
+    // Set opacity in metatile image
+    qreal opacityBottom = static_cast<double>(this->ui->slider_OpacityBottom->value()) / 100.0;
+    qreal opacityMiddle = static_cast<double>(this->ui->slider_OpacityMiddle->value()) / 100.0;
+    qreal opacityTop = static_cast<double>(this->ui->slider_OpacityTop->value()) / 100.0;
+    this->metatileSelector->setLayerOpacities(opacityBottom, opacityMiddle, opacityTop);
+    this->metatileSelector->draw();
+
     // TODO: Disable/reenable other parts of the UI as applicable
+}
+
+void TilesetEditor::setLayerOpacity(int layer, int sliderValue) {
+    qreal opacity = static_cast<double>(sliderValue) / 100.0;
+    this->metatileSelector->setLayerOpacity(layer, opacity);
+    this->metatileSelector->draw();
 }
 
 void TilesetEditor::on_actionCombined_triggered() {
@@ -1236,9 +1265,42 @@ void TilesetEditor::on_actionVertical_triggered() {
     // TODO
 }
 
+void TilesetEditor::setGridVisible(bool visible) {
+    if (!this->metatileSelector) return;
+    this->metatileSelector->showGrid = visible;
+    this->metatileSelector->draw();
+    porymapConfig.setTilesetEditorShowGrid(visible);
+}
+
 void TilesetEditor::on_actionGrid_triggered(bool checked) {
     this->ui->checkBox_Grid->setChecked(checked);
-    this->metatileSelector->showGrid = checked;
-    this->metatileSelector->draw();
-    porymapConfig.setTilesetEditorShowGrid(checked);
+}
+
+void TilesetEditor::on_checkBox_Grid_stateChanged(int selected) {
+    bool checked = selected == Qt::Checked;
+    this->ui->actionGrid->setChecked(checked);
+    this->setGridVisible(checked);
+}
+
+void TilesetEditor::on_actionShow_Primary_Metatiles_triggered(bool checked) {
+    this->ui->checkBox_ShowPrimary->setChecked(checked);
+}
+
+void TilesetEditor::on_actionShow_Secondary_Metatiles_triggered(bool checked) {
+    this->ui->checkBox_ShowSecondary->setChecked(checked);
+}
+
+// TODO: Visibility eye icon?
+void TilesetEditor::on_checkBox_ShowPrimary_stateChanged(int selected) {
+    bool checked = selected == Qt::Checked;
+    this->ui->actionShow_Primary_Metatiles->setChecked(checked);
+    this->metatileSelector->showPrimary = checked;
+    this->refresh();
+}
+
+void TilesetEditor::on_checkBox_ShowSecondary_stateChanged(int selected) {
+    bool checked = selected == Qt::Checked;
+    this->ui->actionShow_Secondary_Metatiles->setChecked(checked);
+    this->metatileSelector->showSecondary = checked;
+    this->refresh();
 }
