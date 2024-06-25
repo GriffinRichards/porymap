@@ -30,20 +30,33 @@ void Map::setName(QString mapName) {
     scriptsLoaded = false;
 }
 
-QString Map::mapConstantFromName(QString mapName, bool includePrefix) {
-    // Transform map names of the form 'GraniteCave_B1F` into map constants like 'MAP_GRANITE_CAVE_B1F'.
+// Transform map names of the form 'GraniteCave_B1F` into map constants like 'MAP_GRANITE_CAVE_B1F'.
+QString Map::mapConstantFromName(QString name, bool includePrefix) {
+    // Strip invalid characters
+    static const QRegularExpression re_invalidChars("[^a-zA-Z0-9_]+");
+    name.remove(re_invalidChars);
+
+    // Strip leading digits
+    static const QRegularExpression re_NaN("^[0-9]*");
+    name.remove(re_NaN);
+
+    // Insert underscores when the case changes
     static const QRegularExpression caseChange("([a-z])([A-Z])");
-    QString nameWithUnderscores = mapName.replace(caseChange, "\\1_\\2");
-    const QString prefix = includePrefix ? projectConfig.getIdentifier(ProjectIdentifier::define_map_prefix) : "";
-    QString withMapAndUppercase = prefix + nameWithUnderscores.toUpper();
+    name.replace(caseChange, "\\1_\\2");
+
+    name = name.toUpper();
+    if (includePrefix)
+        name.prepend(projectConfig.getIdentifier(ProjectIdentifier::define_map_prefix));
+
+    // Squash adjacent underscores
     static const QRegularExpression underscores("_+");
-    QString constantName = withMapAndUppercase.replace(underscores, "_");
+    name.replace(underscores, "_");
 
     // Handle special cases.
     // SSTidal needs to be SS_TIDAL, rather than SSTIDAL
-    constantName = constantName.replace("SSTIDAL", "SS_TIDAL");
+    name.replace("SSTIDAL", "SS_TIDAL");
 
-    return constantName;
+    return name;
 }
 
 int Map::getWidth() {

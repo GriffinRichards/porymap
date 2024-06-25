@@ -124,45 +124,94 @@ void NewMapPopup::init(MapLayout *mapLayout) {
     init();
 }
 
+void NewMapPopup::clearErrorMessage() {
+    ui->frame_NewMap_Warning->setVisible(false);
+    ui->label_NewMap_WarningMessage->clear();
+}
+
+// TODO: Either pick fully dynamic or fully static error messages.
+//       Ideally the former, to bring back the red highlight of the line edit
+void NewMapPopup::addErrorMessage(QString message) {
+    if (message.isEmpty())
+        return;
+
+    message.prepend("Error: ");
+
+    const QString curText = ui->label_NewMap_WarningMessage->text();
+    if (!curText.isEmpty())
+        message.prepend(QString("%1\n\n").arg(curText));
+
+    ui->label_NewMap_WarningMessage->setText(message);
+    ui->label_NewMap_WarningMessage->setWordWrap(true);
+    ui->frame_NewMap_Warning->setVisible(true);
+}
+
+bool NewMapPopup::hasErrorMessage() {
+    return ui->frame_NewMap_Warning->isVisible();
+}
+
 bool NewMapPopup::checkNewMapDimensions() {
     int numMetatiles = project->getMapDataSize(ui->spinBox_NewMap_Width->value(), ui->spinBox_NewMap_Height->value());
     int maxMetatiles = project->getMaxMapDataSize();
 
     if (numMetatiles > maxMetatiles) {
-        ui->frame_NewMap_Warning->setVisible(true);
-        QString errorText = QString("Error: The specified width and height are too large.\n"
-                    "The maximum map width and height is the following: (width + 15) * (height + 14) <= %1\n"
-                    "The specified map width and height was: (%2 + 15) * (%3 + 14) = %4")
+        addErrorMessage(QString("The specified width and height are too large.\n"
+                            "The maximum map width and height is the following: (width + 15) * (height + 14) <= %1\n"
+                            "The specified map width and height was: (%2 + 15) * (%3 + 14) = %4")
                         .arg(maxMetatiles)
                         .arg(ui->spinBox_NewMap_Width->value())
                         .arg(ui->spinBox_NewMap_Height->value())
-                        .arg(numMetatiles);
-        ui->label_NewMap_WarningMessage->setText(errorText);
-        ui->label_NewMap_WarningMessage->setWordWrap(true);
+                        .arg(numMetatiles));
         return false;
     }
-    else {
-        ui->frame_NewMap_Warning->setVisible(false);
-        ui->label_NewMap_WarningMessage->clear();
-        return true;
-    }
+    return true;
 }
 
 bool NewMapPopup::checkNewMapGroup() {
-    group = project->groupNames.indexOf(this->ui->comboBox_NewMap_Group->currentText());
+    const QString name = this->ui->comboBox_NewMap_Group->currentText();
 
-    if (group < 0) {
-        ui->frame_NewMap_Warning->setVisible(true);
-        QString errorText = QString("Error: The specified map group '%1' does not exist.")
-                        .arg(ui->comboBox_NewMap_Group->currentText());
-        ui->label_NewMap_WarningMessage->setText(errorText);
-        ui->label_NewMap_WarningMessage->setWordWrap(true);
+    if (name.isEmpty()) {
+        addErrorMessage("Map group name cannot be empty.");
         return false;
-    } else {
-        ui->frame_NewMap_Warning->setVisible(false);
-        ui->label_NewMap_WarningMessage->clear();
-        return true;
     }
+
+    if (project->groupNames.indexOf(name) < 0) {
+        addErrorMessage(QString("The specified map group '%1' does not exist.").arg(name));
+        return false;
+    }
+
+    return true;
+}
+
+bool NewMapPopup::checkNewMapName() {
+    const QString name = this->ui->lineEdit_NewMap_Name->text();
+
+    if (name.isEmpty()) {
+        addErrorMessage("Map name cannot be empty.");
+        return false;
+    }
+
+    // Must not contain characters invalid for a directory name
+    // TODO:
+    if (false) {
+        addErrorMessage(QString("The map name '%1' contains invalid characters.").arg(name));
+        return false;
+    }
+
+    // Name must be unique
+    if (project->mapNames.contains(name)) {
+        addErrorMessage(QString("A map with the name '%1' already exists.").arg(name));
+        return false;
+    }
+
+    // Map constant generated from the name must be unique
+    const QString constant = Map::mapConstantFromName(name);
+    if (project->mapConstantsToMapNames.keys().contains(constant)) {
+        addErrorMessage(QString("A map with the constant '%1' already exists.").arg(constant));
+        return false;
+    }
+
+    return true;
 }
 
 void NewMapPopup::setDefaultSettings(Project *project) {
@@ -227,33 +276,19 @@ void NewMapPopup::useLayout(QString layoutId) {
     ui->comboBox_NewMap_Secondary_Tileset->setDisabled(true);
 }
 
-void NewMapPopup::on_lineEdit_NewMap_Name_textChanged(const QString &text) {
-    if (project->mapNames.contains(text)) {
-        this->ui->lineEdit_NewMap_Name->setStyleSheet("QLineEdit { background-color: rgba(255, 0, 0, 25%) }");
-    } else {
-        this->ui->lineEdit_NewMap_Name->setStyleSheet("");
-    }
-}
+// TODO: Show MAP_ constant preview
 
 void NewMapPopup::on_pushButton_NewMap_Accept_clicked() {
-    if (!checkNewMapDimensions() || !checkNewMapGroup()) {
-        // ignore when map dimensions or map group are invalid
+    // Verify settings. Allow all checks to run so that user sees all errors at once (if any)
+    clearErrorMessage();
+    checkNewMapName();
+    checkNewMapGroup();
+    checkNewMapDimensions();
+    if (hasErrorMessage())
         return;
-    }
+
     Map *newMap = new Map;
-    MapLayout *layout;
-
-    // If map name is not unique, use default value. Also use only valid characters.
-    // After stripping invalid characters, strip any leading digits.
-    static const QRegularExpression re_invalidChars("[^a-zA-Z0-9_]+");
-    QString newMapName = this->ui->lineEdit_NewMap_Name->text().remove(re_invalidChars);
-    static const QRegularExpression re_NaN("^[0-9]*");
-    newMapName.remove(re_NaN);
-    if (project->mapNames.contains(newMapName) || newMapName.isEmpty()) {
-        newMapName = project->getNewMapName();
-    }
-
-    newMap->name = newMapName;
+    newMap->name = this->ui->lineEdit_NewMap_Name->text();
     newMap->type = this->ui->comboBox_NewMap_Type->currentText();
     newMap->location = this->ui->comboBox_NewMap_Location->currentText();
     newMap->song = this->ui->comboBox_NewMap_Song->currentText();
@@ -262,12 +297,13 @@ void NewMapPopup::on_pushButton_NewMap_Accept_clicked() {
     newMap->show_location = this->ui->checkBox_NewMap_Show_Location->isChecked();
     newMap->battle_scene = this->project->mapBattleScenes.value(0, "0");
 
+    MapLayout *layout;
     if (this->existingLayout) {
         layout = this->project->mapLayouts.value(this->layoutId);
         newMap->needsLayoutDir = false;
     } else {
         layout = new MapLayout;
-        layout->id = MapLayout::layoutConstantFromName(newMapName);
+        layout->id = MapLayout::layoutConstantFromName(newMap->name);
         layout->name = QString("%1_Layout").arg(newMap->name);
         layout->width = this->ui->spinBox_NewMap_Width->value();
         layout->height = this->ui->spinBox_NewMap_Height->value();
@@ -281,8 +317,8 @@ void NewMapPopup::on_pushButton_NewMap_Accept_clicked() {
         layout->tileset_primary_label = this->ui->comboBox_NewMap_Primary_Tileset->currentText();
         layout->tileset_secondary_label = this->ui->comboBox_NewMap_Secondary_Tileset->currentText();
         QString basePath = projectConfig.getFilePath(ProjectFilePath::data_layouts_folders);
-        layout->border_path = QString("%1%2/border.bin").arg(basePath, newMapName);
-        layout->blockdata_path = QString("%1%2/map.bin").arg(basePath, newMapName);
+        layout->border_path = QString("%1%2/border.bin").arg(basePath, newMap->name);
+        layout->blockdata_path = QString("%1%2/map.bin").arg(basePath, newMap->name);
     }
 
     if (this->importedMap) {

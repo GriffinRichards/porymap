@@ -35,6 +35,10 @@ private:
     Project *project;
     bool checkNewMapDimensions();
     bool checkNewMapGroup();
+    bool checkNewMapName();
+    void clearErrorMessage();
+    void addErrorMessage(QString message);
+    bool hasErrorMessage();
     void saveSettings();
     void useLayout(QString layoutId);
     void useLayoutSettings(MapLayout *mapLayout);
@@ -61,7 +65,6 @@ private:
 
 private slots:
     void on_pushButton_NewMap_Accept_clicked();
-    void on_lineEdit_NewMap_Name_textChanged(const QString &);
 };
 
 #endif // NEWMAPPOPUP_H
