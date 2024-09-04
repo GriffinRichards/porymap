@@ -21,7 +21,13 @@ QMAKE_TARGET_BUNDLE_PREFIX = com.pret
 VERSION = 5.4.1
 DEFINES += PORYMAP_VERSION=\\\"$$VERSION\\\"
 
-SOURCES += src/core/block.cpp \
+SOURCES += src/config/config.cpp \
+    src/config/legacyconfig.cpp \
+    src/config/porymapconfig.cpp \
+    src/config/projectconfig.cpp \
+    src/config/shortcutsconfig.cpp \
+    src/config/userconfig.cpp \
+    src/core/block.cpp \
     src/core/bitpacker.cpp \
     src/core/blockdata.cpp \
     src/core/events.cpp \
@@ -106,7 +112,6 @@ SOURCES += src/core/block.cpp \
     src/ui/preferenceeditor.cpp \
     src/ui/regionmappropertiesdialog.cpp \
     src/ui/colorpicker.cpp \
-    src/config.cpp \
     src/editor.cpp \
     src/main.cpp \
     src/mainwindow.cpp \
