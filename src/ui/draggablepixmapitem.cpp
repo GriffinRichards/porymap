@@ -123,7 +123,7 @@ void DraggablePixmapItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *) {
         const QString mapPrefix = projectConfig.getIdentifier(ProjectIdentifier::define_map_prefix);
         SecretBaseEvent *base = dynamic_cast<SecretBaseEvent *>(this->event);
         QString baseId = base->getBaseID();
-        QString destMap = editor->project->mapConstantsToMapNames.value(mapPrefix + baseId.left(baseId.lastIndexOf("_")));
+        QString destMap = editor->project->mapConstantToMapName.value(mapPrefix + baseId.left(baseId.lastIndexOf("_")));
         emit editor->warpEventDoubleClicked(destMap, 0, Event::Group::Warp);
     }
 }

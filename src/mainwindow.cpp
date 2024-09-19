@@ -1185,7 +1185,7 @@ void MainWindow::sortMapList() {
                 for (int j = 0; j < names.length(); j++) {
                     QString map_name = names.value(j);
                     QStandardItem *map = createMapItem(map_name, i, j);
-                    QString location = project->readMapLocation(map_name);
+                    QString location = project->mapNameToMapSectionName.value(map_name);
                     QStandardItem *mapsecItem = mapGroupItemsList->at(mapsecToGroupNum[location]);
                     mapsecItem->setIcon(mapFolderIcon);
                     mapsecItem->appendRow(map);
@@ -1217,7 +1217,7 @@ void MainWindow::sortMapList() {
                 for (int j = 0; j < names.length(); j++) {
                     QString map_name = names.value(j);
                     QStandardItem *map = createMapItem(map_name, i, j);
-                    QString layoutId = project->readMapLayoutId(map_name);
+                    QString layoutId = project->mapNameToLayoutId.value(map_name);
                     QStandardItem *layoutItem = mapGroupItemsList->at(layoutIndices.value(layoutId));
                     layoutItem->setIcon(mapFolderIcon);
                     layoutItem->appendRow(map);

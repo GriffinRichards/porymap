@@ -18,6 +18,7 @@
 #include <QVariant>
 #include <QFileSystemWatcher>
 
+// TODO: Expose to config
 // The displayed name of the special map value used by warps with multiple potential destinations
 static QString DYNAMIC_MAP_NAME = "Dynamic";
 
@@ -41,8 +42,10 @@ public:
     QStringList mapNames;
     QList<HealLocation> healLocations;
     QMap<QString, int> healLocationNameToValue;
-    QMap<QString, QString> mapConstantsToMapNames;
-    QMap<QString, QString> mapNamesToMapConstants;
+    QMap<QString, QString> mapConstantToMapName;
+    QMap<QString, QString> mapNameToMapConstant;
+    QMap<QString, QString> mapNameToLayoutId;
+    QMap<QString, QString> mapNameToMapSectionName;
     QStringList mapLayoutsTable;
     QStringList mapLayoutsTableMaster;
     QString layoutsLabel;
@@ -128,9 +131,6 @@ public:
     QString getNewMapName();
     QString getProjectTitle();
 
-    QString readMapLayoutId(QString map_name);
-    QString readMapLocation(QString map_name);
-
     bool readWildMonData();
     tsl::ordered_map<QString, tsl::ordered_map<QString, WildPokemonHeader>> wildMonData;
 
@@ -142,6 +142,7 @@ public:
     QMap<QString, QString> speciesToIconPath;
 
     QSet<QString> getTopLevelMapFields();
+    bool readMapJson(const QString &mapName, QJsonDocument * out);
     bool loadMapData(Map*);
     bool readMapLayouts();
     bool loadLayout(MapLayout *);

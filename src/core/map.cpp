@@ -22,9 +22,9 @@ Map::~Map() {
     deleteConnections();
 }
 
-void Map::setName(QString mapName) {
+void Map::setName(QString mapName, QString id) {
     name = mapName;
-    constantName = mapConstantFromName(mapName);
+    constantName = id;
     scriptsLoaded = false;
 }
 
