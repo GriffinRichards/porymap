@@ -1283,32 +1283,31 @@ void MainWindow::onOpenMapListContextMenu(const QPoint &point)
 
 void MainWindow::onAddNewMapToGroupClick(QAction* triggeredAction)
 {
-    openNewMapPopupWindow();
-    this->newMapPrompt->init(MapSortOrder::Group, triggeredAction->data());
+    openNewMapWindow();
+    this->newMapDialog->init(MapSortOrder::Group, triggeredAction->data());
 }
 
 void MainWindow::onAddNewMapToAreaClick(QAction* triggeredAction)
 {
-    openNewMapPopupWindow();
-    this->newMapPrompt->init(MapSortOrder::Area, triggeredAction->data());
+    openNewMapWindow();
+    this->newMapDialog->init(MapSortOrder::Area, triggeredAction->data());
 }
 
 void MainWindow::onAddNewMapToLayoutClick(QAction* triggeredAction)
 {
-    openNewMapPopupWindow();
-    this->newMapPrompt->init(MapSortOrder::Layout, triggeredAction->data());
+    openNewMapWindow();
+    this->newMapDialog->init(MapSortOrder::Layout, triggeredAction->data());
 }
 
 void MainWindow::onNewMapCreated() {
-    QString newMapName = this->newMapPrompt->map->name;
-    int newMapGroup = this->newMapPrompt->group;
-    Map *newMap = this->newMapPrompt->map;
-    bool existingLayout = this->newMapPrompt->existingLayout;
-    bool importedMap = this->newMapPrompt->importedMap;
+    int newMapGroup = this->newMapDialog->group;
+    Map *newMap = this->newMapDialog->map;
+    bool existingLayout = this->newMapDialog->existingLayout;
+    bool importedMap = this->newMapDialog->importedMap;
 
-    newMap = editor->project->addNewMapToGroup(newMapName, newMapGroup, newMap, existingLayout, importedMap);
+    newMap = editor->project->addNewMapToGroup(newMap, newMapGroup, existingLayout, importedMap);
 
-    logInfo(QString("Created a new map named %1.").arg(newMapName));
+    logInfo(QString("Created a new map named %1.").arg(newMap->name));
 
     editor->project->saveMap(newMap);
     editor->project->saveAllDataStructures();
@@ -1316,21 +1315,21 @@ void MainWindow::onNewMapCreated() {
     QStandardItem* groupItem = mapGroupItemsList->at(newMapGroup);
     int numMapsInGroup = groupItem->rowCount();
 
-    QStandardItem *newMapItem = createMapItem(newMapName, newMapGroup, numMapsInGroup);
+    QStandardItem *newMapItem = createMapItem(newMap->name, newMapGroup, numMapsInGroup);
     groupItem->appendRow(newMapItem);
-    mapListIndexes.insert(newMapName, newMapItem->index());
+    mapListIndexes.insert(newMap->name, newMapItem->index());
 
     sortMapList();
-    setMap(newMapName, true);
+    setMap(newMap->name, true);
 
     // Refresh any combo box that displays map names and persists between maps
     // (other combo boxes like for warp destinations are repopulated when the map changes).
-    int index = this->editor->project->mapNames.indexOf(newMapName);
+    int index = this->editor->project->mapNames.indexOf(newMap->name);
     if (index >= 0) {
         const QSignalBlocker blocker1(ui->comboBox_DiveMap);
         const QSignalBlocker blocker2(ui->comboBox_EmergeMap);
-        ui->comboBox_DiveMap->insertItem(index, newMapName);
-        ui->comboBox_EmergeMap->insertItem(index, newMapName);
+        ui->comboBox_DiveMap->insertItem(index, newMap->name);
+        ui->comboBox_EmergeMap->insertItem(index, newMap->name);
     }
 
     if (newMap->needsHealLocation) {
@@ -1339,26 +1338,26 @@ void MainWindow::onNewMapCreated() {
         editor->save();
     }
 
-    disconnect(this->newMapPrompt, &NewMapPopup::applied, this, &MainWindow::onNewMapCreated);
+    disconnect(this->newMapDialog, &NewMapDialog::applied, this, &MainWindow::onNewMapCreated);
     delete newMap;
 }
 
-void MainWindow::openNewMapPopupWindow() {
+void MainWindow::openNewMapWindow() {
     if (!this->newMapDefaultsSet) {
-        NewMapPopup::setDefaultSettings(this->editor->project);
+        NewMapDialog::setDefaultSettings(this->editor->project);
         this->newMapDefaultsSet = true;
     }
-    if (!this->newMapPrompt) {
-        this->newMapPrompt = new NewMapPopup(this, this->editor->project);
-        connect(this->newMapPrompt, &NewMapPopup::applied, this, &MainWindow::onNewMapCreated);
+    if (!this->newMapDialog) {
+        this->newMapDialog = new NewMapDialog(this, this->editor->project);
+        connect(this->newMapDialog, &NewMapDialog::applied, this, &MainWindow::onNewMapCreated);
     }
 
-    openSubWindow(this->newMapPrompt);
+    openSubWindow(this->newMapDialog);
 }
 
 void MainWindow::on_action_NewMap_triggered() {
-    openNewMapPopupWindow();
-    this->newMapPrompt->init();
+    openNewMapWindow();
+    this->newMapDialog->init();
 }
 
 // Insert label for newly-created tileset into sorted list of existing labels
@@ -2595,8 +2594,8 @@ void MainWindow::importMapFromAdvanceMap1_92()
         return;
     }
 
-    openNewMapPopupWindow();
-    this->newMapPrompt->init(mapLayout);
+    openNewMapWindow();
+    this->newMapDialog->init(mapLayout);
 }
 
 void MainWindow::showExportMapImageWindow(ImageExporterMode mode) {
@@ -3079,9 +3078,9 @@ bool MainWindow::closeSupplementaryWindows() {
         return false;
     this->mapImageExporter = nullptr;
 
-    if (this->newMapPrompt && !this->newMapPrompt->close())
+    if (this->newMapDialog && !this->newMapDialog->close())
         return false;
-    this->newMapPrompt = nullptr;
+    this->newMapDialog = nullptr;
 
     if (this->shortcutsEditor && !this->shortcutsEditor->close())
         return false;

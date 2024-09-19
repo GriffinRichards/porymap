@@ -21,7 +21,7 @@
 #include "regionmapeditor.h"
 #include "mapimageexporter.h"
 #include "filterchildrenproxymodel.h"
-#include "newmappopup.h"
+#include "newmapdialog.h"
 #include "newtilesetdialog.h"
 #include "shortcutseditor.h"
 #include "preferenceeditor.h"
@@ -183,7 +183,7 @@ private slots:
     void onOpenConnectedMap(MapConnection*);
     void onMapNeedsRedrawing();
     void onTilesetsSaved(QString, QString);
-    void openNewMapPopupWindow();
+    void openNewMapWindow();
     void onNewMapCreated();
     void onMapCacheCleared();
     void onMapLoaded(Map *map);
@@ -313,7 +313,7 @@ private:
     QPointer<RegionMapEditor> regionMapEditor = nullptr;
     QPointer<ShortcutsEditor> shortcutsEditor = nullptr;
     QPointer<MapImageExporter> mapImageExporter = nullptr;
-    QPointer<NewMapPopup> newMapPrompt = nullptr;
+    QPointer<NewMapDialog> newMapDialog = nullptr;
     QPointer<PreferenceEditor> preferenceEditor = nullptr;
     QPointer<ProjectSettingsEditor> projectSettingsEditor = nullptr;
     QPointer<CustomScriptsEditor> customScriptsEditor = nullptr;
