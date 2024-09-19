@@ -261,7 +261,6 @@ enum ProjectFilePath {
     data_pokemon_gfx,
     data_heal_locations,
     constants_global,
-    constants_map_groups,
     constants_items,
     constants_flags,
     constants_vars,

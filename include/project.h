@@ -164,7 +164,6 @@ public:
     void saveMapLayouts();
     void saveMapGroups();
     void saveWildMonData();
-    void saveMapConstantsHeader();
     void saveHealLocations(Map*);
     void saveTilesets(Tileset*, Tileset*);
     void saveTilesetMetatileLabels(Tileset*, Tileset*);
