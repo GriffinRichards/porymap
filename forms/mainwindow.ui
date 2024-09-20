@@ -260,7 +260,7 @@
            </sizepolicy>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <property name="movable" stdset="0">
            <bool>false</bool>
@@ -1193,8 +1193,8 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>91</width>
-                          <height>512</height>
+                          <width>428</width>
+                          <height>591</height>
                          </rect>
                         </property>
                         <layout class="QGridLayout" name="gridLayout_7">
@@ -1413,8 +1413,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>93</width>
-                             <height>460</height>
+                             <width>383</width>
+                             <height>702</height>
                             </rect>
                            </property>
                            <layout class="QVBoxLayout" name="verticalLayout_14">
@@ -1715,7 +1715,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>100</width>
-                             <height>16</height>
+                             <height>30</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -1809,7 +1809,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>100</width>
-                             <height>16</height>
+                             <height>30</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -1903,7 +1903,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>100</width>
-                             <height>16</height>
+                             <height>30</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -2003,7 +2003,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>100</width>
-                             <height>16</height>
+                             <height>30</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -2097,7 +2097,7 @@
                              <x>0</x>
                              <y>0</y>
                              <width>100</width>
-                             <height>16</height>
+                             <height>30</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -2681,8 +2681,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>204</width>
-                        <height>16</height>
+                        <width>367</width>
+                        <height>648</height>
                        </rect>
                       </property>
                       <layout class="QVBoxLayout" name="layout_ConnectionsList">

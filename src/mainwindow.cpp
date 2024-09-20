@@ -83,12 +83,28 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    // Some config settings are updated as subwindows are destroyed (e.g. their geometry),
+    // so we need to ensure that the configs are saved after this happens.
+    saveGlobalConfigs();
+
     delete label_MapRulerStatus;
     delete editor;
     delete mapListProxyModel;
     delete mapGroupItemsList;
     delete mapListModel;
     delete ui;
+}
+
+void MainWindow::saveGlobalConfigs() {
+    porymapConfig.setMainGeometry(
+        this->saveGeometry(),
+        this->saveState(),
+        this->ui->splitter_map->saveState(),
+        this->ui->splitter_main->saveState(),
+        this->ui->splitter_Metatiles->saveState()
+    );
+    porymapConfig.save();
+    shortcutsConfig.save();
 }
 
 void MainWindow::setWindowDisabled(bool disabled) {
@@ -1440,6 +1456,7 @@ void MainWindow::on_action_Save_Project_triggered() {
     editor->saveProject();
     updateMapList();
     showWindowTitle();
+    saveGlobalConfigs();
 }
 
 void MainWindow::on_action_Save_triggered() {
@@ -1447,6 +1464,7 @@ void MainWindow::on_action_Save_triggered() {
     if (editor->map)
         updateMapListIcon(editor->map->name);
     showWindowTitle();
+    saveGlobalConfigs();
 }
 
 void MainWindow::duplicate() {
@@ -2999,24 +3017,9 @@ bool MainWindow::closeProject() {
     return true;
 }
 
-void MainWindow::saveGlobalConfigs() {
-    porymapConfig.setMainGeometry(
-        this->saveGeometry(),
-        this->saveState(),
-        this->ui->splitter_map->saveState(),
-        this->ui->splitter_main->saveState(),
-        this->ui->splitter_Metatiles->saveState()
-    );
-    porymapConfig.save();
-    shortcutsConfig.save();
-}
-
 void MainWindow::on_action_Exit_triggered() {
     if (!closeProject())
         return;
-
-    saveGlobalConfigs();
-
     QApplication::quit();
 }
 
@@ -3025,8 +3028,5 @@ void MainWindow::closeEvent(QCloseEvent *event) {
         event->ignore();
         return;
     }
-
-    saveGlobalConfigs();
-
     QMainWindow::closeEvent(event);
 }

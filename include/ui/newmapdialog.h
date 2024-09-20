@@ -7,6 +7,7 @@
 #include "project.h"
 #include "map.h"
 #include "mapheaderform.h"
+#include "lib/collapsiblesection.h"
 
 namespace Ui {
 class NewMapDialog;
@@ -34,6 +35,7 @@ signals:
 private:
     Ui::NewMapDialog *ui;
     Project *project;
+    CollapsibleSection *headerSection;
     MapHeaderForm *headerData;
 
     bool validateMapDimensions();
