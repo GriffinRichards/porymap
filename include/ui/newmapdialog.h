@@ -6,6 +6,7 @@
 #include "editor.h"
 #include "project.h"
 #include "map.h"
+#include "mapheaderform.h"
 
 namespace Ui {
 class NewMapDialog;
@@ -33,6 +34,7 @@ signals:
 private:
     Ui::NewMapDialog *ui;
     Project *project;
+    MapHeaderForm *headerData;
 
     bool validateMapDimensions();
     bool validateMapGroup();
