@@ -97,26 +97,7 @@ public:
         return (group == Event::Group::Warp) ? 0 : 1;
     }
 
-    static Event::Group typeToGroup(Event::Type type) {
-        switch (type) {
-        case Event::Type::Object:
-        case Event::Type::CloneObject:
-            return Event::Group::Object;
-        case Event::Type::Warp:
-            return Event::Group::Warp;
-        case Event::Type::Trigger:
-        case Event::Type::WeatherTrigger:
-            return Event::Group::Coord;
-        case Event::Type::Sign:
-        case Event::Type::HiddenItem:
-        case Event::Type::SecretBase:
-            return Event::Group::Bg;
-        case Event::Type::HealLocation:
-            return Event::Group::Heal;
-        default:
-            return Event::Group::None;
-        }
-    }
+    static Event::Group typeToGroup(Event::Type type);
 
     static Event* create(Event::Type type);
 
@@ -154,24 +135,24 @@ public:
     Event::Group getEventGroup() const { return this->eventGroup; }
     Event::Type getEventType() const { return this->eventType; }
 
-    virtual OrderedJson::object buildEventJson(Project *project) = 0;
+    virtual OrderedJson::object buildEventJson(Project *project) const = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) = 0;
 
     virtual void setDefaultValues(Project *project);
 
     virtual QSet<QString> getExpectedFields() = 0;
     void readCustomValues(QJsonObject values);
-    void addCustomValuesTo(OrderedJson::object *obj);
-    const QMap<QString, QJsonValue> getCustomValues() { return this->customValues; }
+    void addCustomValuesTo(OrderedJson::object *obj) const;
+    const QMap<QString, QJsonValue> getCustomValues() const { return this->customValues; }
     void setCustomValues(const QMap<QString, QJsonValue> newCustomValues) { this->customValues = newCustomValues; }
 
     virtual void loadPixmap(Project *project);
 
     void setPixmap(QPixmap newPixmap) { this->pixmap = newPixmap; }
-    QPixmap getPixmap() { return this->pixmap; }
+    QPixmap getPixmap() const { return this->pixmap; }
 
     void setPixmapItem(DraggablePixmapItem *item);
-    DraggablePixmapItem *getPixmapItem() { return this->pixmapItem; }
+    DraggablePixmapItem *getPixmapItem() const { return this->pixmapItem; }
 
     void setUsingSprite(bool newUsingSprite) { this->usingSprite = newUsingSprite; }
     bool getUsingSprite() const { return this->usingSprite; }
@@ -233,7 +214,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -243,28 +224,28 @@ public:
     virtual void loadPixmap(Project *project) override;
 
     void setGfx(QString newGfx) { this->gfx = newGfx; }
-    QString getGfx() { return this->gfx; }
+    QString getGfx() const { return this->gfx; }
 
     void setMovement(QString newMovement) { this->movement = newMovement; }
-    QString getMovement() { return this->movement; }
+    QString getMovement() const { return this->movement; }
 
     void setRadiusX(int newRadiusX) { this->radiusX = newRadiusX; }
-    int getRadiusX() { return this->radiusX; }
+    int getRadiusX() const { return this->radiusX; }
 
     void setRadiusY(int newRadiusY) { this->radiusY = newRadiusY; }
-    int getRadiusY() { return this->radiusY; }
+    int getRadiusY() const { return this->radiusY; }
 
     void setTrainerType(QString newTrainerType) { this->trainerType = newTrainerType; }
-    QString getTrainerType() { return this->trainerType; }
+    QString getTrainerType() const { return this->trainerType; }
 
     void setSightRadiusBerryTreeID(QString newValue) { this->sightRadiusBerryTreeID = newValue; }
-    QString getSightRadiusBerryTreeID() { return this->sightRadiusBerryTreeID; }
+    QString getSightRadiusBerryTreeID() const { return this->sightRadiusBerryTreeID; }
 
     void setScript(QString newScript) { this->script = newScript; }
-    QString getScript() { return this->script; }
+    QString getScript() const { return this->script; }
 
     void setFlag(QString newFlag) { this->flag = newFlag; }
-    QString getFlag() { return this->flag; }
+    QString getFlag() const { return this->flag; }
 
 public:
     void setFrameFromMovement(QString movement);
@@ -304,7 +285,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -314,10 +295,10 @@ public:
     virtual void loadPixmap(Project *project) override;
 
     void setTargetMap(QString newTargetMap) { this->targetMap = newTargetMap; }
-    QString getTargetMap() { return this->targetMap; }
+    QString getTargetMap() const { return this->targetMap; }
 
     void setTargetID(int newTargetID) { this->targetID = newTargetID; }
-    int getTargetID() { return this->targetID; }
+    int getTargetID() const { return this->targetID; }
 
 private:
     QString targetMap;
@@ -342,7 +323,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -350,10 +331,10 @@ public:
     virtual QSet<QString> getExpectedFields() override;
 
     void setDestinationMap(QString newDestinationMap) { this->destinationMap = newDestinationMap; }
-    QString getDestinationMap() { return this->destinationMap; }
+    QString getDestinationMap() const { return this->destinationMap; }
 
     void setDestinationWarpID(QString newDestinationWarpID) { this->destinationWarpID = newDestinationWarpID; }
-    QString getDestinationWarpID() { return this->destinationWarpID; }
+    QString getDestinationWarpID() const { return this->destinationWarpID; }
 
     void setWarningEnabled(bool enabled);
 
@@ -377,7 +358,7 @@ public:
 
     virtual EventFrame *createEventFrame() override = 0;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override = 0;
+    virtual OrderedJson::object buildEventJson(Project *project) const override = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
 
     virtual void setDefaultValues(Project *project) override = 0;
@@ -405,7 +386,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -413,13 +394,13 @@ public:
     virtual QSet<QString> getExpectedFields() override;
 
     void setScriptVar(QString newScriptVar) { this->scriptVar = newScriptVar; }
-    QString getScriptVar() { return this->scriptVar; }
+    QString getScriptVar() const { return this->scriptVar; }
 
     void setScriptVarValue(QString newScriptVarValue) { this->scriptVarValue = newScriptVarValue; }
-    QString getScriptVarValue() { return this->scriptVarValue; }
+    QString getScriptVarValue() const { return this->scriptVarValue; }
 
     void setScriptLabel(QString newScriptLabel) { this->scriptLabel = newScriptLabel; }
-    QString getScriptLabel() { return this->scriptLabel; }
+    QString getScriptLabel() const { return this->scriptLabel; }
 
 private:
     QString scriptVar;
@@ -445,7 +426,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -453,7 +434,7 @@ public:
     virtual QSet<QString> getExpectedFields() override;
 
     void setWeather(QString newWeather) { this->weather = newWeather; }
-    QString getWeather() { return this->weather; }
+    QString getWeather() const { return this->weather; }
 
 private:
     QString weather;
@@ -476,7 +457,7 @@ public:
 
     virtual EventFrame *createEventFrame() override = 0;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override = 0;
+    virtual OrderedJson::object buildEventJson(Project *project) const override = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
 
     virtual void setDefaultValues(Project *project) override = 0;
@@ -503,7 +484,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -511,10 +492,10 @@ public:
     virtual QSet<QString> getExpectedFields() override;
 
     void setFacingDirection(QString newFacingDirection) { this->facingDirection = newFacingDirection; }
-    QString getFacingDirection() { return this->facingDirection; }
+    QString getFacingDirection() const { return this->facingDirection; }
 
     void setScriptLabel(QString newScriptLabel) { this->scriptLabel = newScriptLabel; }
-    QString getScriptLabel() { return this->scriptLabel; }
+    QString getScriptLabel() const { return this->scriptLabel; }
 
 private:
     QString facingDirection;
@@ -538,7 +519,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -546,16 +527,16 @@ public:
     virtual QSet<QString> getExpectedFields() override;
 
     void setItem(QString newItem) { this->item = newItem; }
-    QString getItem() { return this->item; }
+    QString getItem() const { return this->item; }
 
     void setFlag(QString newFlag) { this->flag = newFlag; }
-    QString getFlag() { return this->flag; }
+    QString getFlag() const { return this->flag; }
 
     void setQuantity(int newQuantity) { this->quantity = newQuantity; }
-    int getQuantity() { return this->quantity; }
+    int getQuantity() const { return this->quantity; }
 
     void setUnderfoot(bool newUnderfoot) { this->underfoot = newUnderfoot; }
-    bool getUnderfoot() { return this->underfoot; }
+    bool getUnderfoot() const { return this->underfoot; }
 
 private:
     QString item;
@@ -583,7 +564,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -591,7 +572,7 @@ public:
     virtual QSet<QString> getExpectedFields() override;
 
     void setBaseID(QString newBaseID) { this->baseID = newBaseID; }
-    QString getBaseID() { return this->baseID; }
+    QString getBaseID() const { return this->baseID; }
 
 private:
     QString baseID;
@@ -611,38 +592,30 @@ public:
     }
     virtual ~HealLocationEvent() {}
 
-    virtual Event *duplicate() override { return nullptr; }
+    virtual Event *duplicate() override;
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
-    virtual bool loadFromJson(QJsonObject, Project *) override { return false; }
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
+    virtual bool loadFromJson(QJsonObject, Project *) override;
 
     virtual void setDefaultValues(Project *project) override;
 
-    virtual QSet<QString> getExpectedFields() override { return QSet<QString>(); }
-
-    void setIndex(int newIndex) { this->index = newIndex; }
-    int getIndex() { return this->index; }
-
-    void setLocationName(QString newLocationName) { this->locationName = newLocationName; }
-    QString getLocationName() { return this->locationName; }
+    virtual QSet<QString> getExpectedFields() override;
 
     void setIdName(QString newIdName) { this->idName = newIdName; }
-    QString getIdName() { return this->idName; }
+    QString getIdName() const { return this->idName; }
 
-    void setRespawnMap(QString newRespawnMap) { this->respawnMap = newRespawnMap; }
-    QString getRespawnMap() { return this->respawnMap; }
+    void setRespawnMapName(QString newRespawnMap) { this->respawnMap = newRespawnMap; }
+    QString getRespawnMapName() const { return this->respawnMap; }
 
-    void setRespawnNPC(uint8_t newRespawnNPC) { this->respawnNPC = newRespawnNPC; }
-    uint8_t getRespawnNPC() { return this->respawnNPC; }
+    void setRespawnNPC(int newRespawnNPC) { this->respawnNPC = newRespawnNPC; }
+    int getRespawnNPC() const { return this->respawnNPC; }
 
 private:
-    int index = -1;
-    QString locationName;
     QString idName;
     QString respawnMap;
-    uint8_t respawnNPC = 0;
+    int respawnNPC = 0;
 };
 
 

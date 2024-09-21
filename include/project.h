@@ -4,7 +4,6 @@
 
 #include "map.h"
 #include "blockdata.h"
-#include "heallocation.h"
 #include "wildmoninfo.h"
 #include "parseutil.h"
 #include "orderedjson.h"
@@ -40,8 +39,6 @@ public:
     QMap<QString, int> mapGroups;
     QList<QStringList> groupedMapNames;
     QStringList mapNames;
-    QList<HealLocation> healLocations;
-    QMap<QString, int> healLocationNameToValue;
     QMap<QString, QString> mapConstantToMapName;
     QMap<QString, QString> mapNameToMapConstant;
     QMap<QString, QString> mapNameToLayoutId;
@@ -54,6 +51,8 @@ public:
     QMap<QString, QString> mapSecToMapHoverName;
     QMap<QString, int> mapSectionNameToValue;
     QMap<int, QString> mapSectionValueToName;
+    QMap<QString, int> healLocationNameToValue;
+    QMap<int, QString> healLocationValueToName;
     QMap<QString, EventGraphics*> eventGraphicsMap;
     QMap<QString, int> gfxDefines;
     QString defaultSong;
@@ -94,15 +93,6 @@ public:
     void clearTilesetCache();
     void clearMapLayouts();
     void clearEventGraphics();
-
-    struct DataQualifiers
-    {
-        bool isStatic;
-        bool isConst;
-    };
-    DataQualifiers getDataQualifiers(QString, QString);
-    DataQualifiers healLocationDataQualifiers;
-    QString healLocationsTableName;
 
     bool sanityCheck();
     bool load();
@@ -165,7 +155,7 @@ public:
     void saveMapLayouts();
     void saveMapGroups();
     void saveWildMonData();
-    void saveHealLocations(Map*);
+    void saveHealLocationsConstants();
     void saveTilesets(Tileset*, Tileset*);
     void saveTilesetMetatileLabels(Tileset*, Tileset*);
     void saveTilesetMetatileAttributes(Tileset*);
@@ -190,7 +180,6 @@ public:
     bool readTrainerTypes();
     bool readMetatileBehaviors();
     bool readHealLocationConstants();
-    bool readHealLocations();
     bool readMiscellaneousConstants();
     bool readEventScriptLabels();
     bool readObjEventGfxConstants();
@@ -219,6 +208,7 @@ public:
     void setImportExportPath(QString filename);
     static QString getExistingFilepath(QString filepath);
     void applyParsedLimits();
+    QString createNewHealLocationId(const QString& mapConstant);
 
     static int getNumTilesPrimary();
     static int getNumTilesTotal();
@@ -240,11 +230,6 @@ private:
 
     void setNewMapBlockdata(Map* map);
     void setNewMapBorder(Map *map);
-    void setNewMapEvents(Map *map);
-    void setNewMapConnections(Map *map);
-
-    void saveHealLocationsData(Map *map);
-    void saveHealLocationsConstants();
 
     void ignoreWatchedFileTemporarily(QString filepath);
 

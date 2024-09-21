@@ -453,8 +453,8 @@ void CloneObjectFrame::initialize() {
     this->combo_sprite->setCurrentText(this->clone->getGfx());
 
     // target id
-    this->spinner_target_id->setMinimum(1);
-    this->spinner_target_id->setMaximum(126);
+    this->spinner_target_id->setMinimum(0 + Event::getIndexOffset(Event::Group::Object));
+    this->spinner_target_id->setMaximum(INT_MAX);
     this->spinner_target_id->setValue(this->clone->getTargetID());
 
     // target map
@@ -938,6 +938,8 @@ void HealLocationFrame::setup() {
     this->hideable_label_z->setVisible(false);
     this->spinner_z->setVisible(false);
 
+    // TODO: Add an un-editable ID name display
+
     // respawn map combo
     this->hideable_respawn_map = new QFrame;
     QFormLayout *l_form_respawn_map = new QFormLayout(hideable_respawn_map);
@@ -952,6 +954,8 @@ void HealLocationFrame::setup() {
     QFormLayout *l_form_respawn_npc = new QFormLayout(hideable_respawn_npc);
     l_form_respawn_npc->setContentsMargins(0, 0, 0, 0);
     this->spinner_respawn_npc = new NoScrollSpinBox(hideable_respawn_npc);
+    this->spinner_respawn_npc->setMinimum(0 + Event::getIndexOffset(Event::Group::Object));
+    this->spinner_respawn_npc->setMaximum(INT_MAX);
     this->spinner_respawn_npc->setToolTip("event_object ID of the NPC the player interacts with\n" 
                                           "upon respawning after whiteout.");
     l_form_respawn_npc->addRow("Respawn NPC", this->spinner_respawn_npc);
@@ -966,19 +970,17 @@ void HealLocationFrame::connectSignals(MainWindow *window) {
 
     EventFrame::connectSignals(window);
 
-    if (projectConfig.healLocationRespawnDataEnabled) {
-        this->combo_respawn_map->disconnect();
-        connect(this->combo_respawn_map, &QComboBox::currentTextChanged, [this](const QString &text) {
-            this->healLocation->setRespawnMap(text);
-            this->healLocation->modify();
-        });
+    this->combo_respawn_map->disconnect();
+    connect(this->combo_respawn_map, &QComboBox::currentTextChanged, [this](const QString &text) {
+        this->healLocation->setRespawnMapName(text);
+        this->healLocation->modify();
+    });
 
-        this->spinner_respawn_npc->disconnect();
-        connect(this->spinner_respawn_npc, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
-            this->healLocation->setRespawnNPC(value);
-            this->healLocation->modify();
-        });
-    }
+    this->spinner_respawn_npc->disconnect();
+    connect(this->spinner_respawn_npc, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
+        this->healLocation->setRespawnNPC(value);
+        this->healLocation->modify();
+    });
 }
 
 void HealLocationFrame::initialize() {
@@ -987,12 +989,10 @@ void HealLocationFrame::initialize() {
     const QSignalBlocker blocker(this);
     EventFrame::initialize();
 
-    bool respawnEnabled = projectConfig.healLocationRespawnDataEnabled;
-    if (respawnEnabled) {
-        this->combo_respawn_map->setTextItem(this->healLocation->getRespawnMap());
-        this->spinner_respawn_npc->setValue(this->healLocation->getRespawnNPC());
-    }
+    this->combo_respawn_map->setTextItem(this->healLocation->getRespawnMapName());
+    this->spinner_respawn_npc->setValue(this->healLocation->getRespawnNPC());
 
+    bool respawnEnabled = projectConfig.healLocationRespawnDataEnabled;
     this->hideable_respawn_map->setVisible(respawnEnabled);
     this->hideable_respawn_npc->setVisible(respawnEnabled);
 }
@@ -1003,6 +1003,5 @@ void HealLocationFrame::populate(Project *project) {
     const QSignalBlocker blocker(this);
     EventFrame::populate(project);
 
-    if (projectConfig.healLocationRespawnDataEnabled)
-        this->combo_respawn_map->addItems(project->mapNames);
+    this->combo_respawn_map->addItems(project->mapNames);
 }

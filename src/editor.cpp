@@ -1368,12 +1368,11 @@ void Editor::mouseEvent_map(QGraphicsSceneMouseEvent *event, MapPixmapItem *item
             } else {
                 // Left-clicking while in paint mode will add a new event of the
                 // type of the first currently selected events.
-                // Disallow adding heal locations, deleting them is not possible yet
                 Event::Type eventType = Event::Type::Object;
                 if (this->selected_events->size() > 0)
                     eventType = this->selected_events->first()->event->getEventType();
 
-                if (eventType != Event::Type::HealLocation) {
+                if (eventType != Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
                     DraggablePixmapItem *newEvent = addNewEvent(eventType);
                     if (newEvent) {
                         newEvent->move(pos.x(), pos.y());
@@ -2071,7 +2070,7 @@ void Editor::duplicateSelectedEvents() {
             logWarn(QString("Skipping duplication, the map limit for events of type '%1' has been reached.").arg(Event::eventTypeToString(eventType)));
             continue;
         }
-        if (eventType == Event::Type::HealLocation) {
+        if (eventType == Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
             logWarn("Skipping duplication, event is a heal location.");
             continue;
         }
@@ -2097,12 +2096,6 @@ DraggablePixmapItem *Editor::addNewEvent(Event::Type type) {
 
     event->setMap(this->map);
     event->setDefaultValues(this->project);
-
-    if (type == Event::Type::HealLocation) {
-        HealLocation healLocation = HealLocation::fromEvent(event);
-        project->healLocations.append(healLocation);
-        ((HealLocationEvent *)event)->setIndex(project->healLocations.length());
-    }
 
     map->editHistory.push(new EventCreate(this, map, event));
     return event->getPixmapItem();

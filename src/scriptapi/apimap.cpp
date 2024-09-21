@@ -811,6 +811,10 @@ QJSValue MainWindow::getTilePixels(int tileId) {
 // Editing map header
 //=====================
 
+// TODO: These are all editing the UI, and expecting the UI to update the data in the map (which it does).
+//       From a design perspective this is a little backwards, we should probably have setter functions in Map
+//       which would send signals to the UI that it needs to update.
+
 QString MainWindow::getSong() {
     if (!this->editor || !this->editor->map)
         return QString();

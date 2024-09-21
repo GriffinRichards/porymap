@@ -14,6 +14,11 @@
 Map::Map(QObject *parent) : QObject(parent)
 {
     editHistory.setClean();
+
+    // Initialize events map with empty lists
+    for (int i = 0; i < static_cast<int>(Event::Group::None); i++) {
+        events[static_cast<Event::Group>(i)];
+    }
 }
 
 Map::~Map() {

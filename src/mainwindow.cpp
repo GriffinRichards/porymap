@@ -873,12 +873,6 @@ void MainWindow::refreshMapScene()
 }
 
 void MainWindow::openWarpMap(QString map_name, int event_id, Event::Group event_group) {
-    // Ensure valid destination map name.
-    if (!editor->project->mapNames.contains(map_name)) {
-        logError(QString("Invalid map name '%1'").arg(map_name));
-        return;
-    }
-
     // Open the destination map.
     if (!userSetMap(map_name, true))
         return;
@@ -1207,9 +1201,8 @@ void MainWindow::onNewMapCreated() {
     }
 
     if (newMap->needsHealLocation) {
+        newMap->needsHealLocation = false;
         addNewEvent(Event::Type::HealLocation);
-        editor->project->saveHealLocations(newMap);
-        editor->save();
     }
 
     disconnect(this->newMapDialog, &NewMapDialog::applied, this, &MainWindow::onNewMapCreated);
@@ -1542,7 +1535,7 @@ void MainWindow::copy() {
                 for (auto item : events) {
                     Event *event = item->event;
 
-                    if (event->getEventType() == Event::Type::HealLocation) {
+                    if (event->getEventType() == Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
                         // no copy on heal locations
                         logWarn(QString("Copying heal location events is not allowed."));
                         continue;
@@ -1662,7 +1655,7 @@ void MainWindow::paste() {
                         logWarn(QString("Cannot paste event, the limit for type '%1' has been reached.").arg(typeString));
                         continue;
                     }
-                    if (type == Event::Type::HealLocation) {
+                    if (type == Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
                         logWarn(QString("Cannot paste events of type '%1'").arg(typeString));
                         continue;
                     }
@@ -2072,21 +2065,15 @@ void MainWindow::eventTabChanged(int index) {
         Event::Group group = getEventGroupFromTabWidget(ui->tabWidget_EventType->widget(index));
         DraggablePixmapItem *selectedEvent = this->lastSelectedEvent.value(group, nullptr);
 
-        switch (group) {
-        case Event::Group::Object:
-            ui->newEventToolButton->setDefaultAction(ui->newEventToolButton->newObjectAction);
-            break;
-        case Event::Group::Warp:
-            ui->newEventToolButton->setDefaultAction(ui->newEventToolButton->newWarpAction);
-            break;
-        case Event::Group::Coord:
-            ui->newEventToolButton->setDefaultAction(ui->newEventToolButton->newTriggerAction);
-            break;
-        case Event::Group::Bg:
-            ui->newEventToolButton->setDefaultAction(ui->newEventToolButton->newSignAction);
-            break;
-        default:
-            break;
+        static const QMap<Event::Group, QAction*> groupToAction = {
+            {Event::Group::Object, ui->newEventToolButton->newObjectAction},
+            {Event::Group::Warp,   ui->newEventToolButton->newWarpAction},
+            {Event::Group::Coord,  ui->newEventToolButton->newTriggerAction},
+            {Event::Group::Bg,     ui->newEventToolButton->newSignAction},
+            //{Event::Group::Heal,   ui->newEventToolButton->newHealLocationAction}, // TODO
+        };
+        if (group != Event::Group::None) {
+            ui->newEventToolButton->setDefaultAction(groupToAction.value(group));
         }
 
         if (!isProgrammaticEventTabChange) {
@@ -2182,7 +2169,7 @@ void MainWindow::on_toolButton_deleteObject_clicked() {
             int numDeleted = 0;
             for (DraggablePixmapItem *item : *editor->selected_events) {
                 Event::Group event_group = item->event->getEventGroup();
-                if (event_group != Event::Group::Heal) {
+                if (event_group != Event::Group::Heal) { // TODO: Remove once deleting heal locations is supported
                     numDeleted++;
                     item->event->setPixmapItem(item);
                     selectedEvents.append(item->event);
@@ -2519,15 +2506,11 @@ void MainWindow::on_pushButton_ConfigureEncountersJSON_clicked() {
 }
 
 void MainWindow::on_button_OpenDiveMap_clicked() {
-    const QString mapName = ui->comboBox_DiveMap->currentText();
-    if (editor->project->mapNames.contains(mapName))
-        userSetMap(mapName, true);
+    userSetMap(ui->comboBox_DiveMap->currentText(), true);
 }
 
 void MainWindow::on_button_OpenEmergeMap_clicked() {
-    const QString mapName = ui->comboBox_EmergeMap->currentText();
-    if (editor->project->mapNames.contains(mapName))
-        userSetMap(mapName, true);
+    userSetMap(ui->comboBox_EmergeMap->currentText(), true);
 }
 
 void MainWindow::on_comboBox_DiveMap_currentTextChanged(const QString &mapName) {

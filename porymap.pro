@@ -25,7 +25,6 @@ SOURCES += src/core/block.cpp \
     src/core/bitpacker.cpp \
     src/core/blockdata.cpp \
     src/core/events.cpp \
-    src/core/heallocation.cpp \
     src/core/imageexport.cpp \
     src/core/map.cpp \
     src/core/mapconnection.cpp \
@@ -123,7 +122,6 @@ HEADERS  += include/core/block.h \
     include/core/bitpacker.h \
     include/core/blockdata.h \
     include/core/events.h \
-    include/core/heallocation.h \
     include/core/history.h \
     include/core/imageexport.h \
     include/core/map.h \
