@@ -355,12 +355,14 @@ bool Project::loadMapData(Map* map) {
     }
 
     map->events[Event::Group::Heal].clear();
+    map->persistedHealLocationNames.clear();
     QJsonArray healLocationsArr = mapObj["heal_locations"].toArray();
     for (int i = 0; i < healLocationsArr.size(); i++) {
         QJsonObject event = healLocationsArr[i].toObject();
         HealLocationEvent *hl = new HealLocationEvent();
         hl->loadFromJson(event, this);
         map->addEvent(hl);
+        map->persistedHealLocationNames.insert(hl->getIdName());
     }
 
     map->deleteConnections();
@@ -728,13 +730,27 @@ void Project::saveWildMonData() {
     wildEncountersFile.close();
 }
 
-// Get a new unique ID name + value for a Heal Location and add it to the list of IDs.
-// Normally the ID name will be HEAL_LOCATION_FOO for some map with an ID name of MAP_FOO.
+bool Project::isHealLocationIdUnique(const QString &id) {
+    // Heal location ID is not unique if it's one we read while parsing the project that hasn't been deleted in this session.
+    if (this->healLocationNames.contains(id) && !this->healLocationNamesToDelete.contains(id))
+        return false;
+
+    // Heal location ID is not unique if it's in-use by any active events
+    for (auto i = this->mapCache.constBegin(); i != this->mapCache.constEnd(); i++) {
+        for (const auto &event : i.value()->events[Event::Group::Heal]) {
+            if (dynamic_cast<HealLocationEvent*>(event)->getIdName() == id) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+// Get the deafult ID name for a Heal Location. Normally this name will be HEAL_LOCATION_FOO for some map with an ID name of MAP_FOO.
 // If that name is already taken we will add a `_#` suffix, with `#` starting at 2 and incrementing until we hit a unique name.
-QString Project::createNewHealLocationId(const QString &mapConstant) {
+QString Project::getDefaultHealLocationName(const QString &mapConstant) {
     const QString mapPrefix = projectConfig.getIdentifier(ProjectIdentifier::define_map_prefix);
-    const QString healPrefix = projectConfig.getIdentifier(projectConfig.healLocationRespawnDataEnabled ? ProjectIdentifier::define_spawn_prefix
-                                                                                                        : ProjectIdentifier::define_heal_locations_prefix);
+    const QString healPrefix = projectConfig.getIdentifier(ProjectIdentifier::define_heal_locations_prefix);
     // Set base ID
     QString idName;
     if (mapConstant.startsWith(mapPrefix))
@@ -745,42 +761,29 @@ QString Project::createNewHealLocationId(const QString &mapConstant) {
     // Add suffix if our ID already exists
     int suffixNum = 2;
     QString suffix = "";
-    while (this->healLocationNameToValue.contains(idName + suffix)) {
+    while (!isHealLocationIdUnique(idName + suffix)) {
         suffix = QString("_%1").arg(suffixNum++);
     }
-    idName.append(suffix);
-
-    // Get value to define for the ID.
-    int newValue = 1; // Skip 0, this is reserved for the "none" ID.
-    for (auto i = this->healLocationValueToName.constBegin(); i != this->healLocationValueToName.constEnd(); i++) {
-        if (newValue == i.key())
-            newValue++;
-    }
-
-    this->healLocationNameToValue.insert(idName, newValue);
-    this->healLocationValueToName.insert(newValue, idName);
-    return idName;
+    return idName.append(suffix);
 }
 
-// Saves heal location defines in root + /include/constants/heal_locations.h
 void Project::saveHealLocationsConstants() {
-    // TODO: Handle deleting constants
-    // - We should separately track heal location IDs created during this session, so if they're deleted they can be ignored.
-    // - Pre-existing heal locations that were deleted during this session will need to be aliased to a new config value.
+    // Remove old heal locations
+    for (auto i = this->healLocationNamesToDelete.constBegin(); i != this->healLocationNamesToDelete.constEnd(); i++) {
+        this->healLocationNames.removeOne(*i);
+    }
+    this->healLocationNamesToDelete.clear();
 
-    // Include guards
+    // Print heal location IDs in enum, surrounded by include guards.
     static const QString guardName = "GUARD_CONSTANTS_HEAL_LOCATIONS_H";
-    QString constantsText = QString("#ifndef %1\n#define %1\n\n").arg(guardName);
-
-    // Print heal location IDs in value-sorted order
-    for (auto i = this->healLocationValueToName.constBegin(); i != this->healLocationValueToName.constEnd(); i++)
-        constantsText += QString("#define %1 %2\n").arg(i.value()).arg(i.key());
-
-    constantsText += QString("\n#endif // %1\n").arg(guardName);
+    QString text = QString("#ifndef %1\n#define %1\n\nenum {\n").arg(guardName);
+    for (const auto &name : this->healLocationNames)
+        text += QString("    %1,\n").arg(name);
+    text += QString("};\n\n#endif // %1\n").arg(guardName);
 
     const QString filepath = QString("%1/%2").arg(root).arg(projectConfig.getFilePath(ProjectFilePath::constants_heal_locations));
     ignoreWatchedFileTemporarily(filepath);
-    saveTextFile(filepath, constantsText);
+    saveTextFile(filepath, text);
 }
 
 void Project::saveTilesets(Tileset *primaryTileset, Tileset *secondaryTileset) {
@@ -1189,8 +1192,24 @@ void Project::saveMap(Map *map) {
 
         // Heal locations
         OrderedJson::array healLocationsArr;
+        // We have to do a bit of extra work here to make sure the main heal location ID list is up-to-date when it gets saved after this.
+        // Heal Location IDs can have arbitrary names, so knowing whether an ID has been deleted here is a little difficult because it may
+        // belong to another map we haven't loaded. To find if any heal locations have been deleted we track what heal locations a map had
+        // when it was last loaded/saved in 'persistedHealLocationNames', and if any are now missing we know it was deleted.
+        this->healLocationNamesToDelete.unite(map->persistedHealLocationNames);
+        map->persistedHealLocationNames.clear();
         for (const auto &event : map->events[Event::Group::Heal]) {
             healLocationsArr.append(event->buildEventJson(this));
+            const QString idName = dynamic_cast<HealLocationEvent*>(event)->getIdName();
+
+            // Don't delete any heal location IDs that are still in-use.
+            this->healLocationNamesToDelete.remove(idName);
+
+            if (!this->healLocationNames.contains(idName)) {
+                // Found a new heal location, add its ID to the main list to save later.
+                this->healLocationNames.append(idName);
+            }
+            map->persistedHealLocationNames.insert(idName);
         }
         if (map->events[Event::Group::Heal].length() > 0)
             mapObj["heal_locations"] = healLocationsArr;
@@ -1215,10 +1234,6 @@ void Project::saveMap(Map *map) {
 
     saveLayoutBorder(map);
     saveLayoutBlockdata(map);
-
-    // If any new Heal Locations were added to this map then we'll need to define constants for their ID names.
-    // TODO:
-    // - When we go to save the defines, we need to know the constantName's of the maps that added them and their index.
 
     // Update global data structures with current map data.
     updateMapLayout(map);
@@ -1721,6 +1736,7 @@ bool Project::readMapGroups() {
             this->mapConstantToMapName.insert(mapConstant, mapName);
             this->mapNameToMapConstant.insert(mapName, mapConstant);
             // TODO: Keep these updated
+            // TODO: Either verify that these are known IDs, or make sure nothing breaks when they're unknown.
             this->mapNameToLayoutId.insert(mapName, ParseUtil::jsonToQString(mapObj["layout"]));
             this->mapNameToMapSectionName.insert(mapName, ParseUtil::jsonToQString(mapObj["region_map_section"]));
         }
@@ -2059,24 +2075,17 @@ bool Project::readRegionMapSections() {
     return true;
 }
 
-// Read the constants to preserve any "unused" heal locations when writing the file later
+// Read the heal location constants so that we have a list of reserved names when the user
+// creates new heal locations, and so that we can recreate the file when we write to it.
 bool Project::readHealLocationConstants() {
-    this->healLocationNameToValue.clear();
-    this->healLocationValueToName.clear();
+    this->healLocationNames.clear();
+    this->healLocationNamesToDelete.clear();
 
-    const QStringList regexList = {
-        QString("\\b%1").arg(projectConfig.getIdentifier(ProjectIdentifier::define_heal_locations_prefix)),
-        QString("\\b%1").arg(projectConfig.getIdentifier(ProjectIdentifier::define_spawn_prefix))
-    };
+    const QStringList regexList = {QString("\\b%1").arg(projectConfig.getIdentifier(ProjectIdentifier::define_heal_locations_prefix))};
     const QString filename = projectConfig.getFilePath(ProjectFilePath::constants_heal_locations);
-    fileWatcher.addPath(QString("%1/%2").arg(root).arg(filename));
-    this->healLocationNameToValue = parser.readCDefinesByRegex(filename, regexList);
-
-    // Construct reverse list sorted by value (when we later write these IDs to the project they should be in value order, not alphabetical).
-    for (auto i = this->healLocationNameToValue.constBegin(); i != this->healLocationNameToValue.constEnd(); i++)
-        this->healLocationValueToName.insert(i.value(), i.key());
-
-    // No need to check if empty, not finding any heal location constants is ok
+    fileWatcher.addPath(root + "/" + filename);
+    this->healLocationNames = parser.readCDefineNames(filename, regexList);
+    // No warning for not finding any Heal Location IDs. This is ok, it's possible the user hasn't added any.
     return true;
 }
 

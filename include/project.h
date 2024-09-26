@@ -51,8 +51,6 @@ public:
     QMap<QString, QString> mapSecToMapHoverName;
     QMap<QString, int> mapSectionNameToValue;
     QMap<int, QString> mapSectionValueToName;
-    QMap<QString, int> healLocationNameToValue;
-    QMap<int, QString> healLocationValueToName;
     QMap<QString, EventGraphics*> eventGraphicsMap;
     QMap<QString, int> gfxDefines;
     QString defaultSong;
@@ -69,6 +67,8 @@ public:
     QStringList bgEventFacingDirections;
     QStringList trainerTypes;
     QStringList globalScriptLabels;
+    QStringList healLocationNames;
+    QSet<QString> healLocationNamesToDelete;
     QMap<QString, QMap<QString, uint16_t>> metatileLabelsMap;
     QMap<QString, uint16_t> unusedMetatileLabels;
     QMap<QString, uint32_t> metatileBehaviorMap;
@@ -208,7 +208,7 @@ public:
     void setImportExportPath(QString filename);
     static QString getExistingFilepath(QString filepath);
     void applyParsedLimits();
-    QString createNewHealLocationId(const QString& mapConstant);
+    QString getDefaultHealLocationName(const QString& mapConstant);
 
     static int getNumTilesPrimary();
     static int getNumTilesTotal();
@@ -230,6 +230,7 @@ private:
 
     void setNewMapBlockdata(Map* map);
     void setNewMapBorder(Map *map);
+    bool isHealLocationIdUnique(const QString &id);
 
     void ignoreWatchedFileTemporarily(QString filepath);
 

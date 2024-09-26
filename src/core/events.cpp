@@ -11,31 +11,19 @@ const QMap<Event::Group, QString> eventGroupToStringMap = {
     {Event::Group::Warp,   "Warp"},
     {Event::Group::Coord,  "Trigger"},
     {Event::Group::Bg,     "BG"},
-    {Event::Group::Heal,   "Healspot"},
+    {Event::Group::Heal,   "Heal Location"},
 };
 
 const QMap<Event::Type, QString> eventTypeToStringMap = {
-    {Event::Type::Object,          "event_object"},
-    {Event::Type::CloneObject,     "event_clone_object"},
-    {Event::Type::Warp,            "event_warp"},
-    {Event::Type::Trigger,         "event_trigger"},
-    {Event::Type::WeatherTrigger,  "event_weather_trigger"},
-    {Event::Type::Sign,            "event_sign"},
-    {Event::Type::HiddenItem,      "event_hidden_item"},
-    {Event::Type::SecretBase,      "event_secret_base"},
-    {Event::Type::HealLocation,    "event_healspot"},
-};
-
-const QMap<QString, Event::Type> eventTypeFromStringMap = {
-    {"event_object",          Event::Type::Object},
-    {"event_clone_object",    Event::Type::CloneObject},
-    {"event_warp",            Event::Type::Warp},
-    {"event_trigger",         Event::Type::Trigger},
-    {"event_weather_trigger", Event::Type::WeatherTrigger},
-    {"event_sign",            Event::Type::Sign},
-    {"event_hidden_item",     Event::Type::HiddenItem},
-    {"event_secret_base",     Event::Type::SecretBase},
-    {"event_healspot",        Event::Type::HealLocation},
+    {Event::Type::Object,          "Object"},
+    {Event::Type::CloneObject,     "Clone Object"},
+    {Event::Type::Warp,            "Warp"},
+    {Event::Type::Trigger,         "Trigger"},
+    {Event::Type::WeatherTrigger,  "Weather Trigger"},
+    {Event::Type::Sign,            "Sign"},
+    {Event::Type::HiddenItem,      "Hidden Item"},
+    {Event::Type::SecretBase,      "Secret Base"},
+    {Event::Type::HealLocation,    "Heal Location"},
 };
 
 const QMap<Event::Type, Event::Group> eventTypeToGroupMap = {
@@ -129,7 +117,7 @@ QString Event::eventTypeToString(Event::Type type) {
 }
 
 Event::Type Event::eventTypeFromString(QString type) {
-    return eventTypeFromStringMap.value(type, Event::Type::None);
+    return eventTypeToStringMap.key(type, Event::Type::None);
 }
 
 Event::Group Event::typeToGroup(Event::Type type) {
@@ -976,7 +964,7 @@ bool HealLocationEvent::loadFromJson(QJsonObject json, Project *project) {
 }
 
 void HealLocationEvent::setDefaultValues(Project *project) {
-    this->setIdName(this->map ? project->createNewHealLocationId(this->map->constantName) : QString());
+    this->setIdName(this->map ? project->getDefaultHealLocationName(this->map->constantName) : QString());
     this->setRespawnMapName(this->map ? this->map->name : QString());
     this->setRespawnNPC(0 + Event::getIndexOffset(Event::Group::Object));
 }

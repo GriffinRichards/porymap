@@ -108,8 +108,7 @@ In addition to these files, there are some specific symbol and macro names that 
    ``define_attribute_terrain``, ``METATILE_ATTRIBUTE_TERRAIN``, name used to extract setting from ``symbol_attribute_table``
    ``define_attribute_encounter``, ``METATILE_ATTRIBUTE_ENCOUNTER_TYPE``, name used to extract setting from ``symbol_attribute_table``
    ``define_metatile_label_prefix``, ``METATILE_``, expected prefix for metatile label macro names
-   ``define_heal_locations_prefix``, ``HEAL_LOCATION_``, output as prefix for Heal Location IDs if ``Respawn Map/NPC`` is disabled
-   ``define_spawn_prefix``, ``SPAWN_``, output as prefix for Heal Location IDs if ``Respawn Map/NPC`` is enabled
+   ``define_heal_locations_prefix``, ``HEAL_LOCATION_``, expected prefix for heal location macro names
    ``define_map_prefix``, ``MAP_``, expected prefix for map macro names
    ``define_map_dynamic``, ``DYNAMIC``, macro name after prefix for Dynamic maps
    ``define_map_empty``, ``UNDEFINED``, macro name after prefix for empty maps

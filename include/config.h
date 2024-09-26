@@ -77,6 +77,7 @@ public:
         this->monitorFiles = true;
         this->tilesetCheckerboardFill = true;
         this->newMapHeaderSectionExpanded = false;
+        this->allowHealLocationDeleting = false;
         this->theme = "default";
         this->wildMonChartTheme = "";
         this->textEditorOpenFolder = "";
@@ -129,6 +130,7 @@ public:
     bool monitorFiles;
     bool tilesetCheckerboardFill;
     bool newMapHeaderSectionExpanded;
+    bool allowHealLocationDeleting;
     QString theme;
     QString wildMonChartTheme;
     QString textEditorOpenFolder;
@@ -210,7 +212,6 @@ enum ProjectIdentifier {
     define_attribute_encounter,
     define_metatile_label_prefix,
     define_heal_locations_prefix,
-    define_spawn_prefix,
     define_map_prefix,
     define_map_dynamic,
     define_map_empty,

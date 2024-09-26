@@ -99,7 +99,6 @@ const QMap<ProjectIdentifier, QPair<QString, QString>> ProjectConfig::defaultIde
     {ProjectIdentifier::define_attribute_encounter,    {"define_attribute_encounter",    "METATILE_ATTRIBUTE_ENCOUNTER_TYPE"}},
     {ProjectIdentifier::define_metatile_label_prefix,  {"define_metatile_label_prefix",  "METATILE_"}},
     {ProjectIdentifier::define_heal_locations_prefix,  {"define_heal_locations_prefix",  "HEAL_LOCATION_"}},
-    {ProjectIdentifier::define_spawn_prefix,           {"define_spawn_prefix",           "SPAWN_"}},
     {ProjectIdentifier::define_map_prefix,             {"define_map_prefix",             "MAP_"}},
     {ProjectIdentifier::define_map_dynamic,            {"define_map_dynamic",            "DYNAMIC"}},
     {ProjectIdentifier::define_map_empty,              {"define_map_empty",              "UNDEFINED"}},
@@ -387,6 +386,8 @@ void PorymapConfig::parseConfigKeyValue(QString key, QString value) {
         this->tilesetCheckerboardFill = getConfigBool(key, value);
     } else if (key == "new_map_header_section_expanded") {
         this->newMapHeaderSectionExpanded = getConfigBool(key, value);
+    } else if (key == "allow_heal_location_deleting") {
+        this->allowHealLocationDeleting = getConfigBool(key, value);
     } else if (key == "theme") {
         this->theme = value;
     } else if (key == "wild_mon_chart_theme") {
@@ -470,6 +471,7 @@ QMap<QString, QString> PorymapConfig::getKeyValueMap() {
     map.insert("monitor_files", this->monitorFiles ? "1" : "0");
     map.insert("tileset_checkerboard_fill", this->tilesetCheckerboardFill ? "1" : "0");
     map.insert("new_map_header_section_expanded", this->newMapHeaderSectionExpanded ? "1" : "0");
+    map.insert("allow_heal_location_deleting", this->allowHealLocationDeleting ? "1" : "0");
     map.insert("theme", this->theme);
     map.insert("wild_mon_chart_theme", this->wildMonChartTheme);
     map.insert("text_editor_open_directory", this->textEditorOpenFolder);

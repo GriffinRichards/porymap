@@ -395,8 +395,6 @@ void MainWindow::initMiscHeapObjects() {
 
     mapListProxyModel->setSourceModel(mapListModel);
     ui->mapList->setModel(mapListProxyModel);
-
-    ui->tabWidget_EventType->clear();
 }
 
 void MainWindow::initMapSortOrder() {
@@ -956,9 +954,9 @@ bool MainWindow::setProjectUI() {
     // Wild Encounters tab
     ui->mainTabBar->setTabEnabled(MainTab::WildPokemon, editor->project->wildEncountersLoaded);
 
-    ui->newEventToolButton->newWeatherTriggerAction->setVisible(projectConfig.eventWeatherTriggerEnabled);
-    ui->newEventToolButton->newSecretBaseAction->setVisible(projectConfig.eventSecretBaseEnabled);
-    ui->newEventToolButton->newCloneObjectAction->setVisible(projectConfig.eventCloneObjectEnabled);
+    ui->newEventToolButton->setActionVisible(Event::Type::WeatherTrigger, projectConfig.eventWeatherTriggerEnabled);
+    ui->newEventToolButton->setActionVisible(Event::Type::SecretBase, projectConfig.eventSecretBaseEnabled);
+    ui->newEventToolButton->setActionVisible(Event::Type::CloneObject, projectConfig.eventCloneObjectEnabled);
 
     Event::setIcons();
     editor->setCollisionGraphics();
@@ -1534,13 +1532,6 @@ void MainWindow::copy() {
 
                 for (auto item : events) {
                     Event *event = item->event;
-
-                    if (event->getEventType() == Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
-                        // no copy on heal locations
-                        logWarn(QString("Copying heal location events is not allowed."));
-                        continue;
-                    }
-
                     OrderedJson::object eventContainer;
                     eventContainer["event_type"] = Event::eventTypeToString(event->getEventType());
                     OrderedJson::object eventJson = event->buildEventJson(editor->project);
@@ -1655,8 +1646,9 @@ void MainWindow::paste() {
                         logWarn(QString("Cannot paste event, the limit for type '%1' has been reached.").arg(typeString));
                         continue;
                     }
-                    if (type == Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
-                        logWarn(QString("Cannot paste events of type '%1'").arg(typeString));
+                    if (type == Event::Type::HealLocation && !porymapConfig.allowHealLocationDeleting) {
+                        // Can't freely add Heal Locations if deleting them is not enabled.
+                        logWarn(QString("Cannot paste event, adding Heal Locations is disabled.").arg(typeString));
                         continue;
                     }
 
@@ -1942,6 +1934,9 @@ void MainWindow::updateSelectedObjects() {
         case Event::Group::Object: {
             scrollTarget = ui->scrollArea_Objects;
             target = ui->scrollAreaWidgetContents_Objects;
+
+            // TODO: Because we cleared ui->tabWidget_EventType in 'displayEventTabs', the current tab will already be ui->tab_Objects, so no signal is emitted for the change.
+            //       Merge this and 'updateObjects', keep track of what the tab was before we clear it, and restore it afterwards (while blocking the signal)
             ui->tabWidget_EventType->setCurrentWidget(ui->tab_Objects);
 
             QSignalBlocker b(this->ui->spinner_ObjectID);
@@ -2061,36 +2056,43 @@ Event::Group MainWindow::getEventGroupFromTabWidget(QWidget *tab) {
 }
 
 void MainWindow::eventTabChanged(int index) {
-    if (editor->map) {
-        Event::Group group = getEventGroupFromTabWidget(ui->tabWidget_EventType->widget(index));
-        DraggablePixmapItem *selectedEvent = this->lastSelectedEvent.value(group, nullptr);
+    if (!editor->map)
+        return;
 
-        static const QMap<Event::Group, QAction*> groupToAction = {
-            {Event::Group::Object, ui->newEventToolButton->newObjectAction},
-            {Event::Group::Warp,   ui->newEventToolButton->newWarpAction},
-            {Event::Group::Coord,  ui->newEventToolButton->newTriggerAction},
-            {Event::Group::Bg,     ui->newEventToolButton->newSignAction},
-            //{Event::Group::Heal,   ui->newEventToolButton->newHealLocationAction}, // TODO
-        };
-        if (group != Event::Group::None) {
-            ui->newEventToolButton->setDefaultAction(groupToAction.value(group));
-        }
+    Event::Group group = getEventGroupFromTabWidget(ui->tabWidget_EventType->widget(index));
+    DraggablePixmapItem *selectedEvent = this->lastSelectedEvent.value(group, nullptr);
 
-        if (!isProgrammaticEventTabChange) {
-            if (!selectedEvent && editor->map->events.value(group).count()) {
-                Event *event = editor->map->events.value(group).at(0);
-                for (QGraphicsItem *child : editor->events_group->childItems()) {
-                    DraggablePixmapItem *item = static_cast<DraggablePixmapItem *>(child);
-                    if (item->event == event) {
-                        selectedEvent = item;
-                        break;
-                    }
+    if (!isProgrammaticEventTabChange) {
+        if (!selectedEvent && editor->map->events.value(group).count()) {
+            Event *event = editor->map->events.value(group).at(0);
+            for (QGraphicsItem *child : editor->events_group->childItems()) {
+                DraggablePixmapItem *item = static_cast<DraggablePixmapItem *>(child);
+                if (item->event == event) {
+                    selectedEvent = item;
+                    break;
                 }
             }
-
-            if (selectedEvent) editor->selectMapEvent(selectedEvent);
         }
+
+        if (selectedEvent) editor->selectMapEvent(selectedEvent);
     }
+
+    // If we have an event selected then set the new event button to that type.
+    // If no event is selected we set the new event button to the first event type belonging to the new tab's event group.
+    Event::Type eventType;
+    if (selectedEvent && selectedEvent->event) {
+        eventType = selectedEvent->event->getEventType();
+    } else {
+        static const QMap<Event::Group, Event::Type> groupToNewEventType = {
+            {Event::Group::Object, Event::Type::Object},
+            {Event::Group::Warp,   Event::Type::Warp},
+            {Event::Group::Coord,  Event::Type::Trigger},
+            {Event::Group::Bg,     Event::Type::Sign},
+            {Event::Group::Heal,   Event::Type::HealLocation},
+        };
+        eventType = groupToNewEventType.value(group, Event::Type::Object);
+    }
+    ui->newEventToolButton->setDefaultAction(eventType);
 
     isProgrammaticEventTabChange = false;
 }
@@ -2162,48 +2164,43 @@ void MainWindow::onDeleteKeyPressed() {
 }
 
 void MainWindow::on_toolButton_deleteObject_clicked() {
-    if (editor && editor->selected_events) {
-        if (editor->selected_events->length()) {
-            DraggablePixmapItem *nextSelectedEvent = nullptr;
-            QList<Event *> selectedEvents;
-            int numDeleted = 0;
-            for (DraggablePixmapItem *item : *editor->selected_events) {
-                Event::Group event_group = item->event->getEventGroup();
-                if (event_group != Event::Group::Heal) { // TODO: Remove once deleting heal locations is supported
-                    numDeleted++;
-                    item->event->setPixmapItem(item);
-                    selectedEvents.append(item->event);
-                }
-                else { // don't allow deletion of heal locations
-                    logWarn(QString("Cannot delete event of type '%1'").arg(Event::eventTypeToString(item->event->getEventType())));
-                }
-            }
-            if (numDeleted) {
-                // Get the index for the event that should be selected after this event has been deleted.
-                // Select event at next smallest index when deleting a single event.
-                // If deleting multiple events, just let editor work out next selected.
-                if (numDeleted == 1) {
-                    Event::Group event_group = selectedEvents[0]->getEventGroup();
-                    int index = editor->map->events.value(event_group).indexOf(selectedEvents[0]);
-                    if (index != editor->map->events.value(event_group).size() - 1)
-                        index++;
-                    else
-                        index--;
-                    Event *event = nullptr;
-                    if (index >= 0)
-                        event = editor->map->events.value(event_group).at(index);
-                    for (QGraphicsItem *child : editor->events_group->childItems()) {
-                        DraggablePixmapItem *event_item = static_cast<DraggablePixmapItem *>(child);
-                        if (event_item->event == event) {
-                            nextSelectedEvent = event_item;
-                            break;
-                        }
-                    }
-                }
-                editor->map->editHistory.push(new EventDelete(editor, editor->map, selectedEvents, nextSelectedEvent ? nextSelectedEvent->event : nullptr));
+    if (!editor || !editor->selected_events)
+        return;
+
+    QList<Event *> selectedEvents;
+    for (DraggablePixmapItem *item : *editor->selected_events) {
+        if (item->event->getEventType() == Event::Type::HealLocation && !porymapConfig.allowHealLocationDeleting)
+            continue;
+        item->event->setPixmapItem(item);
+        selectedEvents.append(item->event);
+    }
+
+    if (selectedEvents.length() <= 0)
+        return;
+
+    // Get the index for the event that should be selected after this event has been deleted.
+    // Select event at next smallest index when deleting a single event.
+    // If deleting multiple events, just let editor work out next selected.
+    DraggablePixmapItem *nextSelectedEvent = nullptr;
+    if (selectedEvents.length() == 1) {
+        Event::Group event_group = selectedEvents[0]->getEventGroup();
+        int index = editor->map->events.value(event_group).indexOf(selectedEvents[0]);
+        if (index != editor->map->events.value(event_group).size() - 1)
+            index++;
+        else
+            index--;
+        Event *event = nullptr;
+        if (index >= 0)
+            event = editor->map->events.value(event_group).at(index);
+        for (QGraphicsItem *child : editor->events_group->childItems()) {
+            DraggablePixmapItem *event_item = static_cast<DraggablePixmapItem *>(child);
+            if (event_item->event == event) {
+                nextSelectedEvent = event_item;
+                break;
             }
         }
     }
+    editor->map->editHistory.push(new EventDelete(editor, editor->map, selectedEvents, nextSelectedEvent ? nextSelectedEvent->event : nullptr));
 }
 
 void MainWindow::on_toolButton_Paint_clicked()
@@ -2706,12 +2703,9 @@ void MainWindow::on_actionOpen_Config_Folder_triggered() {
 void MainWindow::on_actionPreferences_triggered() {
     if (!preferenceEditor) {
         preferenceEditor = new PreferenceEditor(this);
-        connect(preferenceEditor, &PreferenceEditor::themeChanged,
-                this, &MainWindow::setTheme);
-        connect(preferenceEditor, &PreferenceEditor::themeChanged,
-                editor, &Editor::maskNonVisibleConnectionTiles);
-        connect(preferenceEditor, &PreferenceEditor::preferencesSaved,
-                this, &MainWindow::togglePreferenceSpecificUi);
+        connect(preferenceEditor, &PreferenceEditor::themeChanged, this, &MainWindow::setTheme);
+        connect(preferenceEditor, &PreferenceEditor::themeChanged, editor, &Editor::maskNonVisibleConnectionTiles);
+        connect(preferenceEditor, &PreferenceEditor::preferencesSaved, this, &MainWindow::togglePreferenceSpecificUi);
     }
 
     openSubWindow(preferenceEditor);
@@ -2722,6 +2716,9 @@ void MainWindow::togglePreferenceSpecificUi() {
         ui->actionOpen_Project_in_Text_Editor->setEnabled(false);
     else
         ui->actionOpen_Project_in_Text_Editor->setEnabled(true);
+
+    // TODO: Add this setting to the preference editor UI.
+    ui->newEventToolButton->setActionVisible(Event::Type::HealLocation, porymapConfig.allowHealLocationDeleting);
 
     if (this->updatePromoter)
         this->updatePromoter->updatePreferences();

@@ -30,6 +30,7 @@ private:
 
     void initFields();
     void saveFields();
+    void showHealLocationWarning();
 
 
 private slots:

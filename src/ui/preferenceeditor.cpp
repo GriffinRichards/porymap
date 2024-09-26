@@ -7,6 +7,7 @@
 #include <QRegularExpression>
 #include <QDirIterator>
 #include <QFormLayout>
+#include <QMessageBox>
 
 
 PreferenceEditor::PreferenceEditor(QWidget *parent) :
@@ -21,8 +22,8 @@ PreferenceEditor::PreferenceEditor(QWidget *parent) :
     themeSelector->setMinimumContentsLength(0);
     formLayout->addRow("Themes", themeSelector);
     setAttribute(Qt::WA_DeleteOnClose);
-    connect(ui->buttonBox, &QDialogButtonBox::clicked,
-            this, &PreferenceEditor::dialogButtonClicked);
+    connect(ui->buttonBox, &QDialogButtonBox::clicked, this, &PreferenceEditor::dialogButtonClicked);
+    connect(ui->checkBox_HealLocationEvents, &QCheckBox::toggled, [this](bool on) { if (on) showHealLocationWarning(); });
     initFields();
     updateFields();
 }
@@ -50,6 +51,9 @@ void PreferenceEditor::updateFields() {
     ui->checkBox_MonitorProjectFiles->setChecked(porymapConfig.monitorFiles);
     ui->checkBox_OpenRecentProject->setChecked(porymapConfig.reopenOnLaunch);
     ui->checkBox_CheckForUpdates->setChecked(porymapConfig.checkForUpdates);
+
+    const QSignalBlocker b_Heal(ui->checkBox_HealLocationEvents);
+    ui->checkBox_HealLocationEvents->setChecked(porymapConfig.allowHealLocationDeleting);
 }
 
 void PreferenceEditor::saveFields() {
@@ -64,9 +68,19 @@ void PreferenceEditor::saveFields() {
     porymapConfig.monitorFiles = ui->checkBox_MonitorProjectFiles->isChecked();
     porymapConfig.reopenOnLaunch = ui->checkBox_OpenRecentProject->isChecked();
     porymapConfig.checkForUpdates = ui->checkBox_CheckForUpdates->isChecked();
+    porymapConfig.allowHealLocationDeleting = ui->checkBox_HealLocationEvents->isChecked();
     porymapConfig.save();
 
     emit preferencesSaved();
+}
+
+void PreferenceEditor::showHealLocationWarning() {
+    static const QString warning = "Deleting Heal Locations will delete their associated ID. This may stop your project from compiling. Are you sure you want to enable this setting?";
+    if (QMessageBox::warning(this, "WARNING", warning, QMessageBox::Yes | QMessageBox::Cancel, QMessageBox::Cancel) != QMessageBox::Yes) {
+        // User didn't accept warning, restore setting
+        const QSignalBlocker b(ui->checkBox_HealLocationEvents);
+        ui->checkBox_HealLocationEvents->setChecked(false);
+    }
 }
 
 void PreferenceEditor::dialogButtonClicked(QAbstractButton *button) {

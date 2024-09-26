@@ -1372,13 +1372,16 @@ void Editor::mouseEvent_map(QGraphicsSceneMouseEvent *event, MapPixmapItem *item
                 if (this->selected_events->size() > 0)
                     eventType = this->selected_events->first()->event->getEventType();
 
-                if (eventType != Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
-                    DraggablePixmapItem *newEvent = addNewEvent(eventType);
-                    if (newEvent) {
-                        newEvent->move(pos.x(), pos.y());
-                        emit objectsChanged();
-                        selectMapEvent(newEvent);
-                    }
+                if (eventType == Event::Type::HealLocation && !porymapConfig.allowHealLocationDeleting) {
+                    // Can't freely add Heal Locations if deleting them is not enabled.
+                    return;
+                }
+
+                DraggablePixmapItem *newEvent = addNewEvent(eventType);
+                if (newEvent) {
+                    newEvent->move(pos.x(), pos.y());
+                    emit objectsChanged();
+                    selectMapEvent(newEvent);
                 }
             }
         } else if (obj_edit_mode == "select") {
@@ -2070,8 +2073,9 @@ void Editor::duplicateSelectedEvents() {
             logWarn(QString("Skipping duplication, the map limit for events of type '%1' has been reached.").arg(Event::eventTypeToString(eventType)));
             continue;
         }
-        if (eventType == Event::Type::HealLocation) { // TODO: Remove once deleting heal locations is supported
-            logWarn("Skipping duplication, event is a heal location.");
+        if (eventType == Event::Type::HealLocation && !porymapConfig.allowHealLocationDeleting) {
+            // Can't freely add Heal Locations if deleting them is not enabled.
+            logWarn("Skipping duplication, adding Heal Locations is disabled.");
             continue;
         }
         Event *duplicate = original->duplicate();
