@@ -27,9 +27,8 @@ Map::~Map() {
     deleteConnections();
 }
 
-void Map::setName(QString mapName, QString id) {
+void Map::setName(QString mapName) {
     name = mapName;
-    constantName = id;
     scriptsLoaded = false;
 }
 

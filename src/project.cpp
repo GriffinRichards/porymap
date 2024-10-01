@@ -185,11 +185,8 @@ Map* Project::loadMap(QString mapName) {
             return map;
         }
     } else {
-        // TODO: How should we handle if !mapNameToMapConstant.contains(mapName) here
-        QString mapConstant = this->mapNameToMapConstant.value(mapName);
-
         map = new Map;
-        map->setName(mapName, mapConstant);
+        map->setName(mapName);
     }
 
     if (!(loadMapData(map) && loadMapLayout(map))){
@@ -202,40 +199,37 @@ Map* Project::loadMap(QString mapName) {
     return map;
 }
 
-const QSet<QString> defaultTopLevelMapFields = {
-    "id",
-    "name",
-    "layout",
-    "music",
-    "region_map_section",
-    "requires_flash",
-    "weather",
-    "map_type",
-    "show_map_name",
-    "battle_scene",
-    "connections",
-    "object_events",
-    "warp_events",
-    "coord_events",
-    "bg_events",
-    "heal_locations",
-    "shared_events_map",
-    "shared_scripts_map",
-};
-
-QSet<QString> Project::getTopLevelMapFields() {
-    // TODO: This set should be costructed once per-project, not every time we load a map.
-    QSet<QString> topLevelMapFields = defaultTopLevelMapFields;
+void Project::initTopLevelMapFields() {
+    static const QSet<QString> defaultTopLevelMapFields = {
+        "id",
+        "name",
+        "layout",
+        "music",
+        "region_map_section",
+        "requires_flash",
+        "weather",
+        "map_type",
+        "show_map_name",
+        "battle_scene",
+        "connections",
+        "object_events",
+        "warp_events",
+        "coord_events",
+        "bg_events",
+        "heal_locations",
+        "shared_events_map",
+        "shared_scripts_map",
+    };
+    this->topLevelMapFields = defaultTopLevelMapFields;
     if (projectConfig.mapAllowFlagsEnabled) {
-        topLevelMapFields.insert("allow_cycling");
-        topLevelMapFields.insert("allow_escaping");
-        topLevelMapFields.insert("allow_running");
+        this->topLevelMapFields.insert("allow_cycling");
+        this->topLevelMapFields.insert("allow_escaping");
+        this->topLevelMapFields.insert("allow_running");
     }
 
     if (projectConfig.floorNumberEnabled) {
-        topLevelMapFields.insert("floor_number");
+        this->topLevelMapFields.insert("floor_number");
     }
-    return topLevelMapFields;
 }
 
 bool Project::readMapJson(const QString &mapName, QJsonDocument * out) {
@@ -256,6 +250,11 @@ bool Project::loadMapData(Map* map) {
     if (!readMapJson(map->name, &mapDoc))
         return false;
     QJsonObject mapObj = mapDoc.object();
+
+    // We should already know the map constant ID from the initial project launch, but we'll ensure it's correct here anyway.
+    map->constantName  = ParseUtil::jsonToQString(mapObj["id"]);
+    this->mapNameToMapConstant.insert(map->name, map->constantName);
+    this->mapConstantToMapName.insert(map->constantName, map->name);
 
     map->song          = ParseUtil::jsonToQString(mapObj["music"]);
     map->layoutId      = ParseUtil::jsonToQString(mapObj["layout"]);
@@ -382,10 +381,8 @@ bool Project::loadMapData(Map* map) {
         }
     }
 
-    // Check for custom fields
-    QSet<QString> baseFields = this->getTopLevelMapFields();
     for (QString key : mapObj.keys()) {
-        if (!baseFields.contains(key)) {
+        if (!this->topLevelMapFields.contains(key)) {
             map->customHeaders.insert(key, mapObj[key]);
         }
     }
@@ -746,7 +743,7 @@ bool Project::isHealLocationIdUnique(const QString &id) {
     return true;
 }
 
-// Get the deafult ID name for a Heal Location. Normally this name will be HEAL_LOCATION_FOO for some map with an ID name of MAP_FOO.
+// Get the default ID name for a Heal Location. Normally this name will be HEAL_LOCATION_FOO for some map with an ID name of MAP_FOO.
 // If that name is already taken we will add a `_#` suffix, with `#` starting at 2 and incrementing until we hit a unique name.
 QString Project::getDefaultHealLocationName(const QString &mapConstant) {
     const QString mapPrefix = projectConfig.getIdentifier(ProjectIdentifier::define_map_prefix);
@@ -1678,6 +1675,8 @@ bool Project::readMapGroups() {
     this->groupedMapNames.clear();
     this->mapNames.clear();
 
+    this->initTopLevelMapFields();
+
     const QString filepath = root + "/" + projectConfig.getFilePath(ProjectFilePath::json_map_groups);
     fileWatcher.addPath(filepath);
     QJsonDocument mapGroupsDoc;
@@ -1688,11 +1687,15 @@ bool Project::readMapGroups() {
 
     QJsonObject mapGroupsObj = mapGroupsDoc.object();
     QJsonArray mapGroupOrder = mapGroupsObj["group_order"].toArray();
+
+    // Process the map group lists
     for (int groupIndex = 0; groupIndex < mapGroupOrder.size(); groupIndex++) {
         const QString groupName = ParseUtil::jsonToQString(mapGroupOrder.at(groupIndex));
         const QJsonArray mapNamesJson = mapGroupsObj.value(groupName).toArray();
         this->groupedMapNames.append(QStringList());
         this->groupNames.append(groupName);
+
+        // Process the names in this map group
         for (int j = 0; j < mapNamesJson.size(); j++) {
             const QString mapName = ParseUtil::jsonToQString(mapNamesJson.at(j));
             if (mapName == DYNAMIC_MAP_NAME) {
@@ -1735,7 +1738,6 @@ bool Project::readMapGroups() {
             this->mapGroups.insert(mapName, groupIndex);
             this->mapConstantToMapName.insert(mapConstant, mapName);
             this->mapNameToMapConstant.insert(mapName, mapConstant);
-            // TODO: Keep these updated
             // TODO: Either verify that these are known IDs, or make sure nothing breaks when they're unknown.
             this->mapNameToLayoutId.insert(mapName, ParseUtil::jsonToQString(mapObj["layout"]));
             this->mapNameToMapSectionName.insert(mapName, ParseUtil::jsonToQString(mapObj["region_map_section"]));
@@ -1751,6 +1753,7 @@ bool Project::readMapGroups() {
         return false;
     }
 
+    // Save special "Dynamic" constant
     const QString defineName = this->getDynamicMapDefineName();
     this->mapConstantToMapName.insert(defineName, DYNAMIC_MAP_NAME);
     this->mapNameToMapConstant.insert(DYNAMIC_MAP_NAME, defineName);
@@ -1768,11 +1771,13 @@ Map* Project::addNewMapToGroup(Map *newMap, int groupNum, bool existingLayout, b
     this->mapGroups.insert(newMap->name, groupNum);
     this->groupedMapNames[groupNum].append(newMap->name);
 
-    newMap->isPersistedToFile = false;
-    //newMap->setName(mapName, QString()); // TODO: Set map name and map constant before calling this function
-
     this->mapConstantToMapName.insert(newMap->constantName, newMap->name);
     this->mapNameToMapConstant.insert(newMap->name, newMap->constantName);
+    this->mapNameToMapSectionName.insert(newMap->name, newMap->location);
+    this->mapNameToLayoutId.insert(newMap->name, newMap->layoutId);
+
+    newMap->isPersistedToFile = false;
+
     if (!existingLayout) {
         this->mapLayouts.insert(newMap->layoutId, newMap->layout);
         this->mapLayoutsTable.append(newMap->layoutId);

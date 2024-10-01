@@ -141,7 +141,7 @@ public:
     virtual void setDefaultValues(Project *project);
 
     virtual QSet<QString> getExpectedFields() = 0;
-    void readCustomValues(QJsonObject values);
+    void readCustomValues(const QJsonObject &values);
     void addCustomValuesTo(OrderedJson::object *obj) const;
     const QMap<QString, QJsonValue> getCustomValues() const { return this->customValues; }
     void setCustomValues(const QMap<QString, QJsonValue> newCustomValues) { this->customValues = newCustomValues; }
@@ -165,9 +165,9 @@ public:
 
     int getEventIndex();
 
-    static QString eventGroupToString(Event::Group group);
-    static QString eventTypeToString(Event::Type type);
-    static Event::Type eventTypeFromString(QString type);
+    static QString groupToString(Event::Group group);
+    static QString typeToString(Event::Type type);
+    static Event::Type typeFromString(QString type);
     static void clearIcons();
     static void setIcons();
 

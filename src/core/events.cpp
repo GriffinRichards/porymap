@@ -6,38 +6,6 @@
 
 QMap<Event::Group, const QPixmap*> Event::icons;
 
-const QMap<Event::Group, QString> eventGroupToStringMap = {
-    {Event::Group::Object, "Object"},
-    {Event::Group::Warp,   "Warp"},
-    {Event::Group::Coord,  "Trigger"},
-    {Event::Group::Bg,     "BG"},
-    {Event::Group::Heal,   "Heal Location"},
-};
-
-const QMap<Event::Type, QString> eventTypeToStringMap = {
-    {Event::Type::Object,          "Object"},
-    {Event::Type::CloneObject,     "Clone Object"},
-    {Event::Type::Warp,            "Warp"},
-    {Event::Type::Trigger,         "Trigger"},
-    {Event::Type::WeatherTrigger,  "Weather Trigger"},
-    {Event::Type::Sign,            "Sign"},
-    {Event::Type::HiddenItem,      "Hidden Item"},
-    {Event::Type::SecretBase,      "Secret Base"},
-    {Event::Type::HealLocation,    "Heal Location"},
-};
-
-const QMap<Event::Type, Event::Group> eventTypeToGroupMap = {
-    {Event::Type::Object,         Event::Group::Object},
-    {Event::Type::CloneObject,    Event::Group::Object},
-    {Event::Type::Warp,           Event::Group::Warp},
-    {Event::Type::Trigger,        Event::Group::Coord},
-    {Event::Type::WeatherTrigger, Event::Group::Coord},
-    {Event::Type::Sign,           Event::Group::Bg},
-    {Event::Type::HiddenItem,     Event::Group::Bg},
-    {Event::Type::SecretBase,     Event::Group::Bg},
-    {Event::Type::HealLocation,   Event::Group::Heal},
-};
-
 Event* Event::create(Event::Type type) {
     switch (type) {
     case Event::Type::Object: return new ObjectEvent();
@@ -51,6 +19,52 @@ Event* Event::create(Event::Type type) {
     case Event::Type::HealLocation: return new HealLocationEvent();
     default: return nullptr;
     }
+}
+
+QString Event::groupToString(Event::Group group) {
+    static const QMap<Event::Group, QString> eventGroupToString = {
+        {Event::Group::Object, "Object"},
+        {Event::Group::Warp,   "Warp"},
+        {Event::Group::Coord,  "Trigger"},
+        {Event::Group::Bg,     "BG"},
+        {Event::Group::Heal,   "Heal Location"},
+    };
+    return eventGroupToString.value(group);
+}
+
+const QMap<Event::Type, QString> eventTypeToString = {
+    {Event::Type::Object,          "Object"},
+    {Event::Type::CloneObject,     "Clone Object"},
+    {Event::Type::Warp,            "Warp"},
+    {Event::Type::Trigger,         "Trigger"},
+    {Event::Type::WeatherTrigger,  "Weather Trigger"},
+    {Event::Type::Sign,            "Sign"},
+    {Event::Type::HiddenItem,      "Hidden Item"},
+    {Event::Type::SecretBase,      "Secret Base"},
+    {Event::Type::HealLocation,    "Heal Location"},
+};
+
+QString Event::typeToString(Event::Type type) {
+    return eventTypeToString.value(type);
+}
+
+Event::Type Event::typeFromString(QString type) {
+    return eventTypeToString.key(type, Event::Type::None);
+}
+
+Event::Group Event::typeToGroup(Event::Type type) {
+    static const QMap<Event::Type, Event::Group> eventTypeToGroup = {
+        {Event::Type::Object,         Event::Group::Object},
+        {Event::Type::CloneObject,    Event::Group::Object},
+        {Event::Type::Warp,           Event::Group::Warp},
+        {Event::Type::Trigger,        Event::Group::Coord},
+        {Event::Type::WeatherTrigger, Event::Group::Coord},
+        {Event::Type::Sign,           Event::Group::Bg},
+        {Event::Type::HiddenItem,     Event::Group::Bg},
+        {Event::Type::SecretBase,     Event::Group::Bg},
+        {Event::Type::HealLocation,   Event::Group::Heal},
+    };
+    return eventTypeToGroup.value(type, Event::Group::None);
 }
 
 Event::~Event() {
@@ -86,42 +100,26 @@ void Event::setDefaultValues(Project *) {
 }
 
 // TODO: Constructing and copying these "expected field" sets for every event is probably inefficient. Measure performance difference with static sets initialized on project load
-void Event::readCustomValues(QJsonObject values) {
+void Event::readCustomValues(const QJsonObject &json) {
     this->customValues.clear();
     QSet<QString> expectedFields = this->getExpectedFields();
-    for (QString key : values.keys()) {
-        if (!expectedFields.contains(key)) {
-            this->customValues[key] = values[key];
+    for (auto i = json.constBegin(); i != json.constEnd(); i++) {
+        if (!expectedFields.contains(i.key())) {
+            this->customValues[i.key()] = i.value();
         }
     }
 }
 
 void Event::addCustomValuesTo(OrderedJson::object *obj) const {
-    for (QString key : this->customValues.keys()) {
-        if (!obj->contains(key)) {
-            (*obj)[key] = OrderedJson::fromQJsonValue(this->customValues[key]);
+    for (auto i = this->customValues.constBegin(); i != this->customValues.constEnd(); i++) {
+        if (!obj->contains(i.key())) {
+            (*obj)[i.key()] = OrderedJson::fromQJsonValue(i.value());
         }
     }
 }
 
 void Event::modify() {
     this->map->modify();
-}
-
-QString Event::eventGroupToString(Event::Group group) {
-    return eventGroupToStringMap.value(group);
-}
-
-QString Event::eventTypeToString(Event::Type type) {
-    return eventTypeToStringMap.value(type);
-}
-
-Event::Type Event::eventTypeFromString(QString type) {
-    return eventTypeToStringMap.key(type, Event::Type::None);
-}
-
-Event::Group Event::typeToGroup(Event::Type type) {
-    return eventTypeToGroupMap.value(type, Event::Group::None);
 }
 
 void Event::loadPixmap(Project *) {

@@ -2068,7 +2068,7 @@ void Editor::duplicateSelectedEvents() {
         Event *original = selected_events->at(i)->event;
         Event::Type eventType = original->getEventType();
         if (eventLimitReached(eventType)) {
-            logWarn(QString("Skipping duplication, the map limit for events of type '%1' has been reached.").arg(Event::eventTypeToString(eventType)));
+            logWarn(QString("Skipping duplication, the map limit for events of type '%1' has been reached.").arg(Event::typeToString(eventType)));
             continue;
         }
         if (eventType == Event::Type::HealLocation && !porymapConfig.allowHealLocationDeleting) {

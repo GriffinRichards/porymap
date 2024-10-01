@@ -326,7 +326,7 @@ public:
     QString getCustomFilePath(ProjectFilePath pathId);
     QString getCustomFilePath(const QString &pathId);
     QString getFilePath(ProjectFilePath pathId);
-    void setIdentifier(ProjectIdentifier id, const QString &text);
+    void setIdentifier(ProjectIdentifier id, QString text);
     void setIdentifier(const QString &id, const QString &text);
     QString getCustomIdentifier(ProjectIdentifier id);
     QString getCustomIdentifier(const QString &id);

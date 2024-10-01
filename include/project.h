@@ -80,6 +80,7 @@ public:
     bool usingAsmTilesets;
     QString importExportPath;
     QSet<QString> disabledSettingsNames;
+    QSet<QString> topLevelMapFields;
     int pokemonMinLevel;
     int pokemonMaxLevel;
     int maxEncounterRate;
@@ -131,7 +132,7 @@ public:
     bool readSpeciesIconPaths();
     QMap<QString, QString> speciesToIconPath;
 
-    QSet<QString> getTopLevelMapFields();
+    void initTopLevelMapFields();
     bool readMapJson(const QString &mapName, QJsonDocument * out);
     bool loadMapData(Map*);
     bool readMapLayouts();

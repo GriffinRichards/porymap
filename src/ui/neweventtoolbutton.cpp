@@ -31,7 +31,7 @@ void NewEventToolButton::insertAction(Event::Type type) {
     if (this->newEventActions.contains(type))
         return;
 
-    auto action = new QAction(QString("New %1").arg(Event::eventTypeToString(type)), this);
+    auto action = new QAction(QString("New %1").arg(Event::typeToString(type)), this);
     action->setIcon(QIcon(":/icons/add.ico"));
     connect(action, &QAction::triggered, [this, type] {
         this->selectedEventType = type;
