@@ -16,7 +16,7 @@ public:
     enum class PaintMode {
         Disabled,
         Metatiles,
-        EventObjects
+        Events
     };
     MapPixmapItem(Map *map_, MetatileSelector *metatileSelector, Settings *settings) {
         this->map = map_;

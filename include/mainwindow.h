@@ -215,8 +215,7 @@ private slots:
     void addNewEvent(Event::Type type);
     void tryAddEventTab(QWidget * tab);
     void displayEventTabs();
-    void updateSelectedObjects();
-    void updateObjects();
+    void updateSelectedEvents();
 
     void on_toolButton_Paint_clicked();
     void on_toolButton_Select_clicked();
@@ -326,7 +325,6 @@ private:
 
     QMap<Event::Group, DraggablePixmapItem*> lastSelectedEvent;
 
-    bool isProgrammaticEventTabChange;
     bool newMapDefaultsSet = false;
     bool tilesetNeedsRedraw = false;
 
@@ -374,6 +372,7 @@ private:
     void setTheme(QString);
     void updateTilesetEditor();
     Event::Group getEventGroupFromTabWidget(QWidget *tab);
+    void updateNewEventButton();
     bool closeSupplementaryWindows();
     void setWindowDisabled(bool);
 

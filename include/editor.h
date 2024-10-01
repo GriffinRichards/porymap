@@ -74,7 +74,7 @@ public:
 
     void setEditingMap();
     void setEditingCollision();
-    void setEditingObjects();
+    void setEditingEvents();
     void setEditingConnections();
     void setMapEditingButtonsEnabled(bool enabled);
     void setConnectionsVisibility(bool visible);
@@ -101,8 +101,8 @@ public:
     DraggablePixmapItem *addNewEvent(Event::Type type);
     void updateSelectedEvents();
     void duplicateSelectedEvents();
-    void redrawObject(DraggablePixmapItem *item);
-    QList<DraggablePixmapItem *> getObjects();
+    void redrawEventPixmapItem(DraggablePixmapItem *item);
+    QList<DraggablePixmapItem *> getEventPixmapItems();
     void updateCursorRectPos(int x, int y);
     void setCursorRectVisible(bool visible);
     void updateWarpEventWarning(Event *event);
@@ -144,7 +144,7 @@ public:
     qreal collisionOpacity = 0.5;
     static QList<QList<const QImage*>> collisionIcons;
 
-    void objectsView_onMousePress(QMouseEvent *event);
+    void eventsView_onMousePress(QMouseEvent *event);
 
     int getBorderDrawDistance(int dimension);
 
@@ -222,7 +222,7 @@ private slots:
     void onToggleGridClicked(bool);
 
 signals:
-    void objectsChanged();
+    void updatedEvents();
     void openConnectedMap(MapConnection*);
     void wildMonTableOpened(EncounterTableModel*);
     void wildMonTableClosed();

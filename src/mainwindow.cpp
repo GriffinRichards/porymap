@@ -56,8 +56,7 @@ using OrderedJsonDoc = poryjson::JsonDoc;
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    isProgrammaticEventTabChange(false)
+    ui(new Ui::MainWindow)
 {
     QCoreApplication::setOrganizationName("pret");
     QCoreApplication::setApplicationName("porymap");
@@ -330,7 +329,7 @@ void MainWindow::checkForUpdates(bool) {}
 
 void MainWindow::initEditor() {
     this->editor = new Editor(ui);
-    connect(this->editor, &Editor::objectsChanged, this, &MainWindow::updateObjects);
+    connect(this->editor, &Editor::updatedEvents, this, &MainWindow::updateSelectedEvents);
     connect(this->editor, &Editor::openConnectedMap, this, &MainWindow::onOpenConnectedMap);
     connect(this->editor, &Editor::warpEventDoubleClicked, this, &MainWindow::openWarpMap);
     connect(this->editor, &Editor::currentMetatilesSelectionChanged, this, &MainWindow::currentMetatilesSelectionChanged);
@@ -880,7 +879,7 @@ void MainWindow::openWarpMap(QString map_name, int event_id, Event::Group event_
     QList<Event*> events = editor->map->events[event_group];
     if (index < events.length() && index >= 0) {
         Event *event = events.at(index);
-        for (DraggablePixmapItem *item : editor->getObjects()) {
+        for (const auto &item : editor->getEventPixmapItems()) {
             if (item->event == event) {
                 editor->selected_events->clear();
                 editor->selected_events->append(item);
@@ -1663,7 +1662,7 @@ void MainWindow::paste() {
 
                 if (!newEvents.empty()) {
                     editor->map->editHistory.push(new EventPaste(this->editor, editor->map, newEvents));
-                    updateObjects();
+                    updateSelectedEvents();
                 }
 
                 break;
@@ -1717,7 +1716,7 @@ void MainWindow::on_mainTabBar_tabBarClicked(int index)
         clickToolButtonFromEditMode(editor->map_edit_mode);
     } else if (index == MainTab::Events) {
         ui->stackedWidget_MapEvents->setCurrentIndex(1);
-        editor->setEditingObjects();
+        editor->setEditingEvents();
         clickToolButtonFromEditMode(editor->obj_edit_mode);
     } else if (index == MainTab::Connections) {
         editor->setEditingConnections();
@@ -1849,7 +1848,7 @@ void MainWindow::addNewEvent(Event::Type type) {
             auto halfSize = ui->graphicsView_Map->size() / 2;
             auto centerPos = ui->graphicsView_Map->mapToScene(halfSize.width(), halfSize.height());
             object->moveTo(Metatile::coordFromPixmapCoord(centerPos));
-            updateObjects();
+            updateSelectedEvents();
             editor->selectMapEvent(object);
         } else {
             QMessageBox msgBox(this);
@@ -1885,19 +1884,16 @@ void MainWindow::displayEventTabs() {
     tryAddEventTab(ui->tab_Healspots);
 }
 
-void MainWindow::updateObjects() {
-    QList<DraggablePixmapItem *> all_objects = editor->getObjects();
+void MainWindow::updateSelectedEvents() {
+    const auto all_objects = editor->getEventPixmapItems();
     for (auto i = this->lastSelectedEvent.cbegin(), end = this->lastSelectedEvent.cend(); i != end; i++) {
         if (i.value() && !all_objects.contains(i.value()))
             this->lastSelectedEvent.insert(i.key(), nullptr);
     }
+
     displayEventTabs();
-    updateSelectedObjects();
-}
 
-void MainWindow::updateSelectedObjects() {
     QList<DraggablePixmapItem *> events;
-
     if (editor->selected_events && editor->selected_events->length()) {
         events = *editor->selected_events;
     }
@@ -1910,7 +1906,7 @@ void MainWindow::updateSelectedObjects() {
             DraggablePixmapItem *selectedEvent = all_events.first()->getPixmapItem();
             if (selectedEvent) {
                 editor->selected_events->append(selectedEvent);
-                editor->redrawObject(selectedEvent);
+                editor->redrawEventPixmapItem(selectedEvent);
                 events.append(selectedEvent);
             }
         }
@@ -1919,7 +1915,7 @@ void MainWindow::updateSelectedObjects() {
     QScrollArea *scrollTarget = ui->scrollArea_Multiple;
     QWidget *target = ui->scrollAreaWidgetContents_Multiple;
 
-    this->isProgrammaticEventTabChange = true;
+    const QSignalBlocker b_EventTab(ui->tabWidget_EventType);
 
     if (events.length() == 1) {
         // single selected event case
@@ -1934,9 +1930,6 @@ void MainWindow::updateSelectedObjects() {
         case Event::Group::Object: {
             scrollTarget = ui->scrollArea_Objects;
             target = ui->scrollAreaWidgetContents_Objects;
-
-            // TODO: Because we cleared ui->tabWidget_EventType in 'displayEventTabs', the current tab will already be ui->tab_Objects, so no signal is emitted for the change.
-            //       Merge this and 'updateObjects', keep track of what the tab was before we clear it, and restore it afterwards (while blocking the signal)
             ui->tabWidget_EventType->setCurrentWidget(ui->tab_Objects);
 
             QSignalBlocker b(this->ui->spinner_ObjectID);
@@ -1998,8 +1991,7 @@ void MainWindow::updateSelectedObjects() {
         ui->tabWidget_EventType->addTab(ui->tab_Multiple, "Multiple");
         ui->tabWidget_EventType->setCurrentWidget(ui->tab_Multiple);
     }
-
-    this->isProgrammaticEventTabChange = false;
+    updateNewEventButton();
 
     QList<QFrame *> frames;
     for (DraggablePixmapItem *item : events) {
@@ -2055,6 +2047,9 @@ Event::Group MainWindow::getEventGroupFromTabWidget(QWidget *tab) {
     return tabToGroup.value(tab, Event::Group::None);
 }
 
+// When the user changes the event tab we reselect the last event they had selected in that group.
+// If they had no event selected in this group we select the first event in that group.
+// When the event tab is changed programmatically the tab widget's signals should be blocked to avoid calling this.
 void MainWindow::eventTabChanged(int index) {
     if (!editor->map)
         return;
@@ -2062,39 +2057,30 @@ void MainWindow::eventTabChanged(int index) {
     Event::Group group = getEventGroupFromTabWidget(ui->tabWidget_EventType->widget(index));
     DraggablePixmapItem *selectedEvent = this->lastSelectedEvent.value(group, nullptr);
 
-    if (!isProgrammaticEventTabChange) {
-        if (!selectedEvent && editor->map->events.value(group).count()) {
-            Event *event = editor->map->events.value(group).at(0);
-            for (QGraphicsItem *child : editor->events_group->childItems()) {
-                DraggablePixmapItem *item = static_cast<DraggablePixmapItem *>(child);
-                if (item->event == event) {
-                    selectedEvent = item;
-                    break;
-                }
+    if (!selectedEvent && editor->map->events.value(group).count()) {
+        Event *event = editor->map->events.value(group).at(0);
+        for (QGraphicsItem *child : editor->events_group->childItems()) {
+            DraggablePixmapItem *item = static_cast<DraggablePixmapItem *>(child);
+            if (item->event == event) {
+                selectedEvent = item;
+                break;
             }
         }
-
-        if (selectedEvent) editor->selectMapEvent(selectedEvent);
     }
 
-    // If we have an event selected then set the new event button to that type.
-    // If no event is selected we set the new event button to the first event type belonging to the new tab's event group.
-    Event::Type eventType;
-    if (selectedEvent && selectedEvent->event) {
-        eventType = selectedEvent->event->getEventType();
-    } else {
-        static const QMap<Event::Group, Event::Type> groupToNewEventType = {
-            {Event::Group::Object, Event::Type::Object},
-            {Event::Group::Warp,   Event::Type::Warp},
-            {Event::Group::Coord,  Event::Type::Trigger},
-            {Event::Group::Bg,     Event::Type::Sign},
-            {Event::Group::Heal,   Event::Type::HealLocation},
-        };
-        eventType = groupToNewEventType.value(group, Event::Type::Object);
-    }
-    ui->newEventToolButton->setDefaultAction(eventType);
+    if (selectedEvent) editor->selectMapEvent(selectedEvent);
 
-    isProgrammaticEventTabChange = false;
+    updateNewEventButton();
+}
+
+void MainWindow::updateNewEventButton() {
+    // If we have a single event selected then set the new event button to that type.
+    // If multiple events or no events are selected then we leave the button unchanged.
+    if (editor->selected_events && editor->selected_events->length()) {
+        auto event = editor->selected_events->at(0)->event;
+        if (event)
+            ui->newEventToolButton->setDefaultAction(event->getEventType());
+    }
 }
 
 void MainWindow::on_actionDive_Emerge_Map_triggered() {
@@ -2717,7 +2703,6 @@ void MainWindow::togglePreferenceSpecificUi() {
     else
         ui->actionOpen_Project_in_Text_Editor->setEnabled(true);
 
-    // TODO: Add this setting to the preference editor UI.
     ui->newEventToolButton->setActionVisible(Event::Type::HealLocation, porymapConfig.allowHealLocationDeleting);
 
     if (this->updatePromoter)

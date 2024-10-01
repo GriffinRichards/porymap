@@ -139,13 +139,13 @@ void Editor::setEditingCollision() {
     setMapEditingButtonsEnabled(true);
 }
 
-void Editor::setEditingObjects() {
+void Editor::setEditingEvents() {
     current_view = map_item;
     if (events_group) {
         events_group->setVisible(true);
     }
     if (map_item) {
-        map_item->paintingMode = MapPixmapItem::PaintMode::EventObjects;
+        map_item->paintingMode = MapPixmapItem::PaintMode::Events;
         map_item->draw();
         map_item->setVisible(true);
     }
@@ -1155,7 +1155,7 @@ void Editor::onHoveredMapMetatileChanged(const QPoint &pos) {
                               .arg(getMetatileDisplayMessage(metatileId))
                               .arg(QString::number(zoomLevels[this->scaleIndex], 'g', 2)));
     }
-    else if (map_item->paintingMode == MapPixmapItem::PaintMode::EventObjects) {
+    else if (map_item->paintingMode == MapPixmapItem::PaintMode::Events) {
         this->ui->statusBar->showMessage(QString("X: %1, Y: %2, Scale = %3x")
                               .arg(x)
                               .arg(y)
@@ -1167,7 +1167,7 @@ void Editor::onHoveredMapMetatileChanged(const QPoint &pos) {
 void Editor::onHoveredMapMetatileCleared() {
     this->setCursorRectVisible(false);
     if (map_item->paintingMode == MapPixmapItem::PaintMode::Metatiles
-     || map_item->paintingMode == MapPixmapItem::PaintMode::EventObjects) {
+     || map_item->paintingMode == MapPixmapItem::PaintMode::Events) {
         this->ui->statusBar->clearMessage();
     }
     Scripting::cb_BlockHoverCleared();
@@ -1302,7 +1302,7 @@ void Editor::setStraightPathCursorMode(QGraphicsSceneMouseEvent *event) {
 }
 
 void Editor::mouseEvent_map(QGraphicsSceneMouseEvent *event, MapPixmapItem *item) {
-    // TODO: add event tab object painting tool buttons stuff here
+    // TODO: add event tab painting tool buttons stuff here
     if (item->paintingMode == MapPixmapItem::PaintMode::Disabled) {
         return;
     }
@@ -1356,7 +1356,7 @@ void Editor::mouseEvent_map(QGraphicsSceneMouseEvent *event, MapPixmapItem *item
             }
             item->shift(event);
         }
-    } else if (item->paintingMode == MapPixmapItem::PaintMode::EventObjects) {
+    } else if (item->paintingMode == MapPixmapItem::PaintMode::Events) {
         if (obj_edit_mode == "paint" && event->type() == QEvent::GraphicsSceneMousePress) {
             // Right-clicking while in paint mode will change mode to select.
             if (event->buttons() & Qt::RightButton) {
@@ -1380,7 +1380,6 @@ void Editor::mouseEvent_map(QGraphicsSceneMouseEvent *event, MapPixmapItem *item
                 DraggablePixmapItem *newEvent = addNewEvent(eventType);
                 if (newEvent) {
                     newEvent->move(pos.x(), pos.y());
-                    emit objectsChanged();
                     selectMapEvent(newEvent);
                 }
             }
@@ -1402,7 +1401,7 @@ void Editor::mouseEvent_map(QGraphicsSceneMouseEvent *event, MapPixmapItem *item
 
                         QList<Event *> selectedEvents;
 
-                        for (DraggablePixmapItem *item : getObjects()) {
+                        for (const auto &item : getEventPixmapItems()) {
                             selectedEvents.append(item->event);
                         }
                         selection_origin = QPoint(pos.x(), pos.y());
@@ -1720,10 +1719,10 @@ void Editor::displayMapEvents() {
 }
 
 DraggablePixmapItem *Editor::addMapEvent(Event *event) {
-    DraggablePixmapItem *object = new DraggablePixmapItem(event, this);
-    this->redrawObject(object);
-    events_group->addToGroup(object);
-    return object;
+    DraggablePixmapItem *item = new DraggablePixmapItem(event, this);
+    redrawEventPixmapItem(item);
+    events_group->addToGroup(item);
+    return item;
 }
 
 void Editor::clearMapConnections() {
@@ -1946,15 +1945,15 @@ Tileset* Editor::getCurrentMapPrimaryTileset()
     return project->getTileset(tilesetLabel);
 }
 
-QList<DraggablePixmapItem *> Editor::getObjects() {
+QList<DraggablePixmapItem *> Editor::getEventPixmapItems() {
     QList<DraggablePixmapItem *> list;
-    for (QGraphicsItem *child : events_group->childItems()) {
+    for (const auto &child : events_group->childItems()) {
         list.append(static_cast<DraggablePixmapItem *>(child));
     }
     return list;
 }
 
-void Editor::redrawObject(DraggablePixmapItem *item) {
+void Editor::redrawEventPixmapItem(DraggablePixmapItem *item) {
     if (item && item->event && !item->event->getPixmap().isNull()) {
         qreal opacity = item->event->getUsingSprite() ? 1.0 : 0.7;
         item->setOpacity(opacity);
@@ -2009,27 +2008,26 @@ void Editor::shouldReselectEvents() {
 }
 
 void Editor::updateSelectedEvents() {
-    for (DraggablePixmapItem *item : getObjects()) {
-        redrawObject(item);
+    for (const auto &item : getEventPixmapItems()) {
+        redrawEventPixmapItem(item);
     }
-
-    emit objectsChanged();
+    emit updatedEvents();
 }
 
-void Editor::selectMapEvent(DraggablePixmapItem *object, bool toggle) {
-    if (!selected_events || !object)
+void Editor::selectMapEvent(DraggablePixmapItem *item, bool toggle) {
+    if (!selected_events || !item)
         return;
 
     if (!toggle) {
         // Selecting just this event
         selected_events->clear();
-        selected_events->append(object);
-    } else if (!selected_events->contains(object)) {
+        selected_events->append(item);
+    } else if (!selected_events->contains(item)) {
         // Adding event to group selection
-        selected_events->append(object);
+        selected_events->append(item);
     } else if (selected_events->length() > 1) {
         // Removing event from group selection
-        selected_events->removeOne(object);
+        selected_events->removeOne(item);
     } else {
         // Attempting to toggle the only currently-selected event.
         // Unselecting an event this way would be unexpected, so we ignore it.
@@ -2062,7 +2060,7 @@ void Editor::selectedEventIndexChanged(int index, Event::Group eventGroup) {
 }
 
 void Editor::duplicateSelectedEvents() {
-    if (!selected_events || !selected_events->length() || !map || !current_view || map_item->paintingMode != MapPixmapItem::PaintMode::EventObjects)
+    if (!selected_events || !selected_events->length() || !map || !current_view || map_item->paintingMode != MapPixmapItem::PaintMode::Events)
         return;
 
     QList<Event *> selectedEvents;
@@ -2194,9 +2192,9 @@ bool Editor::startDetachedProcess(const QString &command, const QString &working
 // Since the DraggablePixmapItem's event fires first, we can set a temp
 // variable "selectingEvent" so that we can detect whether or not the user
 // is clicking on the background instead of an event.
-void Editor::objectsView_onMousePress(QMouseEvent *event) {
-    // make sure we are in object editing mode
-    if (map_item && map_item->paintingMode != MapPixmapItem::PaintMode::EventObjects) {
+void Editor::eventsView_onMousePress(QMouseEvent *event) {
+    // make sure we are in event editing mode
+    if (map_item && map_item->paintingMode != MapPixmapItem::PaintMode::Events) {
         return;
     }
     if (this->obj_edit_mode == "paint" && event->buttons() & Qt::RightButton) {
