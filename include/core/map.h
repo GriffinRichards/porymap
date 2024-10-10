@@ -94,6 +94,7 @@ public:
     void floodFillCollisionElevation(int x, int y, uint16_t collision, uint16_t elevation);
     void _floodFillCollisionElevation(int x, int y, uint16_t collision, uint16_t elevation);
     void magicFillCollisionElevation(int x, int y, uint16_t collision, uint16_t elevation);
+    bool hasEvents() const;
     QList<Event *> getAllEvents() const;
     QStringList getScriptLabels(Event::Group group = Event::Group::None);
     void removeEvent(Event *);

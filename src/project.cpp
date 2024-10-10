@@ -116,6 +116,8 @@ bool Project::sanityCheck() {
 
 bool Project::load() {
     this->disabledSettingsNames.clear();
+    Event::initExpectedFields();
+
     bool success = readMapLayouts()
                 && readRegionMapSections()
                 && readItemNames()
@@ -174,7 +176,7 @@ void Project::clearTilesetCache() {
 }
 
 Map* Project::loadMap(QString mapName) {
-    if (mapName == DYNAMIC_MAP_NAME)
+    if (mapName == getDynamicMapName())
         return nullptr;
 
     Map *map;
@@ -1688,6 +1690,8 @@ bool Project::readMapGroups() {
     QJsonObject mapGroupsObj = mapGroupsDoc.object();
     QJsonArray mapGroupOrder = mapGroupsObj["group_order"].toArray();
 
+    const QString dynamicMapName = getDynamicMapName();
+
     // Process the map group lists
     for (int groupIndex = 0; groupIndex < mapGroupOrder.size(); groupIndex++) {
         const QString groupName = ParseUtil::jsonToQString(mapGroupOrder.at(groupIndex));
@@ -1698,7 +1702,7 @@ bool Project::readMapGroups() {
         // Process the names in this map group
         for (int j = 0; j < mapNamesJson.size(); j++) {
             const QString mapName = ParseUtil::jsonToQString(mapNamesJson.at(j));
-            if (mapName == DYNAMIC_MAP_NAME) {
+            if (mapName == dynamicMapName) {
                 logWarn(QString("Ignoring map with reserved name '%1'.").arg(mapName));
                 continue;
             }
@@ -1755,9 +1759,9 @@ bool Project::readMapGroups() {
 
     // Save special "Dynamic" constant
     const QString defineName = this->getDynamicMapDefineName();
-    this->mapConstantToMapName.insert(defineName, DYNAMIC_MAP_NAME);
-    this->mapNameToMapConstant.insert(DYNAMIC_MAP_NAME, defineName);
-    this->mapNames.append(DYNAMIC_MAP_NAME);
+    this->mapConstantToMapName.insert(defineName, dynamicMapName);
+    this->mapNameToMapConstant.insert(dynamicMapName, defineName);
+    this->mapNames.append(dynamicMapName);
 
     return true;
 }
@@ -2623,6 +2627,10 @@ int Project::getMaxObjectEvents()
 QString Project::getDynamicMapDefineName() {
     const QString prefix = projectConfig.getIdentifier(ProjectIdentifier::define_map_prefix);
     return prefix + projectConfig.getIdentifier(ProjectIdentifier::define_map_dynamic);
+}
+
+QString Project::getDynamicMapName() {
+    return projectConfig.getIdentifier(ProjectIdentifier::symbol_dynamic_map_name);
 }
 
 void Project::setImportExportPath(QString filename)

@@ -211,12 +211,10 @@ private slots:
     void on_actionMap_Shift_triggered();
 
     void onDeleteKeyPressed();
-    void on_toolButton_deleteObject_clicked();
-
-    void addNewEvent(Event::Type type);
-    void tryAddEventTab(QWidget * tab);
-    void displayEventTabs();
-    void updateSelectedEvents();
+    void refreshSelectedEventsTab();
+    void refreshEventsTab(Event::Group eventGroup);
+    void refreshEventsPanel();
+    void clearEventsPanel();
 
     void on_toolButton_Paint_clicked();
     void on_toolButton_Select_clicked();
@@ -257,8 +255,6 @@ private slots:
 
     void moveEvent(QMoveEvent *event);
     void closeEvent(QCloseEvent *);
-
-    void eventTabChanged(int index);
 
     void on_checkBox_MirrorConnections_stateChanged(int selected);
     void on_actionDive_Emerge_Map_triggered();
@@ -327,8 +323,6 @@ private:
 
     MapHeaderForm *mapHeader = nullptr;
 
-    QMap<Event::Group, DraggablePixmapItem*> lastSelectedEvent;
-
     bool newMapDefaultsSet = false;
     bool tilesetNeedsRedraw = false;
 
@@ -376,7 +370,6 @@ private:
     void setTheme(QString);
     void updateTilesetEditor();
     Event::Group getEventGroupFromTabWidget(QWidget *tab);
-    void updateNewEventButton();
     bool closeSupplementaryWindows();
     void setWindowDisabled(bool);
 

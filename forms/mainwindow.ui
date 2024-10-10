@@ -769,7 +769,7 @@
                                 <rect>
                                  <x>0</x>
                                  <y>0</y>
-                                 <width>424</width>
+                                 <width>434</width>
                                  <height>79</height>
                                 </rect>
                                </property>
@@ -888,7 +888,7 @@
                                 <rect>
                                  <x>0</x>
                                  <y>0</y>
-                                 <width>424</width>
+                                 <width>434</width>
                                  <height>79</height>
                                 </rect>
                                </property>
@@ -992,7 +992,7 @@
                              <rect>
                               <x>8</x>
                               <y>0</y>
-                              <width>412</width>
+                              <width>422</width>
                               <height>446</height>
                              </rect>
                             </property>
@@ -1193,7 +1193,7 @@
                          <rect>
                           <x>0</x>
                           <y>0</y>
-                          <width>428</width>
+                          <width>438</width>
                           <height>591</height>
                          </rect>
                         </property>
@@ -1413,7 +1413,7 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>383</width>
+                             <width>393</width>
                              <height>702</height>
                             </rect>
                            </property>
@@ -1635,6 +1635,60 @@
                       <property name="currentIndex">
                        <number>0</number>
                       </property>
+                      <widget class="QWidget" name="tab_Selected">
+                       <attribute name="title">
+                        <string>Selected</string>
+                       </attribute>
+                       <layout class="QVBoxLayout" name="verticalLayout_8">
+                        <property name="leftMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="rightMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QScrollArea" name="scrollArea_Selected">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="frameShape">
+                           <enum>QFrame::Shape::NoFrame</enum>
+                          </property>
+                          <property name="widgetResizable">
+                           <bool>true</bool>
+                          </property>
+                          <property name="alignment">
+                           <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+                          </property>
+                          <widget class="QWidget" name="scrollAreaWidgetContents_Selected">
+                           <property name="geometry">
+                            <rect>
+                             <x>0</x>
+                             <y>0</y>
+                             <width>445</width>
+                             <height>358</height>
+                            </rect>
+                           </property>
+                           <property name="sizePolicy">
+                            <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
+                             <horstretch>0</horstretch>
+                             <verstretch>0</verstretch>
+                            </sizepolicy>
+                           </property>
+                          </widget>
+                         </widget>
+                        </item>
+                       </layout>
+                      </widget>
                       <widget class="QWidget" name="tab_Objects">
                        <attribute name="title">
                         <string>Objects</string>
@@ -1653,52 +1707,6 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QHBoxLayout" name="hbox_Objects">
-                          <property name="leftMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="topMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="rightMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="bottomMargin">
-                           <number>0</number>
-                          </property>
-                          <item>
-                           <widget class="QSpinBox" name="spinner_ObjectID">
-                            <property name="minimumSize">
-                             <size>
-                              <width>60</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="label_16_5">
-                            <property name="text">
-                             <string>object id</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="horizontalSpacer_Objects">
-                            <property name="orientation">
-                             <enum>Qt::Orientation::Horizontal</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>40</width>
-                              <height>20</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
                          <widget class="QScrollArea" name="scrollArea_Objects">
                           <property name="frameShape">
                            <enum>QFrame::Shape::NoFrame</enum>
@@ -1714,8 +1722,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>100</width>
-                             <height>30</height>
+                             <width>445</width>
+                             <height>358</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -1747,52 +1755,6 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QHBoxLayout" name="hbox_Warps">
-                          <property name="leftMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="topMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="rightMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="bottomMargin">
-                           <number>0</number>
-                          </property>
-                          <item>
-                           <widget class="QSpinBox" name="spinner_WarpID">
-                            <property name="minimumSize">
-                             <size>
-                              <width>60</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="label_16_1">
-                            <property name="text">
-                             <string>warp id</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="horizontalSpacer_Warps">
-                            <property name="orientation">
-                             <enum>Qt::Orientation::Horizontal</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>40</width>
-                              <height>20</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
                          <widget class="QScrollArea" name="scrollArea_Warps">
                           <property name="frameShape">
                            <enum>QFrame::Shape::NoFrame</enum>
@@ -1808,8 +1770,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>100</width>
-                             <height>30</height>
+                             <width>445</width>
+                             <height>358</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -1841,52 +1803,6 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QHBoxLayout" name="hbox_Triggers">
-                          <property name="leftMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="topMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="rightMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="bottomMargin">
-                           <number>0</number>
-                          </property>
-                          <item>
-                           <widget class="QSpinBox" name="spinner_TriggerID">
-                            <property name="minimumSize">
-                             <size>
-                              <width>60</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="label_16_2">
-                            <property name="text">
-                             <string>coord id</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="horizontalSpacer_Triggers">
-                            <property name="orientation">
-                             <enum>Qt::Orientation::Horizontal</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>40</width>
-                              <height>20</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
                          <widget class="QScrollArea" name="scrollArea_Triggers">
                           <property name="frameShape">
                            <enum>QFrame::Shape::NoFrame</enum>
@@ -1902,8 +1818,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>100</width>
-                             <height>30</height>
+                             <width>445</width>
+                             <height>358</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -1935,58 +1851,6 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QHBoxLayout" name="hbox_BGs">
-                          <property name="leftMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="topMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="rightMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="bottomMargin">
-                           <number>0</number>
-                          </property>
-                          <item>
-                           <widget class="QSpinBox" name="spinner_BgID">
-                            <property name="sizePolicy">
-                             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-                              <horstretch>0</horstretch>
-                              <verstretch>0</verstretch>
-                             </sizepolicy>
-                            </property>
-                            <property name="minimumSize">
-                             <size>
-                              <width>60</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="label_16_3">
-                            <property name="text">
-                             <string>bg id</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="horizontalSpacer_BGs">
-                            <property name="orientation">
-                             <enum>Qt::Orientation::Horizontal</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>40</width>
-                              <height>20</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
                          <widget class="QScrollArea" name="scrollArea_BGs">
                           <property name="frameShape">
                            <enum>QFrame::Shape::NoFrame</enum>
@@ -2002,8 +1866,8 @@
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>100</width>
-                             <height>30</height>
+                             <width>445</width>
+                             <height>358</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -2017,9 +1881,9 @@
                         </item>
                        </layout>
                       </widget>
-                      <widget class="QWidget" name="tab_Healspots">
+                      <widget class="QWidget" name="tab_HealLocations">
                        <attribute name="title">
-                        <string>Healspots</string>
+                        <string>Heal Locations</string>
                        </attribute>
                        <layout class="QVBoxLayout" name="verticalLayout_9">
                         <property name="leftMargin">
@@ -2035,53 +1899,7 @@
                          <number>0</number>
                         </property>
                         <item>
-                         <layout class="QHBoxLayout" name="hbox_Heals">
-                          <property name="leftMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="topMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="rightMargin">
-                           <number>12</number>
-                          </property>
-                          <property name="bottomMargin">
-                           <number>0</number>
-                          </property>
-                          <item>
-                           <widget class="QSpinBox" name="spinner_HealID">
-                            <property name="minimumSize">
-                             <size>
-                              <width>60</width>
-                              <height>0</height>
-                             </size>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <widget class="QLabel" name="label_16_4">
-                            <property name="text">
-                             <string>heal id</string>
-                            </property>
-                           </widget>
-                          </item>
-                          <item>
-                           <spacer name="horizontalSpacer_Healspots">
-                            <property name="orientation">
-                             <enum>Qt::Orientation::Horizontal</enum>
-                            </property>
-                            <property name="sizeHint" stdset="0">
-                             <size>
-                              <width>40</width>
-                              <height>20</height>
-                             </size>
-                            </property>
-                           </spacer>
-                          </item>
-                         </layout>
-                        </item>
-                        <item>
-                         <widget class="QScrollArea" name="scrollArea_Healspots">
+                         <widget class="QScrollArea" name="scrollArea_HealLocations">
                           <property name="frameShape">
                            <enum>QFrame::Shape::NoFrame</enum>
                           </property>
@@ -2091,67 +1909,13 @@
                           <property name="alignment">
                            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
                           </property>
-                          <widget class="QWidget" name="scrollAreaWidgetContents_Healspots">
+                          <widget class="QWidget" name="scrollAreaWidgetContents_HealLocations">
                            <property name="geometry">
                             <rect>
                              <x>0</x>
                              <y>0</y>
-                             <width>100</width>
-                             <height>30</height>
-                            </rect>
-                           </property>
-                           <property name="sizePolicy">
-                            <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
-                             <horstretch>0</horstretch>
-                             <verstretch>0</verstretch>
-                            </sizepolicy>
-                           </property>
-                          </widget>
-                         </widget>
-                        </item>
-                       </layout>
-                      </widget>
-                      <widget class="QWidget" name="tab_Multiple">
-                       <attribute name="title">
-                        <string>Multiple</string>
-                       </attribute>
-                       <layout class="QVBoxLayout" name="verticalLayout_8">
-                        <property name="leftMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="topMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="rightMargin">
-                         <number>0</number>
-                        </property>
-                        <property name="bottomMargin">
-                         <number>0</number>
-                        </property>
-                        <item>
-                         <widget class="QScrollArea" name="scrollArea_Multiple">
-                          <property name="sizePolicy">
-                           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                            <horstretch>0</horstretch>
-                            <verstretch>0</verstretch>
-                           </sizepolicy>
-                          </property>
-                          <property name="frameShape">
-                           <enum>QFrame::Shape::NoFrame</enum>
-                          </property>
-                          <property name="widgetResizable">
-                           <bool>true</bool>
-                          </property>
-                          <property name="alignment">
-                           <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
-                          </property>
-                          <widget class="QWidget" name="scrollAreaWidgetContents_Multiple">
-                           <property name="geometry">
-                            <rect>
-                             <x>0</x>
-                             <y>0</y>
-                             <width>100</width>
-                             <height>30</height>
+                             <width>445</width>
+                             <height>358</height>
                             </rect>
                            </property>
                            <property name="sizePolicy">
@@ -2675,8 +2439,8 @@
                        <rect>
                         <x>0</x>
                         <y>0</y>
-                        <width>367</width>
-                        <height>648</height>
+                        <width>204</width>
+                        <height>16</height>
                        </rect>
                       </property>
                       <layout class="QVBoxLayout" name="layout_ConnectionsList">

@@ -260,13 +260,13 @@ EventMove::EventMove(QList<Event *> events,
 void EventMove::redo() {
     QUndoCommand::redo();
 
-    for (Event *event : events) {
+    for (const auto &event : events) {
         event->getPixmapItem()->move(deltaX, deltaY);
     }
 }
 
 void EventMove::undo() {
-    for (Event *event : events) {
+    for (const auto &event : events) {
         event->getPixmapItem()->move(-deltaX, -deltaY);
     }
 
@@ -325,13 +325,8 @@ void EventCreate::redo() {
     QUndoCommand::redo();
 
     map->addEvent(event);
-
-    editor->project->setEventPixmap(event);
-    editor->addMapEvent(event);
-
-    // select this event
-    editor->selected_events->clear();
-    editor->selectMapEvent(event->getPixmapItem());
+    editor->createEventPixmapItem(event);
+    editor->selectMapEvent(event);
 }
 
 void EventCreate::undo() {
@@ -340,9 +335,9 @@ void EventCreate::undo() {
     if (editor->scene->items().contains(event->getPixmapItem())) {
         editor->scene->removeItem(event->getPixmapItem());
     }
-    editor->selected_events->removeOne(event->getPixmapItem());
+    editor->selectedEventsByMap[map->name].removeOne(event);
 
-    editor->shouldReselectEvents();
+    editor->selectedEventsChangedByHistory = true;
 
     QUndoCommand::undo();
 }
@@ -374,34 +369,29 @@ EventDelete::EventDelete(Editor *editor, Map *map,
 void EventDelete::redo() {
     QUndoCommand::redo();
 
-    for (Event *event : selectedEvents) {
+    for (const auto &event : selectedEvents) {
         map->removeEvent(event);
-
         if (editor->scene->items().contains(event->getPixmapItem())) {
             editor->scene->removeItem(event->getPixmapItem());
         }
-        editor->selected_events->removeOne(event->getPixmapItem());
     }
 
-    editor->selected_events->clear();
-    if (nextSelectedEvent)
-        editor->selected_events->append(nextSelectedEvent->getPixmapItem());
-    editor->shouldReselectEvents();
+    // TODO: Is this the behavior we want?
+    if (nextSelectedEvent) {
+        editor->selectedEventsByMap[map->name].clear();
+        editor->selectedEventsByMap[map->name].append(nextSelectedEvent);
+        editor->selectedEventsChangedByHistory = true;
+    }
 }
 
 void EventDelete::undo() {
-    for (Event *event : selectedEvents) {
+    editor->selectedEventsByMap[map->name].clear();
+    for (const auto &event : selectedEvents) {
         map->addEvent(event);
-        editor->project->setEventPixmap(event);
-        editor->addMapEvent(event);
+        editor->createEventPixmapItem(event);
+        editor->selectedEventsByMap[map->name].append(event);
     }
-
-    // select these events
-    editor->selected_events->clear();
-    for (Event *event : selectedEvents) {
-        editor->selected_events->append(event->getPixmapItem());
-    }
-    editor->shouldReselectEvents();
+    editor->selectedEventsChangedByHistory = true;
 
     QUndoCommand::undo();
 }
@@ -432,31 +422,26 @@ EventDuplicate::EventDuplicate(Editor *editor, Map *map,
 void EventDuplicate::redo() {
     QUndoCommand::redo();
 
-    for (Event *event : selectedEvents) {
+    editor->selectedEventsByMap[map->name].clear();
+    for (const auto &event : selectedEvents) {
         map->addEvent(event);
-        editor->project->setEventPixmap(event);
-        editor->addMapEvent(event);
+        editor->createEventPixmapItem(event);
+        editor->selectedEventsByMap[map->name].append(event);
     }
-
-    // select these events
-    editor->selected_events->clear();
-    for (Event *event : selectedEvents) {
-        editor->selected_events->append(event->getPixmapItem());
-    }
-    editor->shouldReselectEvents();
+    editor->selectedEventsChangedByHistory = true;
 }
 
 void EventDuplicate::undo() {
-    for (Event *event : selectedEvents) {
+    for (const auto &event : selectedEvents) {
         map->removeEvent(event);
 
         if (editor->scene->items().contains(event->getPixmapItem())) {
             editor->scene->removeItem(event->getPixmapItem());
         }
-        editor->selected_events->removeOne(event->getPixmapItem());
+        editor->selectedEventsByMap[map->name].removeOne(event);
     }
 
-    editor->shouldReselectEvents();
+    editor->selectedEventsChangedByHistory = true;
 
     QUndoCommand::undo();
 }

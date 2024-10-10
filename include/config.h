@@ -190,6 +190,7 @@ enum ProjectIdentifier {
     symbol_wild_encounters,
     symbol_attribute_table,
     symbol_tilesets_prefix,
+    symbol_dynamic_map_name,
     define_obj_event_count,
     define_min_level,
     define_max_level,

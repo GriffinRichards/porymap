@@ -87,6 +87,7 @@ In addition to these files, there are some specific symbol and macro names that 
    ``symbol_wild_encounters``, ``gWildMonHeaders``, output as the ``label`` property for the top-level wild ecounters JSON object
    ``symbol_attribute_table``, ``sMetatileAttrMasks``, optionally read to get settings on ``Tilesets`` tab
    ``symbol_tilesets_prefix``, ``gTileset_``, for new tileset names and to extract base tileset names
+   ``symbol_dynamic_map_name``, ``Dynamic``, reserved map name to display for ``define_map_dynamic``.
    ``define_obj_event_count``, ``OBJECT_EVENT_TEMPLATES_COUNT``, to limit total Object Events
    ``define_min_level``, ``MIN_LEVEL``, minimum wild encounters level
    ``define_max_level``, ``MAX_LEVEL``, maximum wild encounters level
