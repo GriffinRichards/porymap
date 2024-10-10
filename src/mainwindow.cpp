@@ -256,10 +256,6 @@ void MainWindow::initExtraSignals() {
     connect(ui->mapList, &QTreeView::customContextMenuRequested,
             this, &MainWindow::onOpenMapListContextMenu);
 
-    // other signals
-    connect(ui->newEventToolButton, &NewEventToolButton::newEventAdded, this, &MainWindow::addNewEvent);
-    connect(ui->tabWidget_EventType, &QTabWidget::currentChanged, this, &MainWindow::eventTabChanged);
-
     // Change pages on wild encounter groups
     connect(ui->comboBox_EncounterGroupLabel, QOverload<int>::of(&QComboBox::currentIndexChanged), [this](int index){
         ui->stackedWidget_WildMons->setCurrentIndex(index);
@@ -325,7 +321,9 @@ void MainWindow::checkForUpdates(bool) {}
 
 void MainWindow::initEditor() {
     this->editor = new Editor(ui);
-    connect(this->editor, &Editor::updatedEvents, this, &MainWindow::updateSelectedEvents);
+    connect(this->editor, &Editor::mapEventsCleared, this, &MainWindow::clearEventsPanel);
+    connect(this->editor, &Editor::mapEventsDisplayed, this, &MainWindow::refreshEventsPanel);
+    connect(this->editor, &Editor::selectedEventsChanged, this, &MainWindow::refreshSelectedEventsTab);
     connect(this->editor, &Editor::openConnectedMap, this, &MainWindow::onOpenConnectedMap);
     connect(this->editor, &Editor::warpEventDoubleClicked, this, &MainWindow::openWarpMap);
     connect(this->editor, &Editor::currentMetatilesSelectionChanged, this, &MainWindow::currentMetatilesSelectionChanged);
@@ -360,23 +358,6 @@ void MainWindow::initEditor() {
 
     // Toggle an asterisk in the window title when the undo state is changed
     connect(&editor->editGroup, &QUndoGroup::cleanChanged, this, &MainWindow::showWindowTitle);
-
-    // selecting objects from the spinners
-    connect(this->ui->spinner_ObjectID, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
-        this->editor->selectedEventIndexChanged(value, Event::Group::Object);
-    });
-    connect(this->ui->spinner_WarpID, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
-        this->editor->selectedEventIndexChanged(value, Event::Group::Warp);
-    });
-    connect(this->ui->spinner_TriggerID, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
-        this->editor->selectedEventIndexChanged(value, Event::Group::Coord);
-    });
-    connect(this->ui->spinner_BgID, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
-        this->editor->selectedEventIndexChanged(value, Event::Group::Bg);
-    });
-    connect(this->ui->spinner_HealID, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
-        this->editor->selectedEventIndexChanged(value, Event::Group::Heal);
-    });
 }
 
 void MainWindow::initMiscHeapObjects() {
@@ -781,7 +762,7 @@ bool MainWindow::userSetMap(QString map_name, bool scrollTreeView) {
     if (editor->map && editor->map->name == map_name)
         return true; // Already set
 
-    if (map_name == DYNAMIC_MAP_NAME) {
+    if (map_name == editor->project->getDynamicMapName()) {
         QMessageBox msgBox(this);
         QString errorMsg = QString("The map '%1' can't be opened, it's a placeholder to indicate the specified map will be set programmatically.").arg(map_name);
         msgBox.critical(nullptr, "Error Opening Map", errorMsg);
@@ -801,12 +782,13 @@ bool MainWindow::userSetMap(QString map_name, bool scrollTreeView) {
 }
 
 bool MainWindow::setMap(QString map_name, bool scrollTreeView) {
-    logInfo(QString("Setting map to '%1'").arg(map_name));
-    if (map_name.isEmpty() || map_name == DYNAMIC_MAP_NAME) {
+    if (!editor || !editor->project || map_name.isEmpty() || map_name == editor->project->getDynamicMapName()) {
+        logWarn(QString("Ignored setting map to '%1'").arg(map_name));
         return false;
     }
 
-    if (!editor || !editor->setMap(map_name)) {
+    logInfo(QString("Setting map to '%1'").arg(map_name));
+    if (!editor->setMap(map_name)) {
         logWarn(QString("Failed to set map to '%1'").arg(map_name));
         return false;
     }
@@ -815,7 +797,6 @@ bool MainWindow::setMap(QString map_name, bool scrollTreeView) {
         ui->mapList->setExpanded(mapListProxyModel->mapFromSource(mapListIndexes.value(editor->map->name)), false);
     }
 
-    this->lastSelectedEvent.clear();
     refreshMapScene();
     displayMapProperties();
 
@@ -888,16 +869,9 @@ void MainWindow::openWarpMap(QString map_name, int event_id, Event::Group event_
 
     // Select the target event.
     int index = event_id - Event::getIndexOffset(event_group);
-    QList<Event*> events = editor->map->events[event_group];
+    const QList<Event*> events = editor->map->events[event_group];
     if (index < events.length() && index >= 0) {
-        Event *event = events.at(index);
-        for (const auto &item : editor->getEventPixmapItems()) {
-            if (item->event == event) {
-                editor->selected_events->clear();
-                editor->selected_events->append(item);
-                editor->updateSelectedEvents();
-            }
-        }
+        editor->selectMapEvent(events.at(index));
     } else {
         // Can still warp to this map, but can't select the specified event
         logWarn(QString("%1 %2 doesn't exist on map '%3'").arg(Event::groupToString(event_group)).arg(event_id).arg(map_name));
@@ -1211,7 +1185,7 @@ void MainWindow::onNewMapCreated() {
 
     if (newMap->needsHealLocation) {
         newMap->needsHealLocation = false;
-        addNewEvent(Event::Type::HealLocation);
+        this->editor->addNewEvent(Event::Type::HealLocation);
     }
 
     disconnect(this->newMapDialog, &NewMapDialog::applied, this, &MainWindow::onNewMapCreated);
@@ -1528,23 +1502,16 @@ void MainWindow::copy() {
             }
             case MainTab::Events:
             {
-                if (!editor || !editor->project) break;
+                if (!editor || !editor->project || !editor->map) break;
 
                 // copy the currently selected event(s) as a json object
                 OrderedJson::object copyObject;
                 copyObject["object"] = "events";
 
-                QList<DraggablePixmapItem *> events;
-                if (editor->selected_events && editor->selected_events->length()) {
-                    events = *editor->selected_events;
-                }
-
                 OrderedJson::array eventsArray;
-
-                for (auto item : events) {
-                    Event *event = item->event;
+                for (const auto &event : editor->selectedEventsByMap[editor->map->name]) {
                     OrderedJson::object eventContainer;
-                    eventContainer["event_type"] = Event::typeToString(event->getEventType());
+                    eventContainer["event_type"] = event->typeString();
                     OrderedJson::object eventJson = event->buildEventJson(editor->project);
                     eventContainer["event"] = eventJson;
                     eventsArray.append(eventContainer);
@@ -1674,7 +1641,6 @@ void MainWindow::paste() {
 
                 if (!newEvents.empty()) {
                     editor->map->editHistory.push(new EventPaste(this->editor, editor->map, newEvents));
-                    updateSelectedEvents();
                 }
 
                 break;
@@ -1865,161 +1831,54 @@ void MainWindow::resetMapViewScale() {
     editor->scaleMapView(0);
 }
 
-void MainWindow::addNewEvent(Event::Type type) {
-    if (editor && editor->project) {
-        DraggablePixmapItem *object = editor->addNewEvent(type);
-        if (object) {
-            auto halfSize = ui->graphicsView_Map->size() / 2;
-            auto centerPos = ui->graphicsView_Map->mapToScene(halfSize.width(), halfSize.height());
-            object->moveTo(Metatile::coordFromPixmapCoord(centerPos));
-            updateSelectedEvents();
-            editor->selectMapEvent(object);
+struct EventTabUI {
+    QWidget *tab;
+    QScrollArea *scrollArea;
+    QWidget *contents;
+};
+
+void MainWindow::refreshEventsTab(Event::Group eventGroup) {
+    // Map the event groups to their corresponding widgets in the UI.
+    static const QMap<Event::Group, EventTabUI> groupToUI = {
+        {Event::Group::Object, {ui->tab_Objects,       ui->scrollArea_Objects,       ui->scrollAreaWidgetContents_Objects}},
+        {Event::Group::Warp,   {ui->tab_Warps,         ui->scrollArea_Warps,         ui->scrollAreaWidgetContents_Warps}},
+        {Event::Group::Coord,  {ui->tab_Triggers,      ui->scrollArea_Triggers,      ui->scrollAreaWidgetContents_Triggers}},
+        {Event::Group::Bg,     {ui->tab_BGs,           ui->scrollArea_BGs,           ui->scrollAreaWidgetContents_BGs}},
+        {Event::Group::Heal,   {ui->tab_HealLocations, ui->scrollArea_HealLocations, ui->scrollAreaWidgetContents_HealLocations}},
+        {Event::Group::None,   {ui->tab_Selected,      ui->scrollArea_Selected,      ui->scrollAreaWidgetContents_Selected}},
+    };
+
+    // Get the events to populate this tab with
+    const QList<Event*> *events = nullptr;
+    if (editor->map) {
+        if (eventGroup != Event::Group::None) {
+            // Show all the map's events that belong to this group
+            events = &editor->map->events[eventGroup];
         } else {
-            QMessageBox msgBox(this);
-            msgBox.setText("Failed to add new event");
-            if (Event::typeToGroup(type) == Event::Group::Object) {
-                msgBox.setInformativeText(QString("The limit for object events (%1) has been reached.\n\n"
-                                                  "This limit can be adjusted with %2 in '%3'.")
-                                          .arg(editor->project->getMaxObjectEvents())
-                                          .arg(projectConfig.getIdentifier(ProjectIdentifier::define_obj_event_count))
-                                          .arg(projectConfig.getFilePath(ProjectFilePath::constants_global)));
-            }
-            msgBox.setDefaultButton(QMessageBox::Ok);
-            msgBox.setIcon(QMessageBox::Icon::Warning);
-            msgBox.exec();
-        }
-    }
-}
-
-void MainWindow::tryAddEventTab(QWidget * tab) {
-    auto group = getEventGroupFromTabWidget(tab);
-    if (editor->map->events.value(group).length())
-        ui->tabWidget_EventType->addTab(tab, QString("%1s").arg(Event::groupToString(group)));
-}
-
-void MainWindow::displayEventTabs() {
-    const QSignalBlocker blocker(ui->tabWidget_EventType);
-
-    ui->tabWidget_EventType->clear();
-    tryAddEventTab(ui->tab_Objects);
-    tryAddEventTab(ui->tab_Warps);
-    tryAddEventTab(ui->tab_Triggers);
-    tryAddEventTab(ui->tab_BGs);
-    tryAddEventTab(ui->tab_Healspots);
-}
-
-void MainWindow::updateSelectedEvents() {
-    const auto all_objects = editor->getEventPixmapItems();
-    for (auto i = this->lastSelectedEvent.cbegin(), end = this->lastSelectedEvent.cend(); i != end; i++) {
-        if (i.value() && !all_objects.contains(i.value()))
-            this->lastSelectedEvent.insert(i.key(), nullptr);
-    }
-
-    displayEventTabs();
-
-    QList<DraggablePixmapItem *> events;
-    if (editor->selected_events && editor->selected_events->length()) {
-        events = *editor->selected_events;
-    }
-    else {
-        QList<Event *> all_events;
-        if (editor->map) {
-            all_events = editor->map->getAllEvents();
-        }
-        if (all_events.length()) {
-            DraggablePixmapItem *selectedEvent = all_events.first()->getPixmapItem();
-            if (selectedEvent) {
-                editor->selected_events->append(selectedEvent);
-                editor->redrawEventPixmapItem(selectedEvent);
-                events.append(selectedEvent);
-            }
+            // Show the selected events for this map
+            events = &editor->selectedEventsByMap[editor->map->name];
         }
     }
 
-    QScrollArea *scrollTarget = ui->scrollArea_Multiple;
-    QWidget *target = ui->scrollAreaWidgetContents_Multiple;
+    const struct EventTabUI tabUI = groupToUI.value(eventGroup);
+    if (!tabUI.tab || !tabUI.scrollArea || !tabUI.contents)
+        return;
 
-    const QSignalBlocker b_EventTab(ui->tabWidget_EventType);
+    int tabIndex = ui->tabWidget_EventType->indexOf(tabUI.tab);
 
-    if (events.length() == 1) {
-        // single selected event case
-        Event *current = events[0]->event;
-        Event::Group eventGroup = current->getEventGroup();
-        int event_offs = Event::getIndexOffset(eventGroup);
-
-        if (eventGroup != Event::Group::None)
-            this->lastSelectedEvent.insert(eventGroup, current->getPixmapItem());
-
-        switch (eventGroup) {
-        case Event::Group::Object: {
-            scrollTarget = ui->scrollArea_Objects;
-            target = ui->scrollAreaWidgetContents_Objects;
-            ui->tabWidget_EventType->setCurrentWidget(ui->tab_Objects);
-
-            QSignalBlocker b(this->ui->spinner_ObjectID);
-            this->ui->spinner_ObjectID->setMinimum(event_offs);
-            this->ui->spinner_ObjectID->setMaximum(current->getMap()->events.value(eventGroup).length() + event_offs - 1);
-            this->ui->spinner_ObjectID->setValue(current->getEventIndex() + event_offs);
-            break;
-        }
-        case Event::Group::Warp: {
-            scrollTarget = ui->scrollArea_Warps;
-            target = ui->scrollAreaWidgetContents_Warps;
-            ui->tabWidget_EventType->setCurrentWidget(ui->tab_Warps);
-
-            QSignalBlocker b(this->ui->spinner_WarpID);
-            this->ui->spinner_WarpID->setMinimum(event_offs);
-            this->ui->spinner_WarpID->setMaximum(current->getMap()->events.value(eventGroup).length() + event_offs - 1);
-            this->ui->spinner_WarpID->setValue(current->getEventIndex() + event_offs);
-            break;
-        }
-        case Event::Group::Coord: {
-            scrollTarget = ui->scrollArea_Triggers;
-            target = ui->scrollAreaWidgetContents_Triggers;
-            ui->tabWidget_EventType->setCurrentWidget(ui->tab_Triggers);
-
-            QSignalBlocker b(this->ui->spinner_TriggerID);
-            this->ui->spinner_TriggerID->setMinimum(event_offs);
-            this->ui->spinner_TriggerID->setMaximum(current->getMap()->events.value(eventGroup).length() + event_offs - 1);
-            this->ui->spinner_TriggerID->setValue(current->getEventIndex() + event_offs);
-            break;
-        }
-        case Event::Group::Bg: {
-            scrollTarget = ui->scrollArea_BGs;
-            target = ui->scrollAreaWidgetContents_BGs;
-            ui->tabWidget_EventType->setCurrentWidget(ui->tab_BGs);
-
-            QSignalBlocker b(this->ui->spinner_BgID);
-            this->ui->spinner_BgID->setMinimum(event_offs);
-            this->ui->spinner_BgID->setMaximum(current->getMap()->events.value(eventGroup).length() + event_offs - 1);
-            this->ui->spinner_BgID->setValue(current->getEventIndex() + event_offs);
-            break;
-        }
-        case Event::Group::Heal: {
-            scrollTarget = ui->scrollArea_Healspots;
-            target = ui->scrollAreaWidgetContents_Healspots;
-            ui->tabWidget_EventType->setCurrentWidget(ui->tab_Healspots);
-
-            QSignalBlocker b(this->ui->spinner_HealID);
-            this->ui->spinner_HealID->setMinimum(event_offs);
-            this->ui->spinner_HealID->setMaximum(current->getMap()->events.value(eventGroup).length() + event_offs - 1);
-            this->ui->spinner_HealID->setValue(current->getEventIndex() + event_offs);
-            break;
-        }
-        default:
-            break;
-        }
-        ui->tabWidget_EventType->removeTab(ui->tabWidget_EventType->indexOf(ui->tab_Multiple));
+    if (!events || events->length() == 0) {
+        // Tab has no events, hide it. No further updates needed if tab is hidden.
+        ui->tabWidget_EventType->setTabVisible(tabIndex, false);
+        // TODO: Do we need to handle selecting the next tab (if there is one)?
+        // TODO: Hidden tabs are popping in and out weirdly. Disable them, keeping them always visible? Selected tab needs to disappear, at least.
+        return;
     }
-    else if (events.length() > 1) {
-        ui->tabWidget_EventType->addTab(ui->tab_Multiple, "Multiple");
-        ui->tabWidget_EventType->setCurrentWidget(ui->tab_Multiple);
-    }
-    updateNewEventButton();
 
+    ui->tabWidget_EventType->setTabVisible(tabIndex, true);
+
+    // Create the event frames for the targeted events. If they've already been created we just repopulate it.
     QList<QFrame *> frames;
-    for (DraggablePixmapItem *item : events) {
-        Event *event = item->event;
+    for (const auto &event : *events) {
         EventFrame *eventFrame = event->createEventFrame();
         eventFrame->populate(this->editor->project);
         eventFrame->initialize();
@@ -2027,83 +1886,73 @@ void MainWindow::updateSelectedEvents() {
         frames.append(eventFrame);
     }
 
-    if (target->layout() && target->children().length()) {
-        for (QFrame *frame : target->findChildren<EventFrame *>()) {
+    // Delete the old layout
+    if (tabUI.contents->layout() && tabUI.contents->children().length()) {
+        for (const auto &frame : tabUI.contents->findChildren<EventFrame *>()) {
             if (!frames.contains(frame))
                 frame->hide();
         }
-        delete target->layout();
+        delete tabUI.contents->layout();
     }
 
-    if (!events.empty()) {
-        QVBoxLayout *layout = new QVBoxLayout;
-        target->setLayout(layout);
-        scrollTarget->setWidgetResizable(true);
-        scrollTarget->setWidget(target);
+    // Construct a layout for the event frames, then display it.
+    QVBoxLayout *layout = new QVBoxLayout;
+    tabUI.contents->setLayout(layout);
+    tabUI.scrollArea->setWidgetResizable(true);
+    tabUI.scrollArea->setWidget(tabUI.contents);
 
-        for (QFrame *frame : frames) {
-            layout->addWidget(frame);
-        }
-        layout->addStretch(1);
-        // Show the frames after the vertical spacer is added to avoid visual jank
-        // where the frame would stretch to the bottom of the layout.
-        for (QFrame *frame : frames) {
-            frame->show();
-        }
-
-        ui->label_NoEvents->hide();
-        ui->tabWidget_EventType->show();
+    for (const auto &frame : frames) {
+        layout->addWidget(frame);
     }
-    else {
-        ui->tabWidget_EventType->hide();
-        ui->label_NoEvents->show();
+    layout->addStretch(1);
+    tabUI.scrollArea->adjustSize();
+
+    // Show the frames after the vertical spacer is added to avoid visual jank
+    // where the frame would stretch to the bottom of the layout.
+    for (const auto &frame : frames) {
+        frame->show();
     }
 }
 
-Event::Group MainWindow::getEventGroupFromTabWidget(QWidget *tab) {
-    static const QMap<QWidget*,Event::Group> tabToGroup = {
-        {ui->tab_Objects,   Event::Group::Object},
-        {ui->tab_Warps,     Event::Group::Warp},
-        {ui->tab_Triggers,  Event::Group::Coord},
-        {ui->tab_BGs,       Event::Group::Bg},
-        {ui->tab_Healspots, Event::Group::Heal},
-    };
-    return tabToGroup.value(tab, Event::Group::None);
+void MainWindow::clearEventsPanel() {
+    ui->tabWidget_EventType->hide();
+    ui->label_NoEvents->show();
 }
 
-// When the user changes the event tab we reselect the last event they had selected in that group.
-// If they had no event selected in this group we select the first event in that group.
-// When the event tab is changed programmatically the tab widget's signals should be blocked to avoid calling this.
-void MainWindow::eventTabChanged(int index) {
-    if (!editor->map)
+// TODO: Creating a first event of a group doesn't display the new tab. Likewise in reverse for deleting.
+// TODO: It should be possible to start an event selection by interacting with an event panel
+void MainWindow::refreshEventsPanel() {
+    if (!editor->map || !editor->map->hasEvents()) {
+        // Not displaying map, or map has no events.
+        // TODO: Can this potentially display the contents of an old tab?
+        clearEventsPanel();
         return;
-
-    Event::Group group = getEventGroupFromTabWidget(ui->tabWidget_EventType->widget(index));
-    DraggablePixmapItem *selectedEvent = this->lastSelectedEvent.value(group, nullptr);
-
-    if (!selectedEvent && editor->map->events.value(group).count()) {
-        Event *event = editor->map->events.value(group).at(0);
-        for (QGraphicsItem *child : editor->events_group->childItems()) {
-            DraggablePixmapItem *item = static_cast<DraggablePixmapItem *>(child);
-            if (item->event == event) {
-                selectedEvent = item;
-                break;
-            }
-        }
     }
 
-    if (selectedEvent) editor->selectMapEvent(selectedEvent);
+    refreshEventsTab(Event::Group::Object);
+    refreshEventsTab(Event::Group::Warp);
+    refreshEventsTab(Event::Group::Coord);
+    refreshEventsTab(Event::Group::Bg);
+    refreshEventsTab(Event::Group::Heal);
+    refreshSelectedEventsTab();
 
-    updateNewEventButton();
+    ui->label_NoEvents->hide();
+    ui->tabWidget_EventType->show();
 }
 
-void MainWindow::updateNewEventButton() {
-    // If we have a single event selected then set the new event button to that type.
-    // If multiple events or no events are selected then we leave the button unchanged.
-    if (editor->selected_events && editor->selected_events->length()) {
-        auto event = editor->selected_events->at(0)->event;
-        if (event)
-            ui->newEventToolButton->setDefaultAction(event->getEventType());
+// TODO: We can still try to append frames, rather than rebuild this tab every time the selection changes.
+void MainWindow::refreshSelectedEventsTab() {
+    refreshEventsTab(Event::Group::None);
+
+    if (editor->map) {
+        const QList<Event*> *selectedEvents = &editor->selectedEventsByMap[editor->map->name];
+        if (selectedEvents->length() > 0) {
+            // Switch to the selected events tab
+            ui->tabWidget_EventType->setCurrentIndex(ui->tabWidget_EventType->indexOf(ui->tab_Selected));
+
+            // Update the New Event button to show the type of the most recently-selected event.
+            ui->newEventToolButton->setDefaultAction(selectedEvents->constLast()->getEventType());
+        }
     }
 }
 
@@ -2165,52 +2014,15 @@ void MainWindow::on_horizontalSlider_CollisionTransparency_valueChanged(int valu
 }
 
 void MainWindow::onDeleteKeyPressed() {
+    if (!editor)
+        return;
+
     auto tab = ui->mainTabBar->currentIndex();
     if (tab == MainTab::Events) {
-        on_toolButton_deleteObject_clicked();
+        editor->deleteSelectedMapEvents();
     } else if (tab == MainTab::Connections) {
-        if (editor) editor->removeSelectedConnection();
+        editor->removeSelectedConnection();
     }
-}
-
-void MainWindow::on_toolButton_deleteObject_clicked() {
-    if (!editor || !editor->selected_events)
-        return;
-
-    QList<Event *> selectedEvents;
-    for (DraggablePixmapItem *item : *editor->selected_events) {
-        if (item->event->getEventType() == Event::Type::HealLocation && !porymapConfig.allowHealLocationDeleting)
-            continue;
-        item->event->setPixmapItem(item);
-        selectedEvents.append(item->event);
-    }
-
-    if (selectedEvents.length() <= 0)
-        return;
-
-    // Get the index for the event that should be selected after this event has been deleted.
-    // Select event at next smallest index when deleting a single event.
-    // If deleting multiple events, just let editor work out next selected.
-    DraggablePixmapItem *nextSelectedEvent = nullptr;
-    if (selectedEvents.length() == 1) {
-        Event::Group event_group = selectedEvents[0]->getEventGroup();
-        int index = editor->map->events.value(event_group).indexOf(selectedEvents[0]);
-        if (index != editor->map->events.value(event_group).size() - 1)
-            index++;
-        else
-            index--;
-        Event *event = nullptr;
-        if (index >= 0)
-            event = editor->map->events.value(event_group).at(index);
-        for (QGraphicsItem *child : editor->events_group->childItems()) {
-            DraggablePixmapItem *event_item = static_cast<DraggablePixmapItem *>(child);
-            if (event_item->event == event) {
-                nextSelectedEvent = event_item;
-                break;
-            }
-        }
-    }
-    editor->map->editHistory.push(new EventDelete(editor, editor->map, selectedEvents, nextSelectedEvent ? nextSelectedEvent->event : nullptr));
 }
 
 void MainWindow::on_toolButton_Paint_clicked()

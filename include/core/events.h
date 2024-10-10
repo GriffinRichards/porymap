@@ -119,11 +119,15 @@ public:
     void setY(int newY) { this->y = newY; }
     void setZ(int newZ) { this->elevation = newZ; }
     void setElevation(int newElevation) { this->elevation = newElevation; }
+    void setPos(const QPoint &pos) { this->x = pos.x(); this->y = pos.y(); }
+    void move(int deltaX, int deltaY) { this->x += deltaX; this->y += deltaY; }
+    void move(const QPoint &delta) { move(delta.x(), delta.y()); }
 
     int getX() const { return this->x; }
     int getY() const { return this->y; }
     int getZ() const { return this->elevation; }
     int getElevation() const { return this->elevation; }
+    QPoint getPos() const { return QPoint(this->x, this->y); }
 
     int getPixelX() const { return (this->x * 16) - qMax(0, (this->spriteWidth - 16) / 2); }
     int getPixelY() const { return (this->y * 16) - qMax(0, this->spriteHeight - 16); }
@@ -140,7 +144,6 @@ public:
 
     virtual void setDefaultValues(Project *project);
 
-    virtual QSet<QString> getExpectedFields() = 0;
     void readCustomValues(const QJsonObject &values);
     void addCustomValuesTo(OrderedJson::object *obj) const;
     const QMap<QString, QJsonValue> getCustomValues() const { return this->customValues; }
@@ -163,13 +166,20 @@ public:
     void setSpriteHeight(int newSpriteHeight) { this->spriteHeight = newSpriteHeight; }
     int getspriteHeight() const { return this->spriteHeight; }
 
-    int getEventIndex();
+    int getEventIndex() const;
 
     static QString groupToString(Event::Group group);
     static QString typeToString(Event::Type type);
     static Event::Type typeFromString(QString type);
     static void clearIcons();
     static void setIcons();
+    static void initExpectedFields();
+
+    // Convenience functions for calling static functions
+    QString typeString() const { return Event::typeToString(this->getEventType()); }
+    QString groupString() const { return Event::groupToString(this->getEventGroup()); }
+    int getIndexOffset() const { return Event::getIndexOffset(this->getEventGroup()); }
+    int getEventId() const { return this->getEventIndex() + this->getIndexOffset(); }
 
 // protected attributes
 protected:
@@ -193,6 +203,8 @@ protected:
     DraggablePixmapItem *pixmapItem = nullptr;
 
     QPointer<EventFrame> eventFrame;
+
+    static QMap<Event::Type, QSet<QString>> expectedFields;
 };
 
 
@@ -218,8 +230,6 @@ public:
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
-
-    virtual QSet<QString> getExpectedFields() override;
 
     virtual void loadPixmap(Project *project) override;
 
@@ -290,8 +300,6 @@ public:
 
     virtual void setDefaultValues(Project *project) override;
 
-    virtual QSet<QString> getExpectedFields() override;
-
     virtual void loadPixmap(Project *project) override;
 
     void setTargetMap(QString newTargetMap) { this->targetMap = newTargetMap; }
@@ -328,8 +336,6 @@ public:
 
     virtual void setDefaultValues(Project *project) override;
 
-    virtual QSet<QString> getExpectedFields() override;
-
     void setDestinationMap(QString newDestinationMap) { this->destinationMap = newDestinationMap; }
     QString getDestinationMap() const { return this->destinationMap; }
 
@@ -362,8 +368,6 @@ public:
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
 
     virtual void setDefaultValues(Project *project) override = 0;
-
-    virtual QSet<QString> getExpectedFields() override = 0;
 };
 
 
@@ -390,8 +394,6 @@ public:
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
-
-    virtual QSet<QString> getExpectedFields() override;
 
     void setScriptVar(QString newScriptVar) { this->scriptVar = newScriptVar; }
     QString getScriptVar() const { return this->scriptVar; }
@@ -431,8 +433,6 @@ public:
 
     virtual void setDefaultValues(Project *project) override;
 
-    virtual QSet<QString> getExpectedFields() override;
-
     void setWeather(QString newWeather) { this->weather = newWeather; }
     QString getWeather() const { return this->weather; }
 
@@ -461,8 +461,6 @@ public:
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
 
     virtual void setDefaultValues(Project *project) override = 0;
-
-    virtual QSet<QString> getExpectedFields() override = 0;
 };
 
 
@@ -488,8 +486,6 @@ public:
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
-
-    virtual QSet<QString> getExpectedFields() override;
 
     void setFacingDirection(QString newFacingDirection) { this->facingDirection = newFacingDirection; }
     QString getFacingDirection() const { return this->facingDirection; }
@@ -523,8 +519,6 @@ public:
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
-
-    virtual QSet<QString> getExpectedFields() override;
 
     void setItem(QString newItem) { this->item = newItem; }
     QString getItem() const { return this->item; }
@@ -569,8 +563,6 @@ public:
 
     virtual void setDefaultValues(Project *project) override;
 
-    virtual QSet<QString> getExpectedFields() override;
-
     void setBaseID(QString newBaseID) { this->baseID = newBaseID; }
     QString getBaseID() const { return this->baseID; }
 
@@ -600,8 +592,6 @@ public:
     virtual bool loadFromJson(QJsonObject, Project *) override;
 
     virtual void setDefaultValues(Project *project) override;
-
-    virtual QSet<QString> getExpectedFields() override;
 
     void setIdName(QString newIdName) { this->idName = newIdName; }
     QString getIdName() const { return this->idName; }

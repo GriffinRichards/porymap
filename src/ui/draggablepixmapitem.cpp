@@ -12,7 +12,7 @@ void DraggablePixmapItem::updatePosition() {
     int y = event->getPixelY();
     setX(x);
     setY(y);
-    if (editor->selected_events && editor->selected_events->contains(this)) {
+    if (editor->isEventSelected(event)) {
         setZValue(event->getY() + 1);
     } else {
         setZValue(event->getY());
@@ -40,10 +40,10 @@ void DraggablePixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *mouse) {
     this->lastPos = Metatile::coordFromPixmapCoord(mouse->scenePos());
 
     bool selectionToggle = mouse->modifiers() & Qt::ControlModifier;
-    if (selectionToggle || !editor->selected_events->contains(this)) {
+    if (selectionToggle || !this->editor->isEventSelected(this->event)) {
         // User is either toggling this selection on/off as part of a group selection,
         // or they're newly selecting just this item.
-        this->editor->selectMapEvent(this, selectionToggle);
+        this->editor->selectMapEvent(this->event, selectionToggle);
     } else {
         // This item is already selected and the user isn't toggling the selection, so there are 4 possibilities:
         // 1. This is the only selected event, and the selection is pointless.
@@ -58,15 +58,13 @@ void DraggablePixmapItem::mousePressEvent(QGraphicsSceneMouseEvent *mouse) {
 }
 
 void DraggablePixmapItem::move(int dx, int dy) {
-    event->setX(event->getX() + dx);
-    event->setY(event->getY() + dy);
+    event->move(dx, dy);
     updatePosition();
     emitPositionChanged();
 }
 
 void DraggablePixmapItem::moveTo(const QPoint &pos) {
-    event->setX(pos.x());
-    event->setY(pos.y());
+    event->setPos(pos);
     updatePosition();
     emitPositionChanged();
 }
@@ -83,15 +81,7 @@ void DraggablePixmapItem::mouseMoveEvent(QGraphicsSceneMouseEvent *mouse) {
     this->lastPos = pos;
     emit this->editor->map_item->hoveredMapMetatileChanged(pos);
 
-    QList <Event *> selectedEvents;
-    if (editor->selected_events->contains(this)) {
-        for (DraggablePixmapItem *item : *editor->selected_events) {
-            selectedEvents.append(item->event);
-        }
-    } else {
-        selectedEvents.append(this->event);
-    }
-    editor->map->editHistory.push(new EventMove(selectedEvents, moveDistance.x(), moveDistance.y(), currentActionId));
+    editor->map->editHistory.push(new EventMove(editor->selectedEventsByMap[editor->map->name], moveDistance.x(), moveDistance.y(), currentActionId));
     this->releaseSelectionQueued = false;
 }
 
@@ -103,7 +93,7 @@ void DraggablePixmapItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouse) {
     if (this->releaseSelectionQueued) {
         this->releaseSelectionQueued = false;
         if (Metatile::coordFromPixmapCoord(mouse->scenePos()) == this->lastPos)
-            this->editor->selectMapEvent(this);
+            this->editor->selectMapEvent(this->event);
     }
 }
 

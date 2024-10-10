@@ -76,6 +76,7 @@ const QMap<ProjectIdentifier, QPair<QString, QString>> ProjectConfig::defaultIde
     {ProjectIdentifier::symbol_wild_encounters,        {"symbol_wild_encounters",        "gWildMonHeaders"}},
     {ProjectIdentifier::symbol_attribute_table,        {"symbol_attribute_table",        "sMetatileAttrMasks"}},
     {ProjectIdentifier::symbol_tilesets_prefix,        {"symbol_tilesets_prefix",        "gTileset_"}},
+    {ProjectIdentifier::symbol_dynamic_map_name,       {"symbol_dynamic_map_name",       "Dynamic"}},
     // Defines
     {ProjectIdentifier::define_obj_event_count,        {"define_obj_event_count",        "OBJECT_EVENT_TEMPLATES_COUNT"}},
     {ProjectIdentifier::define_min_level,              {"define_min_level",              "MIN_LEVEL"}},

@@ -99,13 +99,16 @@ public:
     void configureEncounterJSON(QWidget *);
     Tileset *getCurrentMapPrimaryTileset();
 
-    DraggablePixmapItem *addMapEvent(Event *event);
-    void selectMapEvent(DraggablePixmapItem *object, bool toggle = false);
-    DraggablePixmapItem *addNewEvent(Event::Type type);
-    void updateSelectedEvents();
+    DraggablePixmapItem *createEventPixmapItem(Event *event);
+    bool isEventSelected(Event *event);
+    void clearEventSelection();
+    void selectMapEvent(Event *event, bool toggle = false);
+    void selectMapEvents(QList<Event*> events, bool toggle = false);
+    Event *addNewEvent(Event::Type type, const QPoint &pos = QPoint());
+    void deleteSelectedMapEvents();
+    void redrawEvents(const QList<Event*> &events);
     void duplicateSelectedEvents();
     void redrawEventPixmapItem(DraggablePixmapItem *item);
-    QList<DraggablePixmapItem *> getEventPixmapItems();
     void updateCursorRectPos(int x, int y);
     void setCursorRectVisible(bool visible);
     void updateWarpEventWarning(Event *event);
@@ -136,7 +139,7 @@ public:
     CurrentSelectedMetatilesPixmapItem *current_metatile_selection_item = nullptr;
     QPointer<MovementPermissionsSelector> movement_permissions_selector_item = nullptr;
 
-    QList<DraggablePixmapItem *> *selected_events = nullptr;
+    QHash<QString, QList<Event*>> selectedEventsByMap;
     QPointer<ConnectionPixmapItem> selected_connection_item = nullptr;
     QPointer<MapConnection> connection_to_select = nullptr;
 
@@ -154,8 +157,8 @@ public:
     QUndoGroup editGroup; // Manages the undo history for each map
 
     bool selectingEvent = false;
+    bool selectedEventsChangedByHistory = false;
 
-    void shouldReselectEvents();
     void scaleMapView(int);
     static void openInTextEditor(const QString &path, int lineNum = 0);
     bool eventLimitReached(Event::Type type);
@@ -167,7 +170,6 @@ public slots:
     void openProjectInTextEditor() const;
     void maskNonVisibleConnectionTiles();
     void onBorderMetatilesChanged();
-    void selectedEventIndexChanged(int index, Event::Group eventGroup);
     void toggleGrid(bool);
 
 private:
@@ -225,7 +227,9 @@ private slots:
     void onWheelZoom(int);
 
 signals:
-    void updatedEvents();
+    void mapEventsCleared();
+    void mapEventsDisplayed();
+    void selectedEventsChanged();
     void openConnectedMap(MapConnection*);
     void wildMonTableOpened(EncounterTableModel*);
     void wildMonTableClosed();

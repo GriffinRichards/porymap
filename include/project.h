@@ -17,10 +17,6 @@
 #include <QVariant>
 #include <QFileSystemWatcher>
 
-// TODO: Expose to config
-// The displayed name of the special map value used by warps with multiple potential destinations
-static QString DYNAMIC_MAP_NAME = "Dynamic";
-
 class Project : public QObject
 {
     Q_OBJECT
@@ -201,7 +197,6 @@ public:
 
     QString getDefaultPrimaryTilesetLabel();
     QString getDefaultSecondaryTilesetLabel();
-    QString getDynamicMapDefineName();
     void updateTilesetMetatileLabels(Tileset *tileset);
     QString buildMetatileLabelsText(const QMap<QString, uint16_t> defines);
     QString findMetatileLabelsTileset(QString label);
@@ -211,6 +206,8 @@ public:
     void applyParsedLimits();
     QString getDefaultHealLocationName(const QString& mapConstant);
 
+    static QString getDynamicMapDefineName();
+    static QString getDynamicMapName();
     static int getNumTilesPrimary();
     static int getNumTilesTotal();
     static int getNumMetatilesPrimary();

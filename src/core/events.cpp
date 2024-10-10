@@ -5,6 +5,7 @@
 #include "config.h"
 
 QMap<Event::Group, const QPixmap*> Event::icons;
+QMap<Event::Type, QSet<QString>> Event::expectedFields;
 
 Event* Event::create(Event::Type type) {
     switch (type) {
@@ -89,8 +90,8 @@ void Event::setPixmapItem(DraggablePixmapItem *item) {
     }
 }
 
-int Event::getEventIndex() {
-    return this->map->events.value(this->getEventGroup()).indexOf(this);
+int Event::getEventIndex() const {
+    return this->map ? this->map->events.value(this->getEventGroup()).indexOf(this) : -1;
 }
 
 void Event::setDefaultValues(Project *) {
@@ -99,14 +100,14 @@ void Event::setDefaultValues(Project *) {
     this->setElevation(projectConfig.defaultElevation);
 }
 
-// TODO: Constructing and copying these "expected field" sets for every event is probably inefficient. Measure performance difference with static sets initialized on project load
 void Event::readCustomValues(const QJsonObject &json) {
     this->customValues.clear();
-    QSet<QString> expectedFields = this->getExpectedFields();
     for (auto i = json.constBegin(); i != json.constEnd(); i++) {
-        if (!expectedFields.contains(i.key())) {
-            this->customValues[i.key()] = i.value();
-        }
+        if (i.key() == "x" || i.key() == "y") // All events are assumed to have an x and y field
+            continue;
+        if (Event::expectedFields[this->getEventType()].contains(i.key()))
+            continue;
+        this->customValues[i.key()] = i.value();
     }
 }
 
@@ -161,6 +162,107 @@ void Event::setIcons() {
             icons[group] = new QPixmap(customIcon.scaled(w, h));
         }
     }
+}
+
+// Any field not listed here will be considered "custom" and appear in the table at the bottom of the event frame.
+// Some of the fields may change depending on the user's project settings. Once the project is loaded they will remain the
+// same for all events of that type, so to save time when loading events we only construct the field sets once per project load.
+void Event::initExpectedFields() {
+    Event::expectedFields.clear();
+
+    // Object
+    QSet<QString> objectFields = {
+        "graphics_id",
+        "elevation",
+        "movement_type",
+        "movement_range_x",
+        "movement_range_y",
+        "trainer_type",
+        "trainer_sight_or_berry_tree_id",
+        "script",
+        "flag",
+    };
+    if (projectConfig.eventCloneObjectEnabled) {
+        objectFields.insert("type");
+    }
+    expectedFields.insert(Event::Type::Object, objectFields);
+
+    // Clone Object
+    static const QSet<QString> cloneObjectFields = {
+        "type",
+        "graphics_id",
+        "target_local_id",
+        "target_map",
+    };
+    expectedFields.insert(Event::Type::CloneObject, objectFields);
+
+    // Warp
+    static const QSet<QString> warpFields = {
+        "elevation",
+        "dest_map",
+        "dest_warp_id",
+    };
+    expectedFields.insert(Event::Type::Warp, warpFields);
+
+    // Trigger
+    static const QSet<QString> triggerFields = {
+        "type",
+        "elevation",
+        "var",
+        "var_value",
+        "script",
+    };
+    expectedFields.insert(Event::Type::Trigger, triggerFields);
+
+    // Weather Trigger
+    static const QSet<QString> weatherTriggerFields = {
+        "type",
+        "elevation",
+        "weather",
+    };
+    expectedFields.insert(Event::Type::WeatherTrigger, weatherTriggerFields);
+
+    // Sign
+    static const QSet<QString> signFields = {
+        "type",
+        "elevation",
+        "player_facing_dir",
+        "script",
+    };
+    expectedFields.insert(Event::Type::Sign, signFields);
+
+    // Hidden Item
+    QSet<QString> hiddenItemFields = {
+        "type",
+        "elevation",
+        "item",
+        "flag",
+    };
+    if (projectConfig.hiddenItemQuantityEnabled) {
+        hiddenItemFields.insert("quantity");
+    }
+    if (projectConfig.hiddenItemRequiresItemfinderEnabled) {
+        hiddenItemFields.insert("underfoot");
+    }
+    expectedFields.insert(Event::Type::HiddenItem, hiddenItemFields);
+
+    // Secret Base
+    static const QSet<QString> secretBaseFields = {
+        "type",
+        "elevation",
+        "secret_base_id",
+    };
+    expectedFields.insert(Event::Type::SecretBase, secretBaseFields);
+
+    // Heal Location
+    QSet<QString> healLocationFields = {
+        "id",
+    };
+    if (projectConfig.healLocationRespawnDataEnabled) {
+        healLocationFields.insert("respawn_map");
+        healLocationFields.insert("respawn_npc");
+    }
+    expectedFields.insert(Event::Type::HealLocation, healLocationFields);
 }
 
 
@@ -241,28 +343,6 @@ void ObjectEvent::setDefaultValues(Project *project) {
     this->setRadiusY(0);
     this->setSightRadiusBerryTreeID("0");
     this->setFrameFromMovement(project->facingDirections.value(this->getMovement()));
-}
-
-const QSet<QString> expectedObjectFields = {
-    "graphics_id",
-    "elevation",
-    "movement_type",
-    "movement_range_x",
-    "movement_range_y",
-    "trainer_type",
-    "trainer_sight_or_berry_tree_id",
-    "script",
-    "flag",
-};
-
-QSet<QString> ObjectEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedObjectFields;
-    if (projectConfig.eventCloneObjectEnabled) {
-        expectedFields.insert("type");
-    }
-    expectedFields << "x" << "y";
-    return expectedFields;
 }
 
 void ObjectEvent::loadPixmap(Project *project) {
@@ -402,20 +482,6 @@ void CloneObjectEvent::setDefaultValues(Project *project) {
     if (this->getMap()) this->setTargetMap(this->getMap()->name);
 }
 
-const QSet<QString> expectedCloneObjectFields = {
-    "type",
-    "graphics_id",
-    "target_local_id",
-    "target_map",
-};
-
-QSet<QString> CloneObjectEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedCloneObjectFields;
-    expectedFields << "x" << "y";
-    return expectedFields;
-}
-
 void CloneObjectEvent::loadPixmap(Project *project) {
     // Try to get the targeted object to clone
     int eventIndex = this->targetID - 1;
@@ -508,19 +574,6 @@ void WarpEvent::setDefaultValues(Project *) {
     this->setElevation(0);
 }
 
-const QSet<QString> expectedWarpFields = {
-    "elevation",
-    "dest_map",
-    "dest_warp_id",
-};
-
-QSet<QString> WarpEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedWarpFields;
-    expectedFields << "x" << "y";
-    return expectedFields;
-}
-
 void WarpEvent::setWarningEnabled(bool enabled) {
     WarpFrame * frame = static_cast<WarpFrame*>(this->getEventFrame());
     if (frame && frame->warning)
@@ -588,21 +641,6 @@ void TriggerEvent::setDefaultValues(Project *project) {
     this->setElevation(0);
 }
 
-const QSet<QString> expectedTriggerFields = {
-    "type",
-    "elevation",
-    "var",
-    "var_value",
-    "script",
-};
-
-QSet<QString> TriggerEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedTriggerFields;
-    expectedFields << "x" << "y";
-    return expectedFields;
-}
-
 
 
 Event *WeatherTriggerEvent::duplicate() {
@@ -654,19 +692,6 @@ bool WeatherTriggerEvent::loadFromJson(QJsonObject json, Project *) {
 void WeatherTriggerEvent::setDefaultValues(Project *project) {
     this->setWeather(project->coordEventWeatherNames.value(0, "0"));
     this->setElevation(0);
-}
-
-const QSet<QString> expectedWeatherTriggerFields = {
-    "type",
-    "elevation",
-    "weather",
-};
-
-QSet<QString> WeatherTriggerEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedWeatherTriggerFields;
-    expectedFields << "x" << "y";
-    return expectedFields;
 }
 
 
@@ -724,20 +749,6 @@ void SignEvent::setDefaultValues(Project *project) {
     this->setFacingDirection(project->bgEventFacingDirections.value(0, "0"));
     this->setScriptLabel("NULL");
     this->setElevation(0);
-}
-
-const QSet<QString> expectedSignFields = {
-    "type",
-    "elevation",
-    "player_facing_dir",
-    "script",
-};
-
-QSet<QString> SignEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedSignFields;
-    expectedFields << "x" << "y";
-    return expectedFields;
 }
 
 
@@ -816,26 +827,6 @@ void HiddenItemEvent::setDefaultValues(Project *project) {
     }
 }
 
-const QSet<QString> expectedHiddenItemFields = {
-    "type",
-    "elevation",
-    "item",
-    "flag",
-};
-
-QSet<QString> HiddenItemEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedHiddenItemFields;
-    if (projectConfig.hiddenItemQuantityEnabled) {
-        expectedFields << "quantity";
-    }
-    if (projectConfig.hiddenItemRequiresItemfinderEnabled) {
-        expectedFields << "underfoot";
-    }
-    expectedFields << "x" << "y";
-    return expectedFields;
-}
-
 
 
 Event *SecretBaseEvent::duplicate() {
@@ -887,19 +878,6 @@ bool SecretBaseEvent::loadFromJson(QJsonObject json, Project *) {
 void SecretBaseEvent::setDefaultValues(Project *project) {
     this->setBaseID(project->secretBaseIds.value(0, "0"));
     this->setElevation(0);
-}
-
-const QSet<QString> expectedSecretBaseFields = {
-    "type",
-    "elevation",
-    "secret_base_id",
-};
-
-QSet<QString> SecretBaseEvent::getExpectedFields() {
-    QSet<QString> expectedFields = QSet<QString>();
-    expectedFields = expectedSecretBaseFields;
-    expectedFields << "x" << "y";
-    return expectedFields;
 }
 
 
@@ -964,19 +942,5 @@ bool HealLocationEvent::loadFromJson(QJsonObject json, Project *project) {
 void HealLocationEvent::setDefaultValues(Project *project) {
     this->setIdName(this->map ? project->getDefaultHealLocationName(this->map->constantName) : QString());
     this->setRespawnMapName(this->map ? this->map->name : QString());
-    this->setRespawnNPC(0 + Event::getIndexOffset(Event::Group::Object));
-}
-
-const QSet<QString> expectedHealLocationFields = {
-    "x",
-    "y",
-    "id",
-};
-
-QSet<QString> HealLocationEvent::getExpectedFields() {
-    QSet<QString> expectedFields = expectedHealLocationFields;
-    if (projectConfig.healLocationRespawnDataEnabled) {
-        expectedFields << "respawn_map" << "respawn_npc";
-    }
-    return expectedFields;
+    this->setRespawnNPC(0 + this->getIndexOffset());
 }

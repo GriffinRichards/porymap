@@ -134,6 +134,9 @@ void EventFrame::initialize() {
     this->initialized = true;
 
     const QSignalBlocker blocker(this);
+
+    // TODO: This needs to be updated when events are deleted
+    this->label_id->setText(QString("%1 (ID: %2)").arg(this->event->typeString()).arg(this->event->getEventId()));
     
     this->spinner_x->setValue(this->event->getX());
     this->spinner_y->setValue(this->event->getY());
@@ -184,8 +187,6 @@ void EventFrame::populateScriptDropdown(NoScrollComboBox * combo, Project * proj
 
 void ObjectFrame::setup() {
     EventFrame::setup();
-
-    this->label_id->setText("Object");
 
     // sprite combo
     QFormLayout *l_form_sprite = new QFormLayout();
@@ -387,8 +388,6 @@ void ObjectFrame::populate(Project *project) {
 void CloneObjectFrame::setup() {
     EventFrame::setup();
 
-    this->label_id->setText("Clone Object");
-
     this->spinner_z->setEnabled(false);
 
     // sprite combo (edits disabled)
@@ -473,8 +472,6 @@ void CloneObjectFrame::populate(Project *project) {
 void WarpFrame::setup() {
     EventFrame::setup();
 
-    this->label_id->setText("Warp");
-
     // desination map combo
     QFormLayout *l_form_dest_map = new QFormLayout();
     this->combo_dest_map = new NoScrollComboBox(this);
@@ -555,8 +552,6 @@ void WarpFrame::populate(Project *project) {
 
 void TriggerFrame::setup() {
     EventFrame::setup();
-
-    this->label_id->setText("Trigger");
 
     // script combo
     QFormLayout *l_form_script = new QFormLayout();
@@ -644,8 +639,6 @@ void TriggerFrame::populate(Project *project) {
 void WeatherTriggerFrame::setup() {
     EventFrame::setup();
 
-    this->label_id->setText("Weather Trigger");
-
     // weather combo
     QFormLayout *l_form_weather = new QFormLayout();
     this->combo_weather = new NoScrollComboBox(this);
@@ -694,8 +687,6 @@ void WeatherTriggerFrame::populate(Project *project) {
 
 void SignFrame::setup() {
     EventFrame::setup();
-
-    this->label_id->setText("Sign");
 
     // facing dir combo
     QFormLayout *l_form_facing_dir = new QFormLayout();
@@ -765,8 +756,6 @@ void SignFrame::populate(Project *project) {
 
 void HiddenItemFrame::setup() {
     EventFrame::setup();
-
-    this->label_id->setText("Hidden Item");
 
     // item combo
     QFormLayout *l_form_item = new QFormLayout();
@@ -880,8 +869,6 @@ void HiddenItemFrame::populate(Project *project) {
 void SecretBaseFrame::setup() {
     EventFrame::setup();
 
-    this->label_id->setText("Secret Base");
-
     this->spinner_z->setEnabled(false);
 
     // item combo
@@ -932,8 +919,6 @@ void SecretBaseFrame::populate(Project *project) {
 
 void HealLocationFrame::setup() {
     EventFrame::setup();
-
-    this->label_id->setText("Heal Location");
 
     this->hideable_label_z->setVisible(false);
     this->spinner_z->setVisible(false);

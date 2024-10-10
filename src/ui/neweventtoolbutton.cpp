@@ -48,10 +48,13 @@ void NewEventToolButton::setDefaultAction(Event::Type type) {
 }
 
 void NewEventToolButton::setActionVisible(Event::Type type, bool visible) {
-    if (type != defaultEventType && this->newEventActions.contains(type)){
-        this->newEventActions.value(type)->setVisible(visible);
-        if (this->selectedEventType == type){ 
-            setDefaultAction(defaultEventType);
-        }
+    if (type == defaultEventType || !this->newEventActions.contains(type))
+        return;
+
+    this->newEventActions.value(type)->setVisible(visible);
+
+    // If we just hid the currently-selected type we reset to the default.
+    if (this->selectedEventType == type) {
+        setDefaultAction(defaultEventType);
     }
 }

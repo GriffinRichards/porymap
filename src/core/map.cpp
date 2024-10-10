@@ -460,6 +460,14 @@ void Map::magicFillCollisionElevation(int initialX, int initialY, uint16_t colli
     }
 }
 
+bool Map::hasEvents() const {
+    for (const auto &event_list : events) {
+        if (event_list.length())
+            return true;
+    }
+    return false;
+}
+
 QList<Event *> Map::getAllEvents() const {
     QList<Event *> all_events;
     for (const auto &event_list : events) {
