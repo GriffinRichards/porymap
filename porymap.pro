@@ -51,6 +51,7 @@ SOURCES += src/core/block.cpp \
     src/scriptapi/apiutility.cpp \
     src/scriptapi/scripting.cpp \
     src/ui/aboutporymap.cpp \
+    src/ui/colorinputwidget.cpp \
     src/ui/connectionslistitem.cpp \
     src/ui/customscriptseditor.cpp \
     src/ui/customscriptslistitem.cpp \
@@ -60,6 +61,7 @@ SOURCES += src/core/block.cpp \
     src/ui/collisionpixmapitem.cpp \
     src/ui/connectionpixmapitem.cpp \
     src/ui/currentselectedmetatilespixmapitem.cpp \
+    src/ui/gridsettings.cpp \
     src/ui/newmapconnectiondialog.cpp \
     src/ui/overlay.cpp \
     src/ui/prefab.cpp \
@@ -158,6 +160,7 @@ HEADERS  += include/core/block.h \
     include/ui/collisionpixmapitem.h \
     include/ui/connectionpixmapitem.h \
     include/ui/currentselectedmetatilespixmapitem.h \
+    include/ui/gridsettings.h \
     include/ui/mapheaderform.h \
     include/ui/newmapconnectiondialog.h \
     include/ui/prefabframe.h \
@@ -175,6 +178,7 @@ HEADERS  += include/core/block.h \
     include/ui/prefabcreationdialog.h \
     include/ui/regionmappixmapitem.h \
     include/ui/citymappixmapitem.h \
+    include/ui/colorinputwidget.h \
     include/ui/mapsceneeventfilter.h \
     include/ui/metatilelayersitem.h \
     include/ui/metatileselector.h \
@@ -220,7 +224,9 @@ HEADERS  += include/core/block.h \
     include/ui/wildmonchart.h
 
 FORMS    += forms/mainwindow.ui \
+    forms/colorinputwidget.ui \
     forms/connectionslistitem.ui \
+    forms/gridsettingsdialog.ui \
     forms/mapheaderform.ui \
     forms/newmapconnectiondialog.ui \
     forms/prefabcreationdialog.ui \
