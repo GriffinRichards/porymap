@@ -98,21 +98,27 @@ void Event::setDefaultValues(Project *) {
     this->setX(0);
     this->setY(0);
     this->setElevation(projectConfig.defaultElevation);
+    this->setDefaultCustomAttributes();
 }
 
-void Event::readCustomValues(const QJsonObject &json) {
-    this->customValues.clear();
+void Event::setDefaultCustomAttributes() {
+    // TODO: Currently unsupported
+    //this->setCustomAttributes(projectConfig.getDefaultEventCustomAttributes(this->getEventType()));
+}
+
+void Event::readCustomAttributes(const QJsonObject &json) {
+    this->customAttributes.clear();
     for (auto i = json.constBegin(); i != json.constEnd(); i++) {
         if (i.key() == "x" || i.key() == "y") // All events are assumed to have an x and y field
             continue;
         if (Event::expectedFields[this->getEventType()].contains(i.key()))
             continue;
-        this->customValues[i.key()] = i.value();
+        this->customAttributes[i.key()] = i.value();
     }
 }
 
-void Event::addCustomValuesTo(OrderedJson::object *obj) const {
-    for (auto i = this->customValues.constBegin(); i != this->customValues.constEnd(); i++) {
+void Event::addCustomAttributesTo(OrderedJson::object *obj) const {
+    for (auto i = this->customAttributes.constBegin(); i != this->customAttributes.constEnd(); i++) {
         if (!obj->contains(i.key())) {
             (*obj)[i.key()] = OrderedJson::fromQJsonValue(i.value());
         }
@@ -280,7 +286,7 @@ Event *ObjectEvent::duplicate() {
     copy->setSightRadiusBerryTreeID(this->getSightRadiusBerryTreeID());
     copy->setScript(this->getScript());
     copy->setFlag(this->getFlag());
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -310,7 +316,7 @@ OrderedJson::object ObjectEvent::buildEventJson(Project *) const {
     objectJson["trainer_sight_or_berry_tree_id"] = this->getSightRadiusBerryTreeID();
     objectJson["script"] = this->getScript();
     objectJson["flag"] = this->getFlag();
-    this->addCustomValuesTo(&objectJson);
+    this->addCustomAttributesTo(&objectJson);
 
     return objectJson;
 }
@@ -328,7 +334,7 @@ bool ObjectEvent::loadFromJson(QJsonObject json, Project *) {
     this->setScript(ParseUtil::jsonToQString(json["script"]));
     this->setFlag(ParseUtil::jsonToQString(json["flag"]));
     
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -343,6 +349,7 @@ void ObjectEvent::setDefaultValues(Project *project) {
     this->setRadiusY(0);
     this->setSightRadiusBerryTreeID("0");
     this->setFrameFromMovement(project->facingDirections.value(this->getMovement()));
+    this->setDefaultCustomAttributes();
 }
 
 void ObjectEvent::loadPixmap(Project *project) {
@@ -432,7 +439,7 @@ Event *CloneObjectEvent::duplicate() {
     copy->setGfx(this->getGfx());
     copy->setTargetID(this->getTargetID());
     copy->setTargetMap(this->getTargetMap());
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -454,7 +461,7 @@ OrderedJson::object CloneObjectEvent::buildEventJson(Project *project) const {
     cloneJson["y"] = this->getY();
     cloneJson["target_local_id"] = this->getTargetID();
     cloneJson["target_map"] = project->mapNameToMapConstant.value(this->getTargetMap());
-    this->addCustomValuesTo(&cloneJson);
+    this->addCustomAttributesTo(&cloneJson);
 
     return cloneJson;
 }
@@ -471,7 +478,7 @@ bool CloneObjectEvent::loadFromJson(QJsonObject json, Project *project) {
         logWarn(QString("Target Map constant '%1' is invalid.").arg(mapConstant));
     this->setTargetMap(project->mapConstantToMapName.value(mapConstant, mapConstant));
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -480,6 +487,7 @@ void CloneObjectEvent::setDefaultValues(Project *project) {
     this->setGfx(project->gfxDefines.keys().value(0, "0"));
     this->setTargetID(1);
     if (this->getMap()) this->setTargetMap(this->getMap()->name);
+    this->setDefaultCustomAttributes();
 }
 
 void CloneObjectEvent::loadPixmap(Project *project) {
@@ -524,7 +532,7 @@ Event *WarpEvent::duplicate() {
     copy->setDestinationMap(this->getDestinationMap());
     copy->setDestinationWarpID(this->getDestinationWarpID());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -546,7 +554,7 @@ OrderedJson::object WarpEvent::buildEventJson(Project *project) const {
     warpJson["dest_map"] = project->mapNameToMapConstant.value(this->getDestinationMap());
     warpJson["dest_warp_id"] = this->getDestinationWarpID();
 
-    this->addCustomValuesTo(&warpJson);
+    this->addCustomAttributesTo(&warpJson);
 
     return warpJson;
 }
@@ -563,7 +571,7 @@ bool WarpEvent::loadFromJson(QJsonObject json, Project *project) {
         logWarn(QString("Destination Map constant '%1' is invalid.").arg(mapConstant));
     this->setDestinationMap(project->mapConstantToMapName.value(mapConstant, mapConstant));
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -572,6 +580,7 @@ void WarpEvent::setDefaultValues(Project *) {
     if (this->getMap()) this->setDestinationMap(this->getMap()->name);
     this->setDestinationWarpID("0");
     this->setElevation(0);
+    this->setDefaultCustomAttributes();
 }
 
 void WarpEvent::setWarningEnabled(bool enabled) {
@@ -592,7 +601,7 @@ Event *TriggerEvent::duplicate() {
     copy->setScriptVarValue(this->getScriptVarValue());
     copy->setScriptLabel(this->getScriptLabel());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -616,7 +625,7 @@ OrderedJson::object TriggerEvent::buildEventJson(Project *) const {
     triggerJson["var_value"] = this->getScriptVarValue();
     triggerJson["script"] = this->getScriptLabel();
 
-    this->addCustomValuesTo(&triggerJson);
+    this->addCustomAttributesTo(&triggerJson);
 
     return triggerJson;
 }
@@ -629,7 +638,7 @@ bool TriggerEvent::loadFromJson(QJsonObject json, Project *) {
     this->setScriptVarValue(ParseUtil::jsonToQString(json["var_value"]));
     this->setScriptLabel(ParseUtil::jsonToQString(json["script"]));
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -639,6 +648,7 @@ void TriggerEvent::setDefaultValues(Project *project) {
     this->setScriptVar(project->varNames.value(0, "0"));
     this->setScriptVarValue("0");
     this->setElevation(0);
+    this->setDefaultCustomAttributes();
 }
 
 
@@ -651,7 +661,7 @@ Event *WeatherTriggerEvent::duplicate() {
     copy->setElevation(this->getElevation());
     copy->setWeather(this->getWeather());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -673,7 +683,7 @@ OrderedJson::object WeatherTriggerEvent::buildEventJson(Project *) const {
     weatherJson["elevation"] = this->getElevation();
     weatherJson["weather"] = this->getWeather();
 
-    this->addCustomValuesTo(&weatherJson);
+    this->addCustomAttributesTo(&weatherJson);
 
     return weatherJson;
 }
@@ -684,7 +694,7 @@ bool WeatherTriggerEvent::loadFromJson(QJsonObject json, Project *) {
     this->setElevation(ParseUtil::jsonToInt(json["elevation"]));
     this->setWeather(ParseUtil::jsonToQString(json["weather"]));
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -692,6 +702,7 @@ bool WeatherTriggerEvent::loadFromJson(QJsonObject json, Project *) {
 void WeatherTriggerEvent::setDefaultValues(Project *project) {
     this->setWeather(project->coordEventWeatherNames.value(0, "0"));
     this->setElevation(0);
+    this->setDefaultCustomAttributes();
 }
 
 
@@ -705,7 +716,7 @@ Event *SignEvent::duplicate() {
     copy->setFacingDirection(this->getFacingDirection());
     copy->setScriptLabel(this->getScriptLabel());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -728,7 +739,7 @@ OrderedJson::object SignEvent::buildEventJson(Project *) const {
     signJson["player_facing_dir"] = this->getFacingDirection();
     signJson["script"] = this->getScriptLabel();
 
-    this->addCustomValuesTo(&signJson);
+    this->addCustomAttributesTo(&signJson);
 
     return signJson;
 }
@@ -740,7 +751,7 @@ bool SignEvent::loadFromJson(QJsonObject json, Project *) {
     this->setFacingDirection(ParseUtil::jsonToQString(json["player_facing_dir"]));
     this->setScriptLabel(ParseUtil::jsonToQString(json["script"]));
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -749,6 +760,7 @@ void SignEvent::setDefaultValues(Project *project) {
     this->setFacingDirection(project->bgEventFacingDirections.value(0, "0"));
     this->setScriptLabel("NULL");
     this->setElevation(0);
+    this->setDefaultCustomAttributes();
 }
 
 
@@ -764,7 +776,7 @@ Event *HiddenItemEvent::duplicate() {
     copy->setQuantity(this->getQuantity());
     copy->setQuantity(this->getQuantity());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -793,7 +805,7 @@ OrderedJson::object HiddenItemEvent::buildEventJson(Project *) const {
         hiddenItemJson["underfoot"] = this->getUnderfoot();
     }
 
-    this->addCustomValuesTo(&hiddenItemJson);
+    this->addCustomAttributesTo(&hiddenItemJson);
 
     return hiddenItemJson;
 }
@@ -811,7 +823,7 @@ bool HiddenItemEvent::loadFromJson(QJsonObject json, Project *) {
         this->setUnderfoot(ParseUtil::jsonToBool(json["underfoot"]));
     }
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -825,6 +837,7 @@ void HiddenItemEvent::setDefaultValues(Project *project) {
     if (projectConfig.hiddenItemRequiresItemfinderEnabled) {
         this->setUnderfoot(false);
     }
+    this->setDefaultCustomAttributes();
 }
 
 
@@ -837,7 +850,7 @@ Event *SecretBaseEvent::duplicate() {
     copy->setElevation(this->getElevation());
     copy->setBaseID(this->getBaseID());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -859,7 +872,7 @@ OrderedJson::object SecretBaseEvent::buildEventJson(Project *) const {
     secretBaseJson["elevation"] = this->getElevation();
     secretBaseJson["secret_base_id"] = this->getBaseID();
 
-    this->addCustomValuesTo(&secretBaseJson);
+    this->addCustomAttributesTo(&secretBaseJson);
 
     return secretBaseJson;
 }
@@ -870,7 +883,7 @@ bool SecretBaseEvent::loadFromJson(QJsonObject json, Project *) {
     this->setElevation(ParseUtil::jsonToInt(json["elevation"]));
     this->setBaseID(ParseUtil::jsonToQString(json["secret_base_id"]));
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
 
     return true;
 }
@@ -878,6 +891,7 @@ bool SecretBaseEvent::loadFromJson(QJsonObject json, Project *) {
 void SecretBaseEvent::setDefaultValues(Project *project) {
     this->setBaseID(project->secretBaseIds.value(0, "0"));
     this->setElevation(0);
+    this->setDefaultCustomAttributes();
 }
 
 
@@ -891,7 +905,7 @@ Event *HealLocationEvent::duplicate() {
     copy->setRespawnMapName(this->getRespawnMapName());
     copy->setRespawnNPC(this->getRespawnNPC());
 
-    copy->setCustomValues(this->getCustomValues());
+    copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
 }
@@ -916,7 +930,7 @@ OrderedJson::object HealLocationEvent::buildEventJson(Project *project) const {
         healLocationJson["respawn_npc"] = this->getRespawnNPC();
     }
 
-    this->addCustomValuesTo(&healLocationJson);
+    this->addCustomAttributesTo(&healLocationJson);
 
     return healLocationJson;
 }
@@ -935,7 +949,7 @@ bool HealLocationEvent::loadFromJson(QJsonObject json, Project *project) {
         this->setRespawnNPC(ParseUtil::jsonToInt(json["respawn_npc"]));
     }
 
-    this->readCustomValues(json);
+    this->readCustomAttributes(json);
     return true;
 }
 
@@ -943,4 +957,5 @@ void HealLocationEvent::setDefaultValues(Project *project) {
     this->setIdName(this->map ? project->getDefaultHealLocationName(this->map->constantName) : QString());
     this->setRespawnMapName(this->map ? this->map->name : QString());
     this->setRespawnNPC(0 + this->getIndexOffset());
+    this->setDefaultCustomAttributes();
 }

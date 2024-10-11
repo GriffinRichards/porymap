@@ -53,6 +53,8 @@ SOURCES += src/core/block.cpp \
     src/ui/aboutporymap.cpp \
     src/ui/colorinputwidget.cpp \
     src/ui/connectionslistitem.cpp \
+    src/ui/customattributesdialog.cpp \
+    src/ui/customattributestable.cpp \
     src/ui/customscriptseditor.cpp \
     src/ui/customscriptslistitem.cpp \
     src/ui/divingmappixmapitem.cpp \
@@ -69,7 +71,7 @@ SOURCES += src/core/block.cpp \
     src/ui/regionmaplayoutpixmapitem.cpp \
     src/ui/regionmapentriespixmapitem.cpp \
     src/ui/cursortilerect.cpp \
-    src/ui/customattributestable.cpp \
+    src/ui/customattributesframe.cpp \
     src/ui/eventframes.cpp \
     src/ui/filterchildrenproxymodel.cpp \
     src/ui/graphicsview.cpp \
@@ -152,6 +154,8 @@ HEADERS  += include/core/block.h \
     include/lib/orderedjson.h \
     include/ui/aboutporymap.h \
     include/ui/connectionslistitem.h \
+    include/ui/customattributesdialog.h \
+    include/ui/customattributestable.h \
     include/ui/customscriptseditor.h \
     include/ui/customscriptslistitem.h \
     include/ui/divingmappixmapitem.h \
@@ -168,7 +172,7 @@ HEADERS  += include/core/block.h \
     include/ui/regionmaplayoutpixmapitem.h \
     include/ui/regionmapentriespixmapitem.h \
     include/ui/cursortilerect.h \
-    include/ui/customattributestable.h \
+    include/ui/customattributesframe.h \
     include/ui/eventframes.h \
     include/ui/filterchildrenproxymodel.h \
     include/ui/graphicsview.h \
@@ -226,6 +230,7 @@ HEADERS  += include/core/block.h \
 FORMS    += forms/mainwindow.ui \
     forms/colorinputwidget.ui \
     forms/connectionslistitem.ui \
+    forms/customattributesframe.ui \
     forms/gridsettingsdialog.ui \
     forms/mapheaderform.ui \
     forms/newmapconnectiondialog.ui \
@@ -245,6 +250,7 @@ FORMS    += forms/mainwindow.ui \
     forms/projectsettingseditor.ui \
     forms/customscriptseditor.ui \
     forms/customscriptslistitem.ui \
+    forms/customattributesdialog.ui \
     forms/updatepromoter.ui \
     forms/wildmonchart.ui
 

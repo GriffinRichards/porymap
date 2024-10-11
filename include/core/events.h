@@ -144,10 +144,11 @@ public:
 
     virtual void setDefaultValues(Project *project);
 
-    void readCustomValues(const QJsonObject &values);
-    void addCustomValuesTo(OrderedJson::object *obj) const;
-    const QMap<QString, QJsonValue> getCustomValues() const { return this->customValues; }
-    void setCustomValues(const QMap<QString, QJsonValue> newCustomValues) { this->customValues = newCustomValues; }
+    void readCustomAttributes(const QJsonObject &values);
+    void addCustomAttributesTo(OrderedJson::object *obj) const;
+    const QMap<QString, QJsonValue> getCustomAttributes() const { return this->customAttributes; }
+    void setCustomAttributes(const QMap<QString, QJsonValue> newCustomAttributes) { this->customAttributes = newCustomAttributes; }
+    void setDefaultCustomAttributes();
 
     virtual void loadPixmap(Project *project);
 
@@ -180,6 +181,7 @@ public:
     QString groupString() const { return Event::groupToString(this->getEventGroup()); }
     int getIndexOffset() const { return Event::getIndexOffset(this->getEventGroup()); }
     int getEventId() const { return this->getEventIndex() + this->getIndexOffset(); }
+    QSet<QString> getExpectedFields() const { return Event::expectedFields[this->getEventType()]; }
 
 // protected attributes
 protected:
@@ -197,7 +199,7 @@ protected:
     int spriteHeight = 16;
     bool usingSprite = false;
 
-    QMap<QString, QJsonValue> customValues;
+    QMap<QString, QJsonValue> customAttributes;
 
     QPixmap pixmap;
     DraggablePixmapItem *pixmapItem = nullptr;

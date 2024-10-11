@@ -340,6 +340,7 @@ void NewMapDialog::on_pushButton_Accept_clicked() {
         newMap->floorNumber = this->headerData->ui->spinBox_FloorNumber->value();
     }
     newMap->needsHealLocation = ui->checkBox_CanFlyTo->isChecked();
+    //newMap->customHeaders = projectConfig.getDefaultMapCustomAttributes();
 
     MapLayout *layout;
     if (this->existingLayout) {

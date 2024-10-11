@@ -10,7 +10,7 @@
 #include "editcommands.h"
 #include "config.h"
 #include "scripting.h"
-#include "customattributestable.h"
+#include "customattributesframe.h"
 #include <QCheckBox>
 #include <QPainter>
 #include <QMouseEvent>
@@ -50,6 +50,16 @@ Editor::Editor(Ui::MainWindow* ui)
     connect(ui->actionOpen_Project_in_Text_Editor, &QAction::triggered, this, &Editor::openProjectInTextEditor);
     connect(ui->checkBox_ToggleGrid, &QCheckBox::toggled, this, &Editor::toggleGrid);
     connect(ui->newEventToolButton, &NewEventToolButton::newEventAdded, [this](Event::Type type) { this->addNewEvent(type); });
+    connect(ui->mapCustomAttributesFrame->table, &CustomAttributesTable::edited, this, &Editor::updateCustomMapHeaderValues);
+    
+    /* Default settings not currently supported
+    connect(ui->mapCustomAttributesFrame->table, &CustomAttributesTable::defaultSet, [](QString key, QJsonValue value) {
+        projectConfig.insertDefaultMapCustomAttribute(key, value);
+    });
+    connect(ui->mapCustomAttributesFrame->table, &CustomAttributesTable::defaultRemoved, [](QString key) {
+        projectConfig.removeDefaultMapCustomAttribute(key);
+    });
+    */
 }
 
 Editor::~Editor()
@@ -1948,9 +1958,9 @@ void Editor::updateBorderVisibility() {
     }
 }
 
-void Editor::updateCustomMapHeaderValues(QTableWidget *table)
+void Editor::updateCustomMapHeaderValues()
 {
-    map->customHeaders = CustomAttributesTable::getAttributes(table);
+    map->customHeaders = ui->mapCustomAttributesFrame->table->getAttributes();
     map->modify();
 }
 

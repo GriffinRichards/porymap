@@ -7,7 +7,7 @@
 #include "eventframes.h"
 #include "bordermetatilespixmapitem.h"
 #include "currentselectedmetatilespixmapitem.h"
-#include "customattributestable.h"
+#include "customattributesframe.h"
 #include "scripting.h"
 #include "adjustingstackedwidget.h"
 #include "draggablepixmapitem.h"
@@ -896,14 +896,7 @@ void MainWindow::displayMapProperties() {
     ui->comboBox_SecondaryTileset->setCurrentText(map->layout->tileset_secondary_label);
 
     this->mapHeader->setMap(map);
-
-    // Custom fields table.
-    ui->tableWidget_CustomHeaderFields->blockSignals(true);
-    ui->tableWidget_CustomHeaderFields->setRowCount(0);
-    for (auto it = map->customHeaders.begin(); it != map->customHeaders.end(); it++)
-        CustomAttributesTable::addAttribute(ui->tableWidget_CustomHeaderFields, it.key(), it.value());
-    ui->tableWidget_CustomHeaderFields->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    ui->tableWidget_CustomHeaderFields->blockSignals(false);
+    ui->mapCustomAttributesFrame->table->setAttributes(map->customHeaders); // TODO: Rename 'customHeaders'
 }
 
 // Update the UI using information we've read from the user's project files.
@@ -947,6 +940,12 @@ bool MainWindow::setProjectUI() {
     editor->setCollisionGraphics();
     ui->spinBox_SelectedElevation->setMaximum(Block::getMaxElevation());
     ui->spinBox_SelectedCollision->setMaximum(Block::getMaxCollision());
+
+/* Default attributes currently unsupported
+    QStringList keys = projectConfig.getDefaultMapCustomAttributes().keys();
+    ui->mapCustomAttributesFrame->table->setDefaultKeys(QSet<QString>(keys.begin(), keys.end()));
+*/
+    ui->mapCustomAttributesFrame->table->setRestrictedKeys(project->topLevelMapFields);
 
     return true;
 }
@@ -2605,27 +2604,6 @@ void MainWindow::reloadScriptEngine() {
     Scripting::cb_ProjectOpened(projectConfig.projectDir);
     if (editor && editor->map)
         Scripting::cb_MapOpened(editor->map->name);
-}
-
-void MainWindow::on_pushButton_AddCustomHeaderField_clicked()
-{
-    bool ok;
-    QJsonValue value = CustomAttributesTable::pickType(this, &ok);
-    if (ok){
-        CustomAttributesTable::addAttribute(this->ui->tableWidget_CustomHeaderFields, "", value, true);
-        this->editor->updateCustomMapHeaderValues(this->ui->tableWidget_CustomHeaderFields);
-    }
-}
-
-void MainWindow::on_pushButton_DeleteCustomHeaderField_clicked()
-{
-    if (CustomAttributesTable::deleteSelectedAttributes(this->ui->tableWidget_CustomHeaderFields))
-        this->editor->updateCustomMapHeaderValues(this->ui->tableWidget_CustomHeaderFields);
-}
-
-void MainWindow::on_tableWidget_CustomHeaderFields_cellChanged(int, int)
-{
-    this->editor->updateCustomMapHeaderValues(this->ui->tableWidget_CustomHeaderFields);
 }
 
 void MainWindow::on_horizontalSlider_MetatileZoom_valueChanged(int value) {
