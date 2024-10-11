@@ -16,8 +16,11 @@ public:
     QMap<QString, QJsonValue> getAttributes() const;
     void setAttributes(const QMap<QString, QJsonValue> &attributes);
 
-    void addNewAttribute(const QString &key, QJsonValue value, bool setAsDefault = false);
+    void addNewAttribute(const QString &key, const QJsonValue &value, bool setAsDefault = false);
     bool deleteSelectedAttributes();
+
+    bool isEmpty() const;
+    bool isSelectionEmpty() const;
 
     QSet<QString> keys() const;
     QSet<QString> defaultKeys() const;
@@ -39,9 +42,9 @@ private:
     QSet<QString> m_restrictedKeys; // All keys not allowed in the table
 
     QPair<QString, QJsonValue> getAttribute(int row) const;
-    int addAttribute(const QString &key, QJsonValue value);
+    int addAttribute(const QString &key, const QJsonValue &value);
     void removeAttribute(const QString &key);
-    void setDefaultAttribute(const QString &key, QJsonValue value);
+    void setDefaultAttribute(const QString &key, const QJsonValue &value);
     void unsetDefaultAttribute(const QString &key);
     void resizeVertically();
 };

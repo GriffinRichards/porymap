@@ -23,10 +23,14 @@ public:
     explicit CustomAttributesFrame(QWidget *parent = nullptr);
     ~CustomAttributesFrame();
 
-    CustomAttributesTable *table;
+    CustomAttributesTable* table() const;
 
 private:
     Ui::CustomAttributesFrame *ui;
+
+    void addAttribute();
+    void deleteAttribute();
+    void updateDeleteButton();
 };
 
 #endif // CUSTOMATTRIBUTESFRAME_H

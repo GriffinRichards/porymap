@@ -95,7 +95,7 @@ public:
     void updatePrimaryTileset(QString tilesetLabel, bool forceLoad = false);
     void updateSecondaryTileset(QString tilesetLabel, bool forceLoad = false);
     void toggleBorderVisibility(bool visible, bool enableScriptCallback = true);
-    void updateCustomMapHeaderValues();
+    void updateCustomMapAttributes();
     void configureEncounterJSON(QWidget *);
     Tileset *getCurrentMapPrimaryTileset();
 

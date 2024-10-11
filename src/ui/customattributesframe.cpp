@@ -11,20 +11,30 @@ CustomAttributesFrame::CustomAttributesFrame(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    this->table = ui->tableWidget;
-
-    // Connect the "Add" button
-    connect(ui->button_Add, &QPushButton::clicked, [this]() {
-        CustomAttributesDialog dialog(this->table);
-        dialog.exec();
-    });
-
-    // Connect the "Delete" button
-    connect(ui->button_Delete, &QPushButton::clicked, [this]() {
-        this->table->deleteSelectedAttributes();
-    });
+    connect(ui->button_Add, &QPushButton::clicked, this, &CustomAttributesFrame::addAttribute);
+    connect(ui->button_Delete, &QPushButton::clicked, this, &CustomAttributesFrame::deleteAttribute);
+    connect(ui->tableWidget, &QTableWidget::itemSelectionChanged, this, &CustomAttributesFrame::updateDeleteButton);
 }
 
 CustomAttributesFrame::~CustomAttributesFrame() {
     delete ui;
+}
+
+CustomAttributesTable* CustomAttributesFrame::table() const {
+    return ui->tableWidget;
+}
+
+void CustomAttributesFrame::addAttribute() {
+    CustomAttributesDialog dialog(ui->tableWidget);
+    dialog.exec();
+    updateDeleteButton();
+}
+
+void CustomAttributesFrame::deleteAttribute() {
+    ui->tableWidget->deleteSelectedAttributes();
+    updateDeleteButton();
+}
+
+void CustomAttributesFrame::updateDeleteButton() {
+    ui->button_Delete->setDisabled(ui->tableWidget->isSelectionEmpty());
 }

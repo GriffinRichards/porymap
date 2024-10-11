@@ -50,13 +50,13 @@ Editor::Editor(Ui::MainWindow* ui)
     connect(ui->actionOpen_Project_in_Text_Editor, &QAction::triggered, this, &Editor::openProjectInTextEditor);
     connect(ui->checkBox_ToggleGrid, &QCheckBox::toggled, this, &Editor::toggleGrid);
     connect(ui->newEventToolButton, &NewEventToolButton::newEventAdded, [this](Event::Type type) { this->addNewEvent(type); });
-    connect(ui->mapCustomAttributesFrame->table, &CustomAttributesTable::edited, this, &Editor::updateCustomMapHeaderValues);
+    connect(ui->mapCustomAttributesFrame->table(), &CustomAttributesTable::edited, this, &Editor::updateCustomMapAttributes);
     
     /* Default settings not currently supported
-    connect(ui->mapCustomAttributesFrame->table, &CustomAttributesTable::defaultSet, [](QString key, QJsonValue value) {
+    connect(ui->mapCustomAttributesFrame->table(), &CustomAttributesTable::defaultSet, [](QString key, QJsonValue value) {
         projectConfig.insertDefaultMapCustomAttribute(key, value);
     });
-    connect(ui->mapCustomAttributesFrame->table, &CustomAttributesTable::defaultRemoved, [](QString key) {
+    connect(ui->mapCustomAttributesFrame->table(), &CustomAttributesTable::defaultRemoved, [](QString key) {
         projectConfig.removeDefaultMapCustomAttribute(key);
     });
     */
@@ -1958,9 +1958,9 @@ void Editor::updateBorderVisibility() {
     }
 }
 
-void Editor::updateCustomMapHeaderValues()
+void Editor::updateCustomMapAttributes()
 {
-    map->customHeaders = ui->mapCustomAttributesFrame->table->getAttributes();
+    map->customAttributes = ui->mapCustomAttributesFrame->table()->getAttributes();
     map->modify();
 }
 

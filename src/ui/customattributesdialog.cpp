@@ -30,10 +30,6 @@ CustomAttributesDialog::CustomAttributesDialog(CustomAttributesTable *parent) :
         this->setNameEditHighlight(false);
     });
 
-    // Exclude delimiters used in the config
-    static const QRegularExpression expression("[^:,=/]*");
-    ui->lineEdit_Name->setValidator(new QRegularExpressionValidator(expression));
-
     // Button box
     connect(ui->buttonBox, &QDialogButtonBox::clicked, [this](QAbstractButton *button) {
         auto buttonRole = ui->buttonBox->buttonRole(button);
@@ -45,8 +41,15 @@ CustomAttributesDialog::CustomAttributesDialog(CustomAttributesTable *parent) :
         }
     });
 
+    // Default settings currently not supported
+    ui->checkBox_Default->setChecked(false);
+    ui->checkBox_Default->setVisible(false);
+    ui->label_Default->setVisible(false);
+
     ui->spinBox_Value->setMinimum(INT_MIN);
     ui->spinBox_Value->setMaximum(INT_MAX);
+
+    this->adjustSize();
 }
 
 CustomAttributesDialog::~CustomAttributesDialog() {

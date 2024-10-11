@@ -896,7 +896,7 @@ void MainWindow::displayMapProperties() {
     ui->comboBox_SecondaryTileset->setCurrentText(map->layout->tileset_secondary_label);
 
     this->mapHeader->setMap(map);
-    ui->mapCustomAttributesFrame->table->setAttributes(map->customHeaders); // TODO: Rename 'customHeaders'
+    ui->mapCustomAttributesFrame->table()->setAttributes(map->customAttributes);
 }
 
 // Update the UI using information we've read from the user's project files.
@@ -943,9 +943,9 @@ bool MainWindow::setProjectUI() {
 
 /* Default attributes currently unsupported
     QStringList keys = projectConfig.getDefaultMapCustomAttributes().keys();
-    ui->mapCustomAttributesFrame->table->setDefaultKeys(QSet<QString>(keys.begin(), keys.end()));
+    ui->mapCustomAttributesFrame->table()->setDefaultKeys(QSet<QString>(keys.begin(), keys.end()));
 */
-    ui->mapCustomAttributesFrame->table->setRestrictedKeys(project->topLevelMapFields);
+    ui->mapCustomAttributesFrame->table()->setRestrictedKeys(project->topLevelMapFields);
 
     return true;
 }

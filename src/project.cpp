@@ -383,9 +383,9 @@ bool Project::loadMapData(Map* map) {
         }
     }
 
-    for (QString key : mapObj.keys()) {
-        if (!this->topLevelMapFields.contains(key)) {
-            map->customHeaders.insert(key, mapObj[key]);
+    for (auto i = mapObj.constBegin(); i != mapObj.constEnd(); i++) {
+        if (!this->topLevelMapFields.contains(i.key())) {
+            map->customAttributes.insert(i.key(), i.value());
         }
     }
 
@@ -1222,8 +1222,8 @@ void Project::saveMap(Map *map) {
     }
 
     // Custom header fields.
-    for (QString key : map->customHeaders.keys()) {
-        mapObj[key] = OrderedJson::fromQJsonValue(map->customHeaders[key]);
+    for (auto i = map->customAttributes.constBegin(); i != map->customAttributes.constEnd(); i++) {
+        mapObj[i.key()] = OrderedJson::fromQJsonValue(i.value());
     }
 
     OrderedJson mapJson(mapObj);

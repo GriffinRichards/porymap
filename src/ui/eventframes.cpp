@@ -100,9 +100,9 @@ void EventFrame::initCustomAttributesTable() {
     this->custom_attributes = new CustomAttributesFrame(this);
 /* Default attributes currently unsupported
     QStringList keys = projectConfig.getDefaultEventCustomAttributes(this->event->getEventType()).keys();
-    this->custom_attributes->table->setDefaultKeys(QSet<QString>(keys.begin(), keys.end()));
+    this->custom_attributes->table()->setDefaultKeys(QSet<QString>(keys.begin(), keys.end()));
 */
-    this->custom_attributes->table->setRestrictedKeys(this->event->getExpectedFields());
+    this->custom_attributes->table()->setRestrictedKeys(this->event->getExpectedFields());
     this->layout_contents->addWidget(this->custom_attributes);
 }
 
@@ -135,8 +135,8 @@ void EventFrame::connectSignals(MainWindow *) {
     });
 
     this->custom_attributes->disconnect();
-    connect(this->custom_attributes->table, &CustomAttributesTable::edited, [this]() {
-        this->event->setCustomAttributes(this->custom_attributes->table->getAttributes());
+    connect(this->custom_attributes->table(), &CustomAttributesTable::edited, [this]() {
+        this->event->setCustomAttributes(this->custom_attributes->table()->getAttributes());
         this->event->modify();
     });
 /*
@@ -161,7 +161,7 @@ void EventFrame::initialize() {
     this->spinner_y->setValue(this->event->getY());
     this->spinner_z->setValue(this->event->getZ());
 
-    this->custom_attributes->table->setAttributes(this->event->getCustomAttributes());
+    this->custom_attributes->table()->setAttributes(this->event->getCustomAttributes());
 
     this->label_icon->setPixmap(this->event->getPixmap());
 }

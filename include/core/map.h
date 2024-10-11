@@ -54,7 +54,7 @@ public:
     QString sharedEventsMap = "";
     QString sharedScriptsMap = "";
     QStringList scriptsFileLabels;
-    QMap<QString, QJsonValue> customHeaders;
+    QMap<QString, QJsonValue> customAttributes;
     MapLayout *layout;
     bool isPersistedToFile = true;
     bool hasUnsavedDataChanges = false;

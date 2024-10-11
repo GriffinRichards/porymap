@@ -1,15 +1,17 @@
 #include "customattributestable.h"
 #include "customattributesdialog.h"
 #include "parseutil.h"
+#include "noscrollspinbox.h"
 #include <QHeaderView>
 #include <QScrollBar>
-#include <QSpinBox>
 
 enum Column {
     Key,
     Value,
     Count
 };
+
+// TODO: Try to resize key column to max key length on first show, maybe up to half the width of the table
 
 CustomAttributesTable::CustomAttributesTable(QWidget *parent) :
     QTableWidget(parent)
@@ -36,6 +38,7 @@ CustomAttributesTable::CustomAttributesTable(QWidget *parent) :
     });
 
     // Double clicking the Key cell will bring up the dialog window to edit all the attribute's properties
+    /*
     connect(this, &QTableWidget::cellDoubleClicked, [this](int row, int column) {
         if (column == Column::Key) {
             // Get cell data
@@ -51,6 +54,7 @@ CustomAttributesTable::CustomAttributesTable(QWidget *parent) :
             }
         }
     });
+    */
 }
 
 QMap<QString, QJsonValue> CustomAttributesTable::getAttributes() const {
@@ -66,7 +70,7 @@ QMap<QString, QJsonValue> CustomAttributesTable::getAttributes() const {
 QPair<QString, QJsonValue> CustomAttributesTable::getAttribute(int row) const {
     auto keyItem = this->item(row, Column::Key);
     if (!keyItem)
-        return QPair<QString, QJsonValue>();
+        return {};
 
     // Read from the table data which JSON type to save the value as
     QJsonValue::Type type = static_cast<QJsonValue::Type>(keyItem->data(Qt::UserRole).toInt());
@@ -75,7 +79,7 @@ QPair<QString, QJsonValue> CustomAttributesTable::getAttribute(int row) const {
     if (type == QJsonValue::String) {
         value = QJsonValue(this->item(row, Column::Value)->text());
     } else if (type == QJsonValue::Double) {
-        auto spinBox = static_cast<QSpinBox*>(this->cellWidget(row, Column::Value));
+        auto spinBox = static_cast<NoScrollSpinBox*>(this->cellWidget(row, Column::Value));
         value = QJsonValue(spinBox->value());
     } else if (type == QJsonValue::Bool) {
         value = QJsonValue(this->item(row, Column::Value)->checkState() == Qt::Checked);
@@ -84,11 +88,11 @@ QPair<QString, QJsonValue> CustomAttributesTable::getAttribute(int row) const {
         value = this->item(row, Column::Value)->data(Qt::UserRole).toJsonValue();
     }
 
-    return QPair<QString, QJsonValue>(keyItem->text(), value);
+    return {keyItem->text(), value};
 }
 
-int CustomAttributesTable::addAttribute(const QString &key, QJsonValue value) {
-    const QSignalBlocker blocker(this);
+int CustomAttributesTable::addAttribute(const QString &key, const QJsonValue &value) {
+    const QSignalBlocker blocker(this); // TODO: Removing this causes a crash that should be prevented
 
     // Certain key names cannot be used (if they would overwrite a field used outside this table)
     if (this->m_restrictedKeys.contains(key))
@@ -120,12 +124,12 @@ int CustomAttributesTable::addAttribute(const QString &key, QJsonValue value) {
         break;
     } case QJsonValue::Double: {
         // Add a spin box for editing number values
-        auto spinBox = new QSpinBox(this);
+        auto spinBox = new NoScrollSpinBox(this);
         spinBox->setMinimum(INT_MIN);
         spinBox->setMaximum(INT_MAX);
         spinBox->setValue(ParseUtil::jsonToInt(value));
         // This connection will be handled by QTableWidget::cellChanged for other cell types
-        connect(spinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this]() { emit this->edited(); });
+        connect(spinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &CustomAttributesTable::edited);
         this->setCellWidget(rowIndex, Column::Value, spinBox);
         break;
     } case QJsonValue::Bool: {
@@ -149,7 +153,7 @@ int CustomAttributesTable::addAttribute(const QString &key, QJsonValue value) {
 }
 
 // For the user adding an attribute by interacting with the table
-void CustomAttributesTable::addNewAttribute(const QString &key, QJsonValue value, bool setAsDefault) {
+void CustomAttributesTable::addNewAttribute(const QString &key, const QJsonValue &value, bool setAsDefault) {
     int row = this->addAttribute(key, value);
     if (row < 0) return;
     if (setAsDefault) this->setDefaultAttribute(key, value);
@@ -167,7 +171,7 @@ void CustomAttributesTable::setAttributes(const QMap<QString, QJsonValue> &attri
     this->resizeVertically();
 }
 
-void CustomAttributesTable::setDefaultAttribute(const QString &key, QJsonValue value) {
+void CustomAttributesTable::setDefaultAttribute(const QString &key, const QJsonValue &value) {
     this->m_defaultKeys.insert(key);
     emit this->defaultSet(key, value);
 }
@@ -189,13 +193,12 @@ void CustomAttributesTable::removeAttribute(const QString &key) {
 }
 
 bool CustomAttributesTable::deleteSelectedAttributes() {
-    int rowCount = this->rowCount();
-    if (rowCount <= 0)
+    if (this->isEmpty())
         return false;
 
     QModelIndexList indexList = this->selectionModel()->selectedIndexes();
     QList<QPersistentModelIndex> persistentIndexes;
-    for (QModelIndex index : indexList) {
+    for (const auto &index : indexList) {
         QPersistentModelIndex persistentIndex(index);
         persistentIndexes.append(persistentIndex);
     }
@@ -203,7 +206,7 @@ bool CustomAttributesTable::deleteSelectedAttributes() {
     if (persistentIndexes.isEmpty())
         return false;
 
-    for (QPersistentModelIndex index : persistentIndexes) {
+    for (const auto &index : persistentIndexes) {
         auto row = index.row();
         auto item = this->item(row, Column::Key);
         if (item) this->m_keys.remove(item->text());
@@ -220,7 +223,7 @@ bool CustomAttributesTable::deleteSelectedAttributes() {
 
 void CustomAttributesTable::resizeVertically() {
     int height = 0;
-    if (this->rowCount() == 0) {
+    if (this->isEmpty()) {
         // Hide header when table is empty
         this->horizontalHeader()->setVisible(false);
     } else {
@@ -240,8 +243,8 @@ void CustomAttributesTable::resizeVertically() {
 }
 
 void CustomAttributesTable::resizeEvent(QResizeEvent *event) {
+    QTableWidget::resizeEvent(event);
     this->resizeVertically();
-    QAbstractItemView::resizeEvent(event);
 }
 
 QSet<QString> CustomAttributesTable::keys() const {
@@ -262,4 +265,12 @@ void CustomAttributesTable::setDefaultKeys(const QSet<QString> &keys) {
 
 void CustomAttributesTable::setRestrictedKeys(const QSet<QString> &keys) {
     this->m_restrictedKeys = keys;
+}
+
+bool CustomAttributesTable::isEmpty() const {
+    return this->rowCount() <= 0;
+}
+
+bool CustomAttributesTable::isSelectionEmpty() const {
+    return this->selectedIndexes().isEmpty();
 }
