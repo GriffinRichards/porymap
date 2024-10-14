@@ -11,6 +11,7 @@
 #include <QDateTime>
 #include <QUrl>
 #include <QVersionNumber>
+#include <QGraphicsPixmapItem>
 
 #include "events.h"
 
@@ -89,6 +90,7 @@ public:
         this->lastUpdateCheckTime = QDateTime();
         this->lastUpdateCheckVersion = porymapVersion;
         this->rateLimitTimes.clear();
+        this->eventSelectionShapeMode = QGraphicsPixmapItem::MaskShape;
     }
     void addRecentProject(QString project);
     void setRecentProjects(QStringList projects);
@@ -143,6 +145,7 @@ public:
     QVersionNumber lastUpdateCheckVersion;
     QMap<QUrl, QDateTime> rateLimitTimes;
     QByteArray wildMonChartGeometry;
+    QGraphicsPixmapItem::ShapeMode eventSelectionShapeMode;
 
 protected:
     virtual QString getConfigFilepath() override;

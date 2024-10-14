@@ -2540,6 +2540,9 @@ void MainWindow::togglePreferenceSpecificUi() {
 
     ui->newEventToolButton->setActionVisible(Event::Type::HealLocation, porymapConfig.allowHealLocationDeleting);
 
+    // Redraw all events to use updated porymapConfig.eventSelectionShapeMode
+    this->editor->redrawAllEvents();
+
     if (this->updatePromoter)
         this->updatePromoter->updatePreferences();
 }

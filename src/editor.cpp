@@ -35,7 +35,7 @@ Editor::Editor(Ui::MainWindow* ui)
     /// the index is changed.
     connect(&editGroup, &QUndoGroup::indexChanged, [this](int) {
         if (this->map && this->selectedEventsChangedByHistory) {
-            redrawEvents(this->map->getAllEvents());
+            redrawAllEvents();
             emit selectedEventsChanged();
             this->selectedEventsChangedByHistory = false;
         }
@@ -1976,7 +1976,7 @@ void Editor::redrawEventPixmapItem(DraggablePixmapItem *item) {
         item->setOpacity(opacity);
         project->setEventPixmap(item->event, true);
         item->setPixmap(item->event->getPixmap());
-        item->setShapeMode(QGraphicsPixmapItem::BoundingRectShape);
+        item->setShapeMode(porymapConfig.eventSelectionShapeMode);
         if (isEventSelected(item->event)) {
             QImage image = item->pixmap().toImage();
             QPainter painter(&image);
@@ -2016,6 +2016,10 @@ void Editor::updateWarpEventWarnings() {
         return;
     for (const auto &event : this->map->events.value(Event::Group::Warp))
         updateWarpEventWarning(event);
+}
+
+void Editor::redrawAllEvents() {
+    redrawEvents(this->map->getAllEvents());
 }
 
 void Editor::redrawEvents(const QList<Event*> &events) {

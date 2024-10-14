@@ -106,6 +106,7 @@ public:
     void selectMapEvents(QList<Event*> events, bool toggle = false);
     Event *addNewEvent(Event::Type type, const QPoint &pos = QPoint());
     void deleteSelectedMapEvents();
+    void redrawAllEvents();
     void redrawEvents(const QList<Event*> &events);
     void duplicateSelectedEvents();
     void redrawEventPixmapItem(DraggablePixmapItem *item);

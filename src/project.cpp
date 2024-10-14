@@ -2422,6 +2422,7 @@ bool Project::readEventGraphics() {
         gfx_label = gfx_label.section(re_parens, 1, 1);
         QString path = graphicIncbins[gfx_label];
 
+        // TODO: Cut walking frames from the spritesheet now, instead of on-demand.
         if (!path.isNull()) {
             path = fixGraphicPath(path);
             eventGraphics->spritesheet = QImage(root + "/" + path);

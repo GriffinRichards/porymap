@@ -173,6 +173,7 @@ void Event::setIcons() {
 // Any field not listed here will be considered "custom" and appear in the table at the bottom of the event frame.
 // Some of the fields may change depending on the user's project settings. Once the project is loaded they will remain the
 // same for all events of that type, so to save time when loading events we only construct the field sets once per project load.
+// TODO: Distribute to each class with a virtual function
 void Event::initExpectedFields() {
     Event::expectedFields.clear();
 
