@@ -765,7 +765,7 @@ bool MainWindow::userSetMap(QString map_name, bool scrollTreeView) {
     if (map_name == editor->project->getDynamicMapName()) {
         QMessageBox msgBox(this);
         QString errorMsg = QString("The map '%1' can't be opened, it's a placeholder to indicate the specified map will be set programmatically.").arg(map_name);
-        msgBox.critical(nullptr, "Error Opening Map", errorMsg);
+        msgBox.warning(nullptr, "Cannot Open Map", errorMsg);
         return false;
     }
 

@@ -201,7 +201,7 @@ void Event::initExpectedFields() {
         "target_local_id",
         "target_map",
     };
-    expectedFields.insert(Event::Type::CloneObject, objectFields);
+    expectedFields.insert(Event::Type::CloneObject, cloneObjectFields);
 
     // Warp
     static const QSet<QString> warpFields = {
