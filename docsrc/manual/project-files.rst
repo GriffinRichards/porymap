@@ -41,7 +41,6 @@ The filepath that Porymap expects for each file can be overridden on the ``Files
    src/data/object_events/object_event_pic_tables.h, yes, no, ``data_obj_event_pic_tables``,
    src/data/object_events/object_event_graphics.h, yes, no, ``data_obj_event_gfx``,
    src/data/graphics/pokemon.h, yes, no, ``data_pokemon_gfx``, for pokemon sprite icons
-   src/data/heal_locations.h, yes, yes, ``data_heal_locations``,
    src/data/region_map/region_map_sections.json, yes, yes, ``json_region_map_entries``,
    src/data/region_map/porymap_config.json, yes, yes, ``json_region_porymap_cfg``,
    include/constants/global.h, yes, no, ``constants_global``, reads ``define_obj_event_count``
@@ -85,11 +84,6 @@ In addition to these files, there are some specific symbol and macro names that 
    ``symbol_obj_event_gfx_pointers``, ``gObjectEventGraphicsInfoPointers``, to map Object Event graphics IDs to graphics data
    ``symbol_pokemon_icon_table``, ``gMonIconTable``, to map species constants to icon images
    ``symbol_wild_encounters``, ``gWildMonHeaders``, output as the ``label`` property for the top-level wild ecounters JSON object
-   ``symbol_heal_locations_type``, ``struct HealLocation``, the type for the Heal Locations table
-   ``symbol_heal_locations``, ``sHealLocations``, the default Heal Locations table name when ``Respawn Map/NPC`` is disabled
-   ``symbol_spawn_points``, ``sSpawnPoints``, the default Heal Locations table name when ``Respawn Map/NPC`` is enabled
-   ``symbol_spawn_maps``, ``u16 sWhiteoutRespawnHealCenterMapIdxs``, the type and table name for Heal Location ``Respawn Map`` values
-   ``symbol_spawn_npcs``, ``u8 sWhiteoutRespawnHealerNpcIds``, the type and table name for Heal Location ``Respawn NPC`` values
    ``symbol_attribute_table``, ``sMetatileAttrMasks``, optionally read to get settings on ``Tilesets`` tab
    ``symbol_tilesets_prefix``, ``gTileset_``, for new tileset names and to extract base tileset names
    ``symbol_dynamic_map_name``, ``Dynamic``, reserved map name to display for ``define_map_dynamic``
@@ -114,8 +108,7 @@ In addition to these files, there are some specific symbol and macro names that 
    ``define_attribute_terrain``, ``METATILE_ATTRIBUTE_TERRAIN``, name used to extract setting from ``symbol_attribute_table``
    ``define_attribute_encounter``, ``METATILE_ATTRIBUTE_ENCOUNTER_TYPE``, name used to extract setting from ``symbol_attribute_table``
    ``define_metatile_label_prefix``, ``METATILE_``, expected prefix for metatile label macro names
-   ``define_heal_locations_prefix``, ``HEAL_LOCATION_``, output as prefix for Heal Location IDs if ``Respawn Map/NPC`` is disabled
-   ``define_spawn_prefix``, ``SPAWN_``, output as prefix for Heal Location IDs if ``Respawn Map/NPC`` is enabled
+   ``define_heal_locations_prefix``, ``HEAL_LOCATION_``, expected prefix for heal location macro names
    ``define_map_prefix``, ``MAP_``, expected prefix for map macro names
    ``define_map_dynamic``, ``DYNAMIC``, macro name after prefix for Dynamic maps
    ``define_map_empty``, ``UNDEFINED``, macro name after prefix for empty maps

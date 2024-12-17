@@ -4,7 +4,6 @@
 
 #include "map.h"
 #include "blockdata.h"
-#include "heallocation.h"
 #include "wildmoninfo.h"
 #include "parseutil.h"
 #include "orderedjson.h"
@@ -35,8 +34,6 @@ public:
     QStringList mapNames;
     QStringList groupNames;
     QMap<QString, QStringList> groupNameToMapNames;
-    QList<HealLocation> healLocations;
-    QMap<QString, int> healLocationNameToValue;
     QMap<QString, QString> mapConstantsToMapNames;
     QMap<QString, QString> mapNamesToMapConstants;
     QMap<QString, QString> mapNameToLayoutId;
@@ -62,6 +59,8 @@ public:
     QStringList bgEventFacingDirections;
     QStringList trainerTypes;
     QStringList globalScriptLabels;
+    QStringList healLocationNames;
+    QSet<QString> healLocationNamesToDelete;
     QStringList mapSectionIdNamesSaveOrder;
     QStringList mapSectionIdNames;
     QMap<QString, MapSectionEntry> regionMapEntries;
@@ -87,15 +86,6 @@ public:
     void clearTilesetCache();
     void clearMapLayouts();
     void clearEventGraphics();
-
-    struct DataQualifiers
-    {
-        bool isStatic;
-        bool isConst;
-    };
-    DataQualifiers getDataQualifiers(QString, QString);
-    DataQualifiers healLocationDataQualifiers;
-    QString healLocationsTableName;
 
     bool sanityCheck();
     bool load();
@@ -141,8 +131,9 @@ public:
     Tileset *createNewTileset(QString name, bool secondary, bool checkerboardFill);
     bool isIdentifierUnique(const QString &identifier) const;
     bool isValidNewIdentifier(QString identifier) const;
-    QString toUniqueIdentifier(const QString &identifier) const;
+    QString toUniqueIdentifier(QString identifier) const;
     QString getProjectTitle();
+    QString getNewHealLocationName(const QString &mapConstant) const;
 
     bool readWildMonData();
     tsl::ordered_map<QString, tsl::ordered_map<QString, WildPokemonHeader>> wildMonData;
@@ -186,7 +177,7 @@ public:
     void saveMapGroups();
     void saveRegionMapSections();
     void saveWildMonData();
-    void saveHealLocations(Map*);
+    void saveHealLocationsConstants();
     void saveTilesets(Tileset*, Tileset*);
     void saveTilesetMetatileLabels(Tileset*, Tileset*);
     void appendTilesetLabel(const QString &label, const QString &isSecondaryStr);
@@ -207,7 +198,6 @@ public:
     bool readTrainerTypes();
     bool readMetatileBehaviors();
     bool readHealLocationConstants();
-    bool readHealLocations();
     bool readMiscellaneousConstants();
     bool readEventScriptLabels();
     bool readObjEventGfxConstants();
@@ -264,9 +254,6 @@ private:
 
     void setNewLayoutBlockdata(Layout *layout);
     void setNewLayoutBorder(Layout *layout);
-
-    void saveHealLocationsData(Map *map);
-    void saveHealLocationsConstants();
 
     void ignoreWatchedFileTemporarily(QString filepath);
 

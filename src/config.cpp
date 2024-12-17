@@ -75,11 +75,6 @@ const QMap<ProjectIdentifier, QPair<QString, QString>> ProjectConfig::defaultIde
     {ProjectIdentifier::symbol_obj_event_gfx_pointers, {"symbol_obj_event_gfx_pointers", "gObjectEventGraphicsInfoPointers"}},
     {ProjectIdentifier::symbol_pokemon_icon_table,     {"symbol_pokemon_icon_table",     "gMonIconTable"}},
     {ProjectIdentifier::symbol_wild_encounters,        {"symbol_wild_encounters",        "gWildMonHeaders"}},
-    {ProjectIdentifier::symbol_heal_locations_type,    {"symbol_heal_locations_type",    "struct HealLocation"}},
-    {ProjectIdentifier::symbol_heal_locations,         {"symbol_heal_locations",         "sHealLocations"}},
-    {ProjectIdentifier::symbol_spawn_points,           {"symbol_spawn_points",           "sSpawnPoints"}},
-    {ProjectIdentifier::symbol_spawn_maps,             {"symbol_spawn_maps",             "u16 sWhiteoutRespawnHealCenterMapIdxs"}},
-    {ProjectIdentifier::symbol_spawn_npcs,             {"symbol_spawn_npcs",             "u8 sWhiteoutRespawnHealerNpcIds"}},
     {ProjectIdentifier::symbol_attribute_table,        {"symbol_attribute_table",        "sMetatileAttrMasks"}},
     {ProjectIdentifier::symbol_tilesets_prefix,        {"symbol_tilesets_prefix",        "gTileset_"}},
     {ProjectIdentifier::symbol_dynamic_map_name,       {"symbol_dynamic_map_name",       "Dynamic"}},
@@ -106,7 +101,6 @@ const QMap<ProjectIdentifier, QPair<QString, QString>> ProjectConfig::defaultIde
     {ProjectIdentifier::define_attribute_encounter,    {"define_attribute_encounter",    "METATILE_ATTRIBUTE_ENCOUNTER_TYPE"}},
     {ProjectIdentifier::define_metatile_label_prefix,  {"define_metatile_label_prefix",  "METATILE_"}},
     {ProjectIdentifier::define_heal_locations_prefix,  {"define_heal_locations_prefix",  "HEAL_LOCATION_"}},
-    {ProjectIdentifier::define_spawn_prefix,           {"define_spawn_prefix",           "SPAWN_"}},
     {ProjectIdentifier::define_map_prefix,             {"define_map_prefix",             "MAP_"}},
     {ProjectIdentifier::define_map_dynamic,            {"define_map_dynamic",            "DYNAMIC"}},
     {ProjectIdentifier::define_map_empty,              {"define_map_empty",              "UNDEFINED"}},
@@ -152,7 +146,6 @@ const QMap<ProjectFilePath, QPair<QString, QString>> ProjectConfig::defaultPaths
     {ProjectFilePath::data_obj_event_pic_tables,        { "data_obj_event_pic_tables",       "src/data/object_events/object_event_pic_tables.h"}},
     {ProjectFilePath::data_obj_event_gfx,               { "data_obj_event_gfx",              "src/data/object_events/object_event_graphics.h"}},
     {ProjectFilePath::data_pokemon_gfx,                 { "data_pokemon_gfx",                "src/data/graphics/pokemon.h"}},
-    {ProjectFilePath::data_heal_locations,              { "data_heal_locations",             "src/data/heal_locations.h"}},
     {ProjectFilePath::constants_global,                 { "constants_global",                "include/constants/global.h"}},
     {ProjectFilePath::constants_items,                  { "constants_items",                 "include/constants/items.h"}},
     {ProjectFilePath::constants_flags,                  { "constants_flags",                 "include/constants/flags.h"}},
@@ -398,6 +391,8 @@ void PorymapConfig::parseConfigKeyValue(QString key, QString value) {
         this->projectSettingsTab = getConfigInteger(key, value, 0);
     } else if (key == "warp_behavior_warning_disabled") {
         this->warpBehaviorWarningDisabled = getConfigBool(key, value);
+    } else if (key == "event_delete_warning_disabled") {
+        this->eventDeleteWarningDisabled = getConfigBool(key, value);
     } else if (key == "check_for_updates") {
         this->checkForUpdates = getConfigBool(key, value);
     } else if (key == "last_update_check_time") {
@@ -474,6 +469,7 @@ QMap<QString, QString> PorymapConfig::getKeyValueMap() {
     map.insert("palette_editor_bit_depth", QString::number(this->paletteEditorBitDepth));
     map.insert("project_settings_tab", QString::number(this->projectSettingsTab));
     map.insert("warp_behavior_warning_disabled", QString::number(this->warpBehaviorWarningDisabled));
+    map.insert("event_delete_warning_disabled", QString::number(this->eventDeleteWarningDisabled));
     map.insert("check_for_updates", QString::number(this->checkForUpdates));
     map.insert("last_update_check_time", this->lastUpdateCheckTime.toUTC().toString());
     map.insert("last_update_check_version", this->lastUpdateCheckVersion.toString());

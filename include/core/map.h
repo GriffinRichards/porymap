@@ -84,7 +84,7 @@ public:
     void openScript(QString label);
     void removeEvent(Event *);
     void addEvent(Event *);
-    int getIndexOfEvent(Event *) const;
+    int getIndexOfEvent(const Event *) const;
 
     void deleteConnections();
     QList<MapConnection*> getConnections() const;
@@ -103,6 +103,8 @@ public:
 
     void setCustomAttributes(const QMap<QString, QJsonValue> &attributes) { m_customAttributes = attributes; }
     QMap<QString, QJsonValue> customAttributes() const { return m_customAttributes; }
+
+    QSet<QString> m_persistedHealLocationNames;
 
 private:
     QString m_name;

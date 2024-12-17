@@ -54,6 +54,16 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QCheckBox" name="checkBox_DisableEventWarning">
+         <property name="toolTip">
+          <string>If checked, no warning will be shown when deleting an event that has an associated #define that may also be deleted.</string>
+         </property>
+         <property name="text">
+          <string>Disable warning when deleting events with IDs</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>
@@ -94,7 +104,7 @@
        <item row="2" column="0">
         <widget class="QScrollArea" name="scrollArea_TextEditor">
          <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
+          <enum>QFrame::Shape::NoFrame</enum>
          </property>
          <property name="widgetResizable">
           <bool>true</bool>
@@ -110,7 +120,7 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_2">
            <property name="sizeConstraint">
-            <enum>QLayout::SetMinimumSize</enum>
+            <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
            </property>
            <item row="6" column="0" colspan="2">
             <widget class="QLabel" name="label_TextEditorGotoLineHelp">
@@ -118,7 +128,7 @@
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;When this command is set a button will appear next to the &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Script&lt;/span&gt; combo-box in the &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Events&lt;/span&gt; tab which executes this command.&lt;span style=&quot; font-weight:600;&quot;&gt; %F&lt;/span&gt; will be substituted with the file path of the script and &lt;span style=&quot; font-weight:600;&quot;&gt;%L&lt;/span&gt; will be substituted with the line number of the script in that file. &lt;span style=&quot; font-weight:600;&quot;&gt;%F &lt;/span&gt;&lt;span style=&quot; font-style:italic;&quot;&gt;must&lt;/span&gt; be given if &lt;span style=&quot; font-weight:600;&quot;&gt;%L&lt;/span&gt; is given. If &lt;span style=&quot; font-weight:600;&quot;&gt;%F&lt;/span&gt; is &lt;span style=&quot; font-style:italic;&quot;&gt;not&lt;/span&gt; given then the script's file path will be added to the end of the command. If the script can't be found then the current map's scripts file is opened.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -151,7 +161,7 @@
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This is the command that is executed when clicking &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Open Project in Text Editor&lt;/span&gt; in the &lt;span style=&quot; font-weight:600; font-style:italic;&quot;&gt;Tools&lt;/span&gt; menu. &lt;span style=&quot; font-weight:600;&quot;&gt;%D&lt;/span&gt; will be substituted with the project's root directory. If &lt;span style=&quot; font-weight:600;&quot;&gt;%D&lt;/span&gt; is &lt;span style=&quot; font-style:italic;&quot;&gt;not&lt;/span&gt; specified then the project directory will be added to the end of the command.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="alignment">
-              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
              </property>
              <property name="wordWrap">
               <bool>true</bool>
@@ -181,10 +191,10 @@
            <item row="2" column="0" colspan="2">
             <spacer name="verticalSpacer_2">
              <property name="orientation">
-              <enum>Qt::Vertical</enum>
+              <enum>Qt::Orientation::Vertical</enum>
              </property>
              <property name="sizeType">
-              <enum>QSizePolicy::Fixed</enum>
+              <enum>QSizePolicy::Policy::Fixed</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -197,7 +207,7 @@
            <item row="7" column="0" colspan="2">
             <spacer name="verticalSpacer">
              <property name="orientation">
-              <enum>Qt::Vertical</enum>
+              <enum>Qt::Orientation::Vertical</enum>
              </property>
              <property name="sizeHint" stdset="0">
               <size>
@@ -217,7 +227,7 @@
     <item>
      <widget class="QDialogButtonBox" name="buttonBox">
       <property name="standardButtons">
-       <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       <set>QDialogButtonBox::StandardButton::Apply|QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
       </property>
      </widget>
     </item>

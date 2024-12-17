@@ -168,10 +168,10 @@ public:
     virtual void loadPixmap(Project *project);
 
     void setPixmap(QPixmap newPixmap) { this->pixmap = newPixmap; }
-    QPixmap getPixmap() { return this->pixmap; }
+    QPixmap getPixmap() const { return this->pixmap; }
 
     void setPixmapItem(DraggablePixmapItem *item);
-    DraggablePixmapItem *getPixmapItem() { return this->pixmapItem; }
+    DraggablePixmapItem *getPixmapItem() const { return this->pixmapItem; }
 
     void setUsingSprite(bool newUsingSprite) { this->usingSprite = newUsingSprite; }
     bool getUsingSprite() const { return this->usingSprite; }
@@ -183,6 +183,9 @@ public:
     int getspriteHeight() const { return this->spriteHeight; }
 
     int getEventIndex();
+
+    void setIdName(QString newIdName) { this->idName = newIdName; }
+    QString getIdName() const { return this->idName; }
 
     static QString eventGroupToString(Event::Group group);
     static QString eventTypeToString(Event::Type type);
@@ -205,6 +208,11 @@ protected:
     int spriteWidth = 16;
     int spriteHeight = 16;
     bool usingSprite = false;
+
+    // Some events can have an associated #define name that should be unique to this event.
+    // e.g. object events can have a 'LOCALID', or Heal Locations have a 'HEAL_LOCATION' id.
+    // When deleting events like this we want to warn the user that the #define will also be deleted.
+    QString idName;
 
     QMap<QString, QJsonValue> customValues;
 
@@ -611,38 +619,26 @@ public:
     }
     virtual ~HealLocationEvent() {}
 
-    virtual Event *duplicate() override { return nullptr; }
+    virtual Event *duplicate() override;
 
     virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
-    virtual bool loadFromJson(QJsonObject, Project *) override { return false; }
+    virtual bool loadFromJson(QJsonObject, Project *) override;
 
     virtual void setDefaultValues(Project *project) override;
 
-    virtual QSet<QString> getExpectedFields() override { return QSet<QString>(); }
+    virtual QSet<QString> getExpectedFields() override;
 
-    void setIndex(int newIndex) { this->index = newIndex; }
-    int getIndex() { return this->index; }
+    void setRespawnMapName(QString newRespawnMap) { this->respawnMapName = newRespawnMap; }
+    QString getRespawnMapName() { return this->respawnMapName; }
 
-    void setLocationName(QString newLocationName) { this->locationName = newLocationName; }
-    QString getLocationName() { return this->locationName; }
-
-    void setIdName(QString newIdName) { this->idName = newIdName; }
-    QString getIdName() { return this->idName; }
-
-    void setRespawnMap(QString newRespawnMap) { this->respawnMap = newRespawnMap; }
-    QString getRespawnMap() { return this->respawnMap; }
-
-    void setRespawnNPC(uint8_t newRespawnNPC) { this->respawnNPC = newRespawnNPC; }
-    uint8_t getRespawnNPC() { return this->respawnNPC; }
+    void setRespawnNPC(int newRespawnNPC) { this->respawnNPC = newRespawnNPC; }
+    int getRespawnNPC() { return this->respawnNPC; }
 
 private:
-    int index = -1;
-    QString locationName;
-    QString idName;
-    QString respawnMap;
-    uint8_t respawnNPC = 0;
+    QString respawnMapName;
+    int respawnNPC = 0;
 };
 
 

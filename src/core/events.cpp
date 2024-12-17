@@ -86,7 +86,7 @@ QString Event::eventGroupToString(Event::Group group) {
     case Event::Group::Bg:
         return "BG";
     case Event::Group::Heal:
-        return "Healspot";
+        return "Heal Location";
     default:
         return "";
     }
@@ -111,7 +111,7 @@ QString Event::eventTypeToString(Event::Type type) {
     case Event::Type::SecretBase:
         return "event_secret_base";
     case Event::Type::HealLocation:
-        return "event_healspot";
+        return "event_heal_location";
     default:
         return "";
     }
@@ -134,7 +134,7 @@ Event::Type Event::eventTypeFromString(QString type) {
         return Event::Type::HiddenItem;
     } else if (type == "event_secret_base") {
         return Event::Type::SecretBase;
-    } else if (type == "event_healspot") {
+    } else if (type == "event_heal_location") {
         return Event::Type::HealLocation;
     } else {
         return Event::Type::None;
@@ -924,6 +924,18 @@ QSet<QString> SecretBaseEvent::getExpectedFields() {
 }
 
 
+Event *HealLocationEvent::duplicate() {
+    HealLocationEvent *copy = new HealLocationEvent();
+
+    copy->setX(this->getX());
+    copy->setY(this->getY());
+    copy->setRespawnMapName(this->getRespawnMapName());
+    copy->setRespawnNPC(this->getRespawnNPC());
+
+    copy->setCustomValues(this->getCustomValues());
+
+    return copy;
+}
 
 EventFrame *HealLocationEvent::createEventFrame() {
     if (!this->eventFrame) {
@@ -933,22 +945,60 @@ EventFrame *HealLocationEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object HealLocationEvent::buildEventJson(Project *) {
-    return OrderedJson::object();
+OrderedJson::object HealLocationEvent::buildEventJson(Project *project) {
+    OrderedJson::object healLocationJson;
+
+    healLocationJson["id"] = this->getIdName();
+    healLocationJson["x"] = this->getX();
+    healLocationJson["y"] = this->getY();
+    if (projectConfig.healLocationRespawnDataEnabled) {
+        const QString mapName = this->getRespawnMapName();
+        healLocationJson["respawn_map"] = project->mapNamesToMapConstants.value(mapName, mapName);
+        healLocationJson["respawn_npc"] = this->getRespawnNPC();
+    }
+
+    this->addCustomValuesTo(&healLocationJson);
+
+    return healLocationJson;
 }
 
-void HealLocationEvent::setDefaultValues(Project *) {
-    this->setElevation(projectConfig.defaultElevation);
-    if (!this->map)
-        return;
+bool HealLocationEvent::loadFromJson(QJsonObject json, Project *project) {
+    this->setX(ParseUtil::jsonToInt(json["x"]));
+    this->setY(ParseUtil::jsonToInt(json["y"]));
+    this->setIdName(ParseUtil::jsonToQString(json["id"]));
 
-    bool respawnEnabled = projectConfig.healLocationRespawnDataEnabled;
-    const QString prefix = projectConfig.getIdentifier(respawnEnabled ? ProjectIdentifier::define_spawn_prefix
-                                                                      : ProjectIdentifier::define_heal_locations_prefix);
-    this->setLocationName(this->map->constantName());
-    this->setIdName(prefix + this->map->constantName());
-    if (respawnEnabled) {
-        this->setRespawnMap(this->map->name());
-        this->setRespawnNPC(1);
+    if (projectConfig.healLocationRespawnDataEnabled) {
+        // Log a warning if "respawn_map" isn't a known map ID, but don't overwrite user data.
+        const QString mapConstant = ParseUtil::jsonToQString(json["respawn_map"]);
+        if (!project->mapConstantsToMapNames.contains(mapConstant))
+            logWarn(QString("Unknown Respawn Map constant '%1'.").arg(mapConstant));
+        this->setRespawnMapName(project->mapConstantsToMapNames.value(mapConstant, mapConstant));
+        this->setRespawnNPC(ParseUtil::jsonToInt(json["respawn_npc"]));
     }
+
+    this->readCustomValues(json);
+    return true;
+}
+
+void HealLocationEvent::setDefaultValues(Project *project) {
+    if (this->map) {
+        this->setIdName(project->getNewHealLocationName(this->map->constantName()));
+        this->setRespawnMapName(this->map->name());
+    }
+    this->setRespawnNPC(0 + this->getIndexOffset(Event::Group::Object));
+}
+
+const QSet<QString> expectedHealLocationFields = {
+    "id"
+};
+
+QSet<QString> HealLocationEvent::getExpectedFields() {
+    QSet<QString> expectedFields = QSet<QString>();
+    expectedFields = expectedHealLocationFields;
+    if (projectConfig.healLocationRespawnDataEnabled) {
+        expectedFields.insert("respawn_map");
+        expectedFields.insert("respawn_npc");
+    }
+    expectedFields << "x" << "y";
+    return expectedFields;
 }
