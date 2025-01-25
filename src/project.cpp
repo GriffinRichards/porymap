@@ -323,7 +323,10 @@ bool Project::loadMapData(Map* map) {
         HealLocationEvent *hl = new HealLocationEvent();
         hl->loadFromJson(event, this);
         map->addEvent(hl);
-        map->m_persistedHealLocationNames.insert(hl->getIdName());
+
+        // Record ID (if it's valid)
+        if (hasHealLocationPrefix(hl->getIdName()))
+            map->m_persistedHealLocationNames.insert(hl->getIdName());
     }
 
     map->deleteConnections();
@@ -845,6 +848,33 @@ QString Project::getNewHealLocationName(const QString &mapConstant) const {
     return toUniqueIdentifier(idName);
 }
 
+bool Project::hasHealLocationPrefix(const QString &id) const {
+    return id.startsWith(projectConfig.getIdentifier(ProjectIdentifier::define_heal_locations_prefix));
+}
+
+// TODO: There's nothing to stop someone from renaming a heal location ID to match an existing ID, then deleting that heal location.
+//       This would presumably be a problem for the matching heal location.
+bool Project::isExistingHealLocationId(const QString &id) const {
+    if (hasHealLocationPrefix(id))
+        return false;
+
+    // The global 'healLocationNames' is only updated when a map is saved. That means we have 2 special cases to consider:
+    // 1. The ID might not be in-use anymore because its event was deleted (we want to know its available for use by new events).
+    if (this->healLocationNames.contains(id) && !this->healLocationNamesToDelete.contains(id))
+        return true;
+
+    // 2. The ID might be in-use by an unsaved event (we want to know that it's no longer available for use by new events).
+    // This should probably be profiled to see how slow it can get, and alternatively track unsaved ID names as they get edited.
+    for (auto i = this->mapCache.constBegin(); i != this->mapCache.constEnd(); i++) {
+        for (const auto &event : i.value()->getEvents(Event::Group::Heal)) {
+            if (dynamic_cast<HealLocationEvent*>(event)->getIdName() == id) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void Project::saveHealLocationsConstants() {
     // Remove old heal locations
     for (auto i = this->healLocationNamesToDelete.constBegin(); i != this->healLocationNamesToDelete.constEnd(); i++) {
@@ -1224,7 +1254,6 @@ void Project::saveMap(Map *map) {
         // deleted we track what heal locations a map had when it was last loaded/saved in
         // 'm_persistedHealLocationNames', and if any are now missing we know it was deleted.
         // We do this as opposed to tracking any time a heal location event is created/deleted.
-        // TODO: What if I delete HEAL_LOCATION_FOO on map A, add HEAL_LOCATION_FOO to map B, then save?
         this->healLocationNamesToDelete.unite(map->m_persistedHealLocationNames);
         map->m_persistedHealLocationNames.clear();
         for (const auto &event : map->getEvents(Event::Group::Heal)) {
@@ -1234,11 +1263,13 @@ void Project::saveMap(Map *map) {
             // Don't delete any heal location IDs that are still in-use.
             this->healLocationNamesToDelete.remove(idName);
 
-            if (!this->healLocationNames.contains(idName)) {
-                // Found a new heal location, add its ID to the main list to save later.
-                this->healLocationNames.append(idName);
+            if (hasHealLocationPrefix(idName)) {
+                if (!this->healLocationNames.contains(idName)) {
+                    // Found a new heal location, add its ID to the main list to save later.
+                    this->healLocationNames.append(idName);
+                }
+                map->m_persistedHealLocationNames.insert(idName);
             }
-            map->m_persistedHealLocationNames.insert(idName);
         }
         if (healLocationsArr.size() > 0)
             mapObj["heal_locations"] = healLocationsArr;
@@ -1882,7 +1913,7 @@ bool Project::isIdentifierUnique(const QString &identifier) const {
         return false;
     if (this->layoutIds.contains(identifier))
         return false;
-    if (this->healLocationNames.contains(identifier))
+    if (isExistingHealLocationId(identifier))
         return false;
     for (const auto &layout : this->mapLayouts) {
         if (layout->name == identifier) {

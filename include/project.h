@@ -134,6 +134,8 @@ public:
     QString toUniqueIdentifier(QString identifier) const;
     QString getProjectTitle();
     QString getNewHealLocationName(const QString &mapConstant) const;
+    bool hasHealLocationPrefix(const QString &id) const;
+    bool isExistingHealLocationId(const QString &id) const;
 
     bool readWildMonData();
     tsl::ordered_map<QString, tsl::ordered_map<QString, WildPokemonHeader>> wildMonData;

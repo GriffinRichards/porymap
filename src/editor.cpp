@@ -2174,10 +2174,7 @@ void Editor::duplicateSelectedEvents() {
             continue;
         }
         Event *duplicate = original->duplicate();
-        if (!duplicate) {
-            logError("Encountered a problem duplicating an event.");
-            continue;
-        }
+
         // ID name (if any) should be unique
         if (!original->getIdName().isEmpty()) {
             duplicate->setIdName(this->project->toUniqueIdentifier(original->getIdName()));
@@ -2260,7 +2257,7 @@ void Editor::deleteSelectedEvents() {
             }
         }
 
-        // TODO: Are we just calling this to invalidate connections? Is that necessary?
+        // TODO: Are we just calling this to invalidate connections?
         event->setPixmapItem(item);
     }
     if (eventsToDelete.isEmpty())
