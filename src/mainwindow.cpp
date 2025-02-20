@@ -1109,6 +1109,8 @@ bool MainWindow::setProjectUI() {
     ui->newEventToolButton->newSecretBaseAction->setVisible(projectConfig.eventSecretBaseEnabled);
     ui->newEventToolButton->newCloneObjectAction->setVisible(projectConfig.eventCloneObjectEnabled);
 
+    this->editor->setPlayerViewSize(projectConfig.playerViewSize);
+
     Event::setIcons();
     editor->setCollisionGraphics();
     ui->spinBox_SelectedElevation->setMaximum(Block::getMaxElevation());

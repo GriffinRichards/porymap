@@ -121,6 +121,7 @@ public:
     QList<DraggablePixmapItem *> getEventPixmapItems();
     qreal getEventOpacity(const Event *event) const;
 
+    void setPlayerViewSize(const QSize &size);
     void updateCursorRectPos(int x, int y);
     void setCursorRectVisible(bool visible);
 

@@ -135,6 +135,8 @@ void ProjectSettingsEditor::initUi() {
     ui->spinBox_UnusedTileNormal->setMaximum(Tile::maxValue);
     ui->spinBox_UnusedTileCovered->setMaximum(Tile::maxValue);
     ui->spinBox_UnusedTileSplit->setMaximum(Tile::maxValue);
+    ui->spinBox_PlayerViewWidth->setMaximum(INT_MAX);
+    ui->spinBox_PlayerViewHeight->setMaximum(INT_MAX);
 
     // The values for some of the settings we provide in this window can be determined using constants in the user's projects.
     // If the user has these constants we disable these settings in the UI -- they can modify them using their constants.
@@ -452,8 +454,8 @@ void ProjectSettingsEditor::refresh() {
     ui->spinBox_Elevation->setValue(projectConfig.defaultElevation);
     ui->spinBox_Collision->setValue(projectConfig.defaultCollision);
     ui->spinBox_FillMetatile->setValue(projectConfig.defaultMetatileId);
-    ui->spinBox_MaxElevation->setValue(projectConfig.collisionSheetHeight - 1);
-    ui->spinBox_MaxCollision->setValue(projectConfig.collisionSheetWidth - 1);
+    ui->spinBox_MaxElevation->setValue(projectConfig.collisionSheetSize.height() - 1);
+    ui->spinBox_MaxCollision->setValue(projectConfig.collisionSheetSize.width() - 1);
     ui->spinBox_BehaviorMask->setValue(projectConfig.metatileBehaviorMask & ui->spinBox_BehaviorMask->maximum());
     ui->spinBox_EncounterTypeMask->setValue(projectConfig.metatileEncounterTypeMask & ui->spinBox_EncounterTypeMask->maximum());
     ui->spinBox_LayerTypeMask->setValue(projectConfig.metatileLayerTypeMask & ui->spinBox_LayerTypeMask->maximum());
@@ -464,6 +466,9 @@ void ProjectSettingsEditor::refresh() {
     ui->spinBox_UnusedTileNormal->setValue(projectConfig.unusedTileNormal);
     ui->spinBox_UnusedTileCovered->setValue(projectConfig.unusedTileCovered);
     ui->spinBox_UnusedTileSplit->setValue(projectConfig.unusedTileSplit);
+    ui->spinBox_PlayerViewWidth->setValue(projectConfig.playerViewSize.width());
+    ui->spinBox_PlayerViewHeight->setValue(projectConfig.playerViewSize.height());
+
 
     // Set (and sync) border metatile IDs
     this->setBorderMetatileIds(false, projectConfig.newMapBorderMetatileIds);
@@ -526,8 +531,8 @@ void ProjectSettingsEditor::save() {
     projectConfig.defaultElevation = ui->spinBox_Elevation->value();
     projectConfig.defaultCollision = ui->spinBox_Collision->value();
     projectConfig.defaultMetatileId = ui->spinBox_FillMetatile->value();
-    projectConfig.collisionSheetHeight = ui->spinBox_MaxElevation->value() + 1;
-    projectConfig.collisionSheetWidth = ui->spinBox_MaxCollision->value() + 1;
+    projectConfig.collisionSheetSize.setHeight(ui->spinBox_MaxElevation->value() + 1);
+    projectConfig.collisionSheetSize.setWidth(ui->spinBox_MaxCollision->value() + 1);
     projectConfig.metatileBehaviorMask = ui->spinBox_BehaviorMask->value();
     projectConfig.metatileTerrainTypeMask = ui->spinBox_TerrainTypeMask->value();
     projectConfig.metatileEncounterTypeMask = ui->spinBox_EncounterTypeMask->value();
@@ -538,6 +543,8 @@ void ProjectSettingsEditor::save() {
     projectConfig.unusedTileNormal = ui->spinBox_UnusedTileNormal->value();
     projectConfig.unusedTileCovered = ui->spinBox_UnusedTileCovered->value();
     projectConfig.unusedTileSplit = ui->spinBox_UnusedTileSplit->value();
+    projectConfig.playerViewSize.setWidth(ui->spinBox_PlayerViewWidth->value());
+    projectConfig.playerViewSize.setHeight(ui->spinBox_PlayerViewHeight->value());
 
     // Save line edit settings
     projectConfig.prefabFilepath = ui->lineEdit_PrefabsPath->text();
