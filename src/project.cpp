@@ -1480,18 +1480,9 @@ Tileset *Project::createNewTileset(QString name, bool secondary, bool checkerboa
     return tileset;
 }
 
-QString Project::findMetatileLabelsTileset(QString label) {
-    for (const QString &tilesetName : this->tilesetLabelsOrdered) {
-        QString metatileLabelPrefix = Tileset::getMetatileLabelPrefix(tilesetName);
-        if (label.startsWith(metatileLabelPrefix))
-            return tilesetName;
-    }
-    return QString();
-}
-
 bool Project::readTilesetMetatileLabels() {
-    metatileLabelsMap.clear();
-    unusedMetatileLabels.clear();
+    this->metatileLabelsMap.clear();
+    this->unusedMetatileLabels.clear();
 
     QString metatileLabelsFilename = projectConfig.getFilePath(ProjectFilePath::constants_metatile_labels);
     fileWatcher.addPath(root + "/" + metatileLabelsFilename);
@@ -1499,19 +1490,30 @@ bool Project::readTilesetMetatileLabels() {
     const QSet<QString> regexList = {QString("\\b%1").arg(projectConfig.getIdentifier(ProjectIdentifier::define_metatile_label_prefix))};
     QMap<QString, int> defines = parser.readCDefinesByRegex(metatileLabelsFilename, regexList);
 
-    for (QString label : defines.keys()) {
-        uint32_t metatileId = static_cast<uint32_t>(defines[label]);
+    // Pre-calculate the label prefixes so we don't need to keep recreating them.
+    QMap<QString, QString> metatileLabelPrefixes;
+    for (const QString &tilesetName : this->tilesetLabelsOrdered) {
+        metatileLabelPrefixes.insert(Tileset::getMetatileLabelPrefix(tilesetName), tilesetName);
+    }
+
+    for (auto i = defines.constBegin(); i != defines.constEnd(); i++) {
+        const QString label = i.key();
+        uint32_t metatileId = static_cast<uint32_t>(i.value());
         if (metatileId > Block::maxValue) {
             metatileId &= Block::maxValue;
             logWarn(QString("Value of metatile label '%1' truncated to %2").arg(label).arg(Metatile::getMetatileIdString(metatileId)));
         }
-        QString tilesetName = findMetatileLabelsTileset(label);
-        if (!tilesetName.isEmpty()) {
-            metatileLabelsMap[tilesetName][label] = metatileId;
+        // Find closest match in our pre-calculated prefixes
+        auto prefixIter = metatileLabelPrefixes.lowerBound(label);
+        if (prefixIter != metatileLabelPrefixes.constBegin())
+            prefixIter--;
+        if (label.startsWith(prefixIter.key())) {
+            const QString tilesetName = prefixIter.value();
+            this->metatileLabelsMap[tilesetName][label] = metatileId;
         } else {
             // This #define name does not match any existing tileset.
             // Save it separately to be outputted later.
-            unusedMetatileLabels[label] = metatileId;
+            this->unusedMetatileLabels[label] = metatileId;
         }
     }
 

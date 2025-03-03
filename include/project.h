@@ -226,7 +226,6 @@ public:
     QString getDefaultSecondaryTilesetLabel() const;
     void updateTilesetMetatileLabels(Tileset *tileset);
     QString buildMetatileLabelsText(const QMap<QString, uint16_t> defines);
-    QString findMetatileLabelsTileset(QString label);
 
     static QString getExistingFilepath(QString filepath);
     void applyParsedLimits();
