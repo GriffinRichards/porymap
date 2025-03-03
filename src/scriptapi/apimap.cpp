@@ -557,13 +557,13 @@ int MainWindow::getNumSecondaryTilesetTiles() {
 QString MainWindow::getPrimaryTileset() {
     if (!this->editor || !this->editor->layout || !this->editor->layout->tileset_primary)
         return QString();
-    return this->editor->layout->tileset_primary->name;
+    return this->editor->layout->tileset_primary->name();
 }
 
 QString MainWindow::getSecondaryTileset() {
     if (!this->editor || !this->editor->layout || !this->editor->layout->tileset_secondary)
         return QString();
-    return this->editor->layout->tileset_secondary->name;
+    return this->editor->layout->tileset_secondary->name();
 }
 
 void MainWindow::setPrimaryTileset(QString tileset) {

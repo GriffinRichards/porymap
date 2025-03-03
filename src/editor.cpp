@@ -1509,10 +1509,10 @@ void Editor::displayMetatileSelector() {
         metatile_selector_item->setLayout(this->layout);
         if (metatile_selector_item->primaryTileset
          && metatile_selector_item->primaryTileset != this->layout->tileset_primary)
-            emit tilesetUpdated(this->layout->tileset_primary->name);
+            emit tilesetUpdated(this->layout->tileset_primary->name());
         if (metatile_selector_item->secondaryTileset
          && metatile_selector_item->secondaryTileset != this->layout->tileset_secondary)
-            emit tilesetUpdated(this->layout->tileset_secondary->name);
+            emit tilesetUpdated(this->layout->tileset_secondary->name());
         metatile_selector_item->setTilesets(this->layout->tileset_primary, this->layout->tileset_secondary);
     }
 

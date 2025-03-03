@@ -885,13 +885,12 @@ void Project::saveTilesets(Tileset *primaryTileset, Tileset *secondaryTileset) {
 
 void Project::updateTilesetMetatileLabels(Tileset *tileset) {
     // Erase old labels, then repopulate with new labels
-    const QString prefix = tileset->getMetatileLabelPrefix();
-    this->metatileLabelsMap[tileset->name].clear();
+    this->metatileLabelsMap[tileset->name()].clear();
     for (int metatileId : tileset->metatileLabels.keys()) {
         if (tileset->metatileLabels[metatileId].isEmpty())
             continue;
-        QString label = prefix + tileset->metatileLabels[metatileId];
-        this->metatileLabelsMap[tileset->name][label] = metatileId;
+        QString label = tileset->metatileLabelPrefix() + tileset->metatileLabels[metatileId];
+        this->metatileLabelsMap[tileset->name()][label] = metatileId;
     }
 }
 
@@ -919,8 +918,8 @@ QString Project::buildMetatileLabelsText(const QMap<QString, uint16_t> defines) 
 
 void Project::saveTilesetMetatileLabels(Tileset *primaryTileset, Tileset *secondaryTileset) {
     // Skip writing the file if there are no labels in both the new and old sets
-    if (metatileLabelsMap[primaryTileset->name].size() == 0 && primaryTileset->metatileLabels.size() == 0
-     && metatileLabelsMap[secondaryTileset->name].size() == 0 && secondaryTileset->metatileLabels.size() == 0)
+    if (metatileLabelsMap[primaryTileset->name()].size() == 0 && primaryTileset->metatileLabels.size() == 0
+     && metatileLabelsMap[secondaryTileset->name()].size() == 0 && secondaryTileset->metatileLabels.size() == 0)
         return;
 
     updateTilesetMetatileLabels(primaryTileset);
@@ -1334,20 +1333,20 @@ Tileset *Project::createNewTileset(QString name, bool secondary, bool checkerboa
     }
 
     auto tileset = new Tileset();
-    tileset->name = name;
+    tileset->setName(name);
     tileset->is_secondary = secondary;
 
     // Create tileset directories
     const QString fullDirectoryPath = QString("%1/%2").arg(this->root).arg(tileset->getExpectedDir());
     QDir directory;
     if (!directory.mkpath(fullDirectoryPath)) {
-        logError(QString("Failed to create directory '%1' for new tileset '%2'").arg(fullDirectoryPath).arg(tileset->name));
+        logError(QString("Failed to create directory '%1' for new tileset '%2'").arg(fullDirectoryPath).arg(tileset->name()));
         delete tileset;
         return nullptr;
     }
     const QString palettesPath = fullDirectoryPath + "/palettes";
     if (!directory.mkpath(palettesPath)) {
-        logError(QString("Failed to create palettes directory '%1' for new tileset '%2'").arg(palettesPath).arg(tileset->name));
+        logError(QString("Failed to create palettes directory '%1' for new tileset '%2'").arg(palettesPath).arg(tileset->name()));
         delete tileset;
         return nullptr;
     }
@@ -1398,12 +1397,12 @@ Tileset *Project::createNewTileset(QString name, bool secondary, bool checkerboa
     // Update tileset label arrays
     QStringList *labelList = tileset->is_secondary ? &this->secondaryTilesetLabels : &this->primaryTilesetLabels;
     for (int i = 0; i < labelList->length(); i++) {
-        if (labelList->at(i) > tileset->name) {
-            labelList->insert(i, tileset->name);
+        if (labelList->at(i) > tileset->name()) {
+            labelList->insert(i, tileset->name());
             break;
         }
     }
-    this->tilesetLabelsOrdered.append(tileset->name);
+    this->tilesetLabelsOrdered.append(tileset->name());
 
     // TODO: Ideally we wouldn't save new Tilesets immediately
     // Append to tileset specific files. Strip prefix from name to get base name for use in other symbols.
@@ -1415,17 +1414,16 @@ Tileset *Project::createNewTileset(QString name, bool secondary, bool checkerboa
     tileset->save();
     tileset->assetsLoaded = true;
 
-    this->tilesets.insert(tileset->name, tileset);
+    this->tilesets.insert(tileset->name(), tileset);
 
     emit tilesetCreated(tileset);
     return tileset;
 }
 
 QString Project::findMetatileLabelsTileset(QString label) {
-    for (const QString &tilesetName : this->tilesetLabelsOrdered) {
-        QString metatileLabelPrefix = Tileset::getMetatileLabelPrefix(tilesetName);
-        if (label.startsWith(metatileLabelPrefix))
-            return tilesetName;
+    for (const auto &tileset : this->tilesets) {
+        if (label.startsWith(tileset->metatileLabelPrefix()))
+            return tileset->name();
     }
     return QString();
 }
@@ -1440,8 +1438,9 @@ bool Project::readTilesetMetatileLabels() {
     const QSet<QString> regexList = {QString("\\b%1").arg(projectConfig.getIdentifier(ProjectIdentifier::define_metatile_label_prefix))};
     QMap<QString, int> defines = parser.readCDefinesByRegex(metatileLabelsFilename, regexList);
 
-    for (QString label : defines.keys()) {
-        uint32_t metatileId = static_cast<uint32_t>(defines[label]);
+    for (auto i = defines.constBegin(); i != defines.constEnd(); i++) {
+        const QString label = i.key();
+        uint32_t metatileId = static_cast<uint32_t>(i.value());
         if (metatileId > Block::maxValue) {
             metatileId &= Block::maxValue;
             logWarn(QString("Value of metatile label '%1' truncated to %2").arg(label).arg(Metatile::getMetatileIdString(metatileId)));
@@ -1460,12 +1459,10 @@ bool Project::readTilesetMetatileLabels() {
 }
 
 void Project::loadTilesetMetatileLabels(Tileset* tileset) {
-    QString metatileLabelPrefix = tileset->getMetatileLabelPrefix();
-
     // Reverse map for faster lookup by metatile id
-    for (auto it = this->metatileLabelsMap[tileset->name].constBegin(); it != this->metatileLabelsMap[tileset->name].constEnd(); it++) {
+    for (auto it = this->metatileLabelsMap[tileset->name()].constBegin(); it != this->metatileLabelsMap[tileset->name()].constEnd(); it++) {
         QString labelName = it.key();
-        tileset->metatileLabels[it.value()] = labelName.replace(metatileLabelPrefix, "");
+        tileset->metatileLabels[it.value()] = labelName.replace(tileset->metatileLabelPrefix(), "");
     }
 }
 
@@ -1975,26 +1972,26 @@ bool Project::readTilesetHeaders() {
     for (auto i = structs.cbegin(); i != structs.cend(); i++){
         const auto tilesetAttributes = i.value();
         auto tileset = new Tileset();
-        tileset->name = i.key();
+        tileset->setName(i.key());
 
         // Interpret tileset as a primary or secondary tileset.
         bool ok;
         const QString isSecondaryStr = tilesetAttributes.value("isSecondary");
         tileset->is_secondary = ParseUtil::gameStringToBool(isSecondaryStr, &ok);
         if (!ok) {
-            logError(QString("Failed to parse tileset header for '%1': Unable to convert value '%2' of 'isSecondary' to bool.").arg(tileset->name).arg(isSecondaryStr));
+            logError(QString("Failed to parse tileset header for '%1': Unable to convert value '%2' of 'isSecondary' to bool.").arg(tileset->name()).arg(isSecondaryStr));
             delete tileset;
             continue;
         }
         QStringList * list = tileset->is_secondary ? &this->secondaryTilesetLabels : &this->primaryTilesetLabels;
-        list->append(tileset->name);
-        this->tilesetLabelsOrdered.append(tileset->name);
+        list->append(tileset->name());
+        this->tilesetLabelsOrdered.append(tileset->name());
 
         tileset->tiles_label = tilesetAttributes.value("tiles");
         tileset->palettes_label = tilesetAttributes.value("palettes");
         tileset->metatiles_label = tilesetAttributes.value("metatiles");
         tileset->metatile_attrs_label = tilesetAttributes.value("metatileAttributes");
-        this->tilesets.insert(tileset->name, tileset);
+        this->tilesets.insert(tileset->name(), tileset);
     }
 
     Util::numericalModeSort(this->primaryTilesetLabels);

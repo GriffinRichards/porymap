@@ -11,8 +11,7 @@
 
 
 Tileset::Tileset(const Tileset &other)
-    : name(other.name),
-      is_secondary(other.is_secondary),
+    : is_secondary(other.is_secondary),
       tiles_label(other.tiles_label),
       palettes_label(other.palettes_label),
       metatiles_label(other.metatiles_label),
@@ -27,6 +26,8 @@ Tileset::Tileset(const Tileset &other)
       palettePreviews(other.palettePreviews),
       m_hasUnsavedTilesImage(other.m_hasUnsavedTilesImage)
 {
+    setName(other.m_name);
+
     for (auto tile : other.tiles) {
         tiles.append(tile.copy());
     }
@@ -37,7 +38,7 @@ Tileset::Tileset(const Tileset &other)
 }
 
 Tileset &Tileset::operator=(const Tileset &other) {
-    name = other.name;
+    setName(other.m_name);
     is_secondary = other.is_secondary;
     tiles_label = other.tiles_label;
     palettes_label = other.palettes_label;
@@ -92,6 +93,15 @@ void Tileset::resizeMetatiles(int newNumMetatiles) {
     while (m_metatiles.length() < newNumMetatiles) {
         m_metatiles.append(new Metatile(numTiles));
     }
+}
+
+void Tileset::setName(const QString &name) {
+    m_name = name;
+
+    // Convert name to metatile label prefix using user's settings. Default is "gTileset_Name" --> "METATILE_Name_"
+    const QString tilesetPrefix = projectConfig.getIdentifier(ProjectIdentifier::symbol_tilesets_prefix);
+    const QString labelPrefix = projectConfig.getIdentifier(ProjectIdentifier::define_metatile_label_prefix);
+    m_metatileLabelPrefix = QString("%1%2_").arg(labelPrefix).arg(QString(m_name).replace(tilesetPrefix, ""));
 }
 
 Tileset* Tileset::getTileTileset(int tileId, Tileset *primaryTileset, Tileset *secondaryTileset) {
@@ -190,19 +200,6 @@ bool Tileset::setMetatileLabel(int metatileId, QString label, Tileset *primaryTi
     return true;
 }
 
-QString Tileset::getMetatileLabelPrefix()
-{
-    return Tileset::getMetatileLabelPrefix(this->name);
-}
-
-QString Tileset::getMetatileLabelPrefix(const QString &name)
-{
-    // Default is "gTileset_Name" --> "METATILE_Name_"
-    const QString tilesetPrefix = projectConfig.getIdentifier(ProjectIdentifier::symbol_tilesets_prefix);
-    const QString labelPrefix = projectConfig.getIdentifier(ProjectIdentifier::define_metatile_label_prefix);
-    return QString("%1%2_").arg(labelPrefix).arg(QString(name).replace(tilesetPrefix, ""));
-}
-
 bool Tileset::metatileIsValid(uint16_t metatileId, Tileset *primaryTileset, Tileset *secondaryTileset) {
     if (metatileId >= Project::getNumMetatilesTotal())
         return false;
@@ -261,7 +258,7 @@ bool Tileset::appendToHeaders(const QString &root, const QString &friendlyName) 
                            "    .palettes = gTilesetPalettes_%4,\n"
                            "    .metatiles = gMetatiles_%4,\n"
                            "    .metatileAttributes = gMetatileAttributes_%4,\n%5};")
-                    .arg(this->name)
+                    .arg(m_name)
                     .arg(projectConfig.tilesetsHaveIsCompressed ? "    .isCompressed = TRUE,\n" : "")
                     .arg(this->is_secondary ? "TRUE" : "FALSE")
                     .arg(friendlyName)
@@ -320,7 +317,7 @@ bool Tileset::appendToMetatiles(const QString &root, const QString &friendlyName
 // Example: for gTileset_DepartmentStore, returns "data/tilesets/secondary/department_store"
 QString Tileset::getExpectedDir()
 {
-    return Tileset::getExpectedDir(this->name, this->is_secondary);
+    return Tileset::getExpectedDir(m_name, this->is_secondary);
 }
 
 QString Tileset::getExpectedDir(QString tilesetName, bool isSecondary)
@@ -403,7 +400,7 @@ void Tileset::loadMetatileAttributes() {
     int numMetatiles = m_metatiles.length();
     int numMetatileAttrs = data.length() / attrSize;
     if (numMetatiles != numMetatileAttrs) {
-        logWarn(QString("Metatile count %1 does not match metatile attribute count %2 in %3").arg(numMetatiles).arg(numMetatileAttrs).arg(this->name));
+        logWarn(QString("Metatile count %1 does not match metatile attribute count %2 in %3").arg(numMetatiles).arg(numMetatileAttrs).arg(m_name));
     }
 
     for (int i = 0; i < qMin(numMetatiles, numMetatileAttrs); i++) {

@@ -1356,15 +1356,15 @@ void MainWindow::onMapSectionDisplayNameChanged(const QString &idName, const QSt
 }
 
 void MainWindow::onNewTilesetCreated(Tileset *tileset) {
-    logInfo(QString("Created a new tileset named %1.").arg(tileset->name));
+    logInfo(QString("Created a new tileset named %1.").arg(tileset->name()));
 
     // Refresh tileset combo boxes
     if (!tileset->is_secondary) {
-        int index = this->editor->project->primaryTilesetLabels.indexOf(tileset->name);
-        ui->comboBox_PrimaryTileset->insertItem(index, tileset->name);
+        int index = this->editor->project->primaryTilesetLabels.indexOf(tileset->name());
+        ui->comboBox_PrimaryTileset->insertItem(index, tileset->name());
     } else {
-        int index = this->editor->project->secondaryTilesetLabels.indexOf(tileset->name);
-        ui->comboBox_SecondaryTileset->insertItem(index, tileset->name);
+        int index = this->editor->project->secondaryTilesetLabels.indexOf(tileset->name());
+        ui->comboBox_SecondaryTileset->insertItem(index, tileset->name());
     }
 }
 

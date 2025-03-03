@@ -21,7 +21,10 @@ public:
     ~Tileset();
 
 public:
-    QString name;
+    void setName(const QString &name);
+    QString name() const { return m_name; }
+    QString metatileLabelPrefix() const { return m_metatileLabelPrefix; }
+
     bool is_secondary;
     QString tiles_label;
     QString palettes_label;
@@ -47,8 +50,6 @@ public:
     static QString getOwnedMetatileLabel(int, Tileset *, Tileset *);
     static MetatileLabelPair getMetatileLabelPair(int metatileId, Tileset *primaryTileset, Tileset *secondaryTileset);
     static bool setMetatileLabel(int, QString, Tileset *, Tileset *);
-    QString getMetatileLabelPrefix();
-    static QString getMetatileLabelPrefix(const QString &name);
     static QList<QList<QRgb>> getBlockPalettes(Tileset*, Tileset*, bool useTruePalettes = false);
     static QList<QRgb> getPalette(int, Tileset*, Tileset*, bool useTruePalettes = false);
     static bool metatileIsValid(uint16_t metatileId, Tileset *, Tileset *);
@@ -85,6 +86,8 @@ public:
     int numMetatiles() const { return m_metatiles.length(); }
 
 private:
+    QString m_name;
+    QString m_metatileLabelPrefix;
     QList<Metatile*> m_metatiles;
     bool m_hasUnsavedTilesImage = false;
 };

@@ -318,7 +318,7 @@ void TilesetEditor::initMetatileHistory() {
 }
 
 void TilesetEditor::reset() {
-    this->setTilesets(this->primaryTileset->name, this->secondaryTileset->name);
+    this->setTilesets(this->primaryTileset->name(), this->secondaryTileset->name());
     if (this->paletteEditor)
         this->paletteEditor->setTilesets(this->primaryTileset, this->secondaryTileset);
     this->refresh();
@@ -628,7 +628,7 @@ void TilesetEditor::on_actionSave_Tileset_triggered()
     // This is a workaround; redrawing the map's metatile selector shouldn't emit the same signal as when it's selected.
     this->lockSelection = true;
     this->project->saveTilesets(this->primaryTileset, this->secondaryTileset);
-    emit this->tilesetsSaved(this->primaryTileset->name, this->secondaryTileset->name);
+    emit this->tilesetsSaved(this->primaryTileset->name(), this->secondaryTileset->name());
     if (this->paletteEditor) {
         this->paletteEditor->setTilesets(this->primaryTileset, this->secondaryTileset);
     }
@@ -929,7 +929,7 @@ void TilesetEditor::pasteMetatile(const Metatile * toPaste, QString newLabel)
 
 void TilesetEditor::on_actionExport_Primary_Tiles_Image_triggered()
 {
-    QString defaultName = QString("%1_Tiles_Pal%2").arg(this->primaryTileset->name).arg(this->paletteId);
+    QString defaultName = QString("%1_Tiles_Pal%2").arg(this->primaryTileset->name()).arg(this->paletteId);
     QString defaultFilepath = QString("%1/%2.png").arg(FileDialog::getDirectory()).arg(defaultName);
     QString filepath = FileDialog::getSaveFileName(this, "Export Primary Tiles Image", defaultFilepath, "Image Files (*.png)");
     if (!filepath.isEmpty()) {
@@ -940,7 +940,7 @@ void TilesetEditor::on_actionExport_Primary_Tiles_Image_triggered()
 
 void TilesetEditor::on_actionExport_Secondary_Tiles_Image_triggered()
 {
-    QString defaultName = QString("%1_Tiles_Pal%2").arg(this->secondaryTileset->name).arg(this->paletteId);
+    QString defaultName = QString("%1_Tiles_Pal%2").arg(this->secondaryTileset->name()).arg(this->paletteId);
     QString defaultFilepath = QString("%1/%2.png").arg(FileDialog::getDirectory()).arg(defaultName);
     QString filepath = FileDialog::getSaveFileName(this, "Export Secondary Tiles Image", defaultFilepath, "Image Files (*.png)");
     if (!filepath.isEmpty()) {
@@ -951,7 +951,7 @@ void TilesetEditor::on_actionExport_Secondary_Tiles_Image_triggered()
 
 void TilesetEditor::on_actionExport_Primary_Metatiles_Image_triggered()
 {
-    QString defaultName = QString("%1_Metatiles").arg(this->primaryTileset->name);
+    QString defaultName = QString("%1_Metatiles").arg(this->primaryTileset->name());
     QString defaultFilepath = QString("%1/%2.png").arg(FileDialog::getDirectory()).arg(defaultName);
     QString filepath = FileDialog::getSaveFileName(this, "Export Primary Metatiles Image", defaultFilepath, "Image Files (*.png)");
     if (!filepath.isEmpty()) {
@@ -962,7 +962,7 @@ void TilesetEditor::on_actionExport_Primary_Metatiles_Image_triggered()
 
 void TilesetEditor::on_actionExport_Secondary_Metatiles_Image_triggered()
 {
-    QString defaultName = QString("%1_Metatiles").arg(this->secondaryTileset->name);
+    QString defaultName = QString("%1_Metatiles").arg(this->secondaryTileset->name());
     QString defaultFilepath = QString("%1/%2.png").arg(FileDialog::getDirectory()).arg(defaultName);
     QString filepath = FileDialog::getSaveFileName(this, "Export Secondary Metatiles Image", defaultFilepath, "Image Files (*.png)");
     if (!filepath.isEmpty()) {
@@ -1083,8 +1083,8 @@ void TilesetEditor::countMetatileUsage() {
         // were updated to use a tileset we were looking for.
         this->project->loadLayoutTilesets(layout);
 
-        bool usesPrimary = (layout->tileset_primary_label == this->primaryTileset->name);
-        bool usesSecondary = (layout->tileset_secondary_label == this->secondaryTileset->name);
+        bool usesPrimary = (layout->tileset_primary_label == this->primaryTileset->name());
+        bool usesSecondary = (layout->tileset_secondary_label == this->secondaryTileset->name());
 
         if (usesPrimary || usesSecondary) {
             if (!this->project->loadLayout(layout))
@@ -1122,8 +1122,8 @@ void TilesetEditor::countTileUsage() {
 
     for (auto layout : this->project->mapLayouts.values()) {
         this->project->loadLayoutTilesets(layout);
-        if (layout->tileset_primary_label == this->primaryTileset->name
-         || layout->tileset_secondary_label == this->secondaryTileset->name) {
+        if (layout->tileset_primary_label == this->primaryTileset->name()
+         || layout->tileset_secondary_label == this->secondaryTileset->name()) {
             // need to check metatiles
             if (layout->tileset_primary && layout->tileset_secondary) {
                 primaryTilesets.insert(layout->tileset_primary);
@@ -1174,7 +1174,7 @@ void TilesetEditor::on_copyButton_metatileLabel_clicked() {
     if (label.isEmpty()) return;
     Tileset * tileset = Tileset::getMetatileLabelTileset(metatileId, this->primaryTileset, this->secondaryTileset);
     if (tileset)
-        label.prepend(tileset->getMetatileLabelPrefix());
+        label.prepend(tileset->metatileLabelPrefix());
     QGuiApplication::clipboard()->setText(label);
     QToolTip::showText(this->ui->copyButton_metatileLabel->mapToGlobal(QPoint(0, 0)), "Copied!");
 }
