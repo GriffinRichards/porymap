@@ -51,9 +51,11 @@ public:
     QStringList readCArray(const QString &filename, const QString &label);
     QMap<QString, QStringList> readCArrayMulti(const QString &filename);
     QMap<QString, QString> readNamedIndexCArray(const QString &text, const QString &label, QString *error = nullptr);
-    QString readCIncbin(const QString &text, const QString &label);
+    QString readCIncbin(const QString &filename, const QString &label);
+    QString getCIncbin(const QString &text, const QString &label);
     QMap<QString, QString> readCIncbinMulti(const QString &filepath);
     QStringList readCIncbinArray(const QString &filename, const QString &label);
+    QStringList getCIncbinArray(const QString &text, const QString &label);
     QMap<QString, int> readCDefinesByRegex(const QString &filename, const QSet<QString> &regexList, QString *error = nullptr);
     QMap<QString, int> readCDefinesByName(const QString &filename, const QSet<QString> &names, QString *error = nullptr);
     QStringList readCDefineNames(const QString &filename, const QSet<QString> &regexList, QString *error = nullptr);

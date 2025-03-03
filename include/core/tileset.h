@@ -32,6 +32,7 @@ public:
     QString tilesImagePath;
     QImage tilesImage;
     QStringList palettePaths;
+    bool assetsLoaded = false;
 
     QList<QImage> tiles;
     QHash<int, QString> metatileLabels;
@@ -51,7 +52,7 @@ public:
     static QList<QList<QRgb>> getBlockPalettes(Tileset*, Tileset*, bool useTruePalettes = false);
     static QList<QRgb> getPalette(int, Tileset*, Tileset*, bool useTruePalettes = false);
     static bool metatileIsValid(uint16_t metatileId, Tileset *, Tileset *);
-    static QHash<int, QString> getHeaderMemberMap(bool usingAsm);
+    static QHash<int, QString> getHeaderMemberMap();
     static QString getExpectedDir(QString tilesetName, bool isSecondary);
     QString getExpectedDir();
 
@@ -67,9 +68,9 @@ public:
     void saveTilesImage();
     void savePalettes();
 
-    bool appendToHeaders(QString root, QString friendlyName, bool usingAsm);
-    bool appendToGraphics(QString root, QString friendlyName, bool usingAsm);
-    bool appendToMetatiles(QString root, QString friendlyName, bool usingAsm);
+    bool appendToHeaders(const QString &root, const QString &friendlyName);
+    bool appendToGraphics(const QString &root, const QString &friendlyName);
+    bool appendToMetatiles(const QString &root, const QString &friendlyName);
 
     void setTilesImage(const QImage &image);
 

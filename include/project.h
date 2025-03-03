@@ -71,7 +71,6 @@ public:
     ParseUtil parser;
     QFileSystemWatcher fileWatcher;
     QSet<QString> modifiedFiles;
-    bool usingAsmTilesets;
     QSet<QString> disabledSettingsNames;
     QSet<QString> topLevelMapFields;
     int pokemonMinLevel;
@@ -82,7 +81,7 @@ public:
     void set_root(QString);
 
     void clearMapCache();
-    void clearTilesetCache();
+    void clearTilesets();
     void clearMapLayouts();
     void clearEventGraphics();
     void clearHealLocations();
@@ -94,8 +93,6 @@ public:
     Map* loadMap(QString);
     Map* getMap(QString);
 
-    QMap<QString, Tileset*> tilesetCache;
-    Tileset* loadTileset(QString, Tileset *tileset = nullptr);
     Tileset* getTileset(QString, bool forceLoad = false);
     QStringList primaryTilesetLabels;
     QStringList secondaryTilesetLabels;
@@ -183,7 +180,7 @@ public:
     void saveTilesets(Tileset*, Tileset*);
     void saveTilesetMetatileLabels(Tileset*, Tileset*);
     void appendTilesetLabel(const QString &label, const QString &isSecondaryStr);
-    bool readTilesetLabels();
+    bool readTilesetHeaders();
     bool readTilesetMetatileLabels();
     bool readRegionMapSections();
     bool readItemNames();
@@ -253,6 +250,9 @@ public:
     static QString getMapGroupPrefix();
 
 private:
+    QMap<QString, Tileset*> tilesets;
+    QString tilesetGraphicsFileText;
+    QString tilesetMetatilesFileText;
     QMap<QString, QString> mapSectionDisplayNames;
     QMap<QString, qint64> modifiedFileTimestamps;
     QMap<QString, QString> facingDirections;

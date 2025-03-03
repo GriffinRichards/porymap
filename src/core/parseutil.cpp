@@ -289,14 +289,18 @@ int ParseUtil::evaluatePostfix(const QList<Token> &postfix) {
 }
 
 QString ParseUtil::readCIncbin(const QString &filename, const QString &label) {
+    this->text = readTextFile(this->root + "/" + filename);
+    return getCIncbin(this->text, label);
+}
+
+QString ParseUtil::getCIncbin(const QString &text, const QString &label) {
     QString path;
 
-    if (label.isNull()) {
+    if (label.isEmpty()) {
         return path;
     }
 
-    this->text = readTextFile(this->root + "/" + filename);
-
+    this->text = text;
     QRegularExpression re(QString(
         "\\b%1\\b"
         "\\s*\\[?\\s*\\]?\\s*=\\s*"
@@ -332,14 +336,17 @@ QMap<QString, QString> ParseUtil::readCIncbinMulti(const QString &filepath) {
 }
 
 QStringList ParseUtil::readCIncbinArray(const QString &filename, const QString &label) {
-    QStringList paths;
+    this->text = readTextFile(this->root + "/" + filename);
+    return getCIncbinArray(this->text, label);
+}
 
-    if (label.isNull()) {
+QStringList ParseUtil::getCIncbinArray(const QString &text, const QString &label) {
+    QStringList paths;
+    if (label.isEmpty()) {
         return paths;
     }
 
-    this->text = readTextFile(this->root + "/" + filename);
-
+    this->text = text;
     bool found = false;
     QString arrayText;
 

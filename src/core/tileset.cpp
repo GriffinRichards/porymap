@@ -247,54 +247,34 @@ QList<QRgb> Tileset::getPalette(int paletteId, Tileset *primaryTileset, Tileset 
     return paletteTable;
 }
 
-bool Tileset::appendToHeaders(QString root, QString friendlyName, bool usingAsm) {
-    QString headersFile = root + "/" + (usingAsm ? projectConfig.getFilePath(ProjectFilePath::tilesets_headers_asm)
-                                                 : projectConfig.getFilePath(ProjectFilePath::tilesets_headers));
+bool Tileset::appendToHeaders(const QString &root, const QString &friendlyName) {
+    QString headersFile = root + "/" + projectConfig.getFilePath(ProjectFilePath::tilesets_headers);
     QFile file(headersFile);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
         logError(QString("Could not write to file \"%1\"").arg(headersFile));
         return false;
     }
-    QString isSecondaryStr = this->is_secondary ? "TRUE" : "FALSE";
-    QString dataString = "\n";
-    if (usingAsm) {
-        // Append to asm file
-        dataString.append("\t.align 2\n");
-        dataString.append(QString("%1::\n").arg(this->name));
-        dataString.append("\t.byte TRUE @ is compressed\n");
-        dataString.append(QString("\t.byte %1 @ is secondary\n").arg(isSecondaryStr));
-        dataString.append("\t.2byte 0 @ padding\n");
-        dataString.append(QString("\t.4byte gTilesetTiles_%1\n").arg(friendlyName));
-        dataString.append(QString("\t.4byte gTilesetPalettes_%1\n").arg(friendlyName));
-        dataString.append(QString("\t.4byte gMetatiles_%1\n").arg(friendlyName));
-        if (projectConfig.baseGameVersion == BaseGameVersion::pokefirered) {
-            dataString.append("\t.4byte NULL @ animation callback\n");
-            dataString.append(QString("\t.4byte gMetatileAttributes_%1\n").arg(friendlyName));
-        } else {
-            dataString.append(QString("\t.4byte gMetatileAttributes_%1\n").arg(friendlyName));
-            dataString.append("\t.4byte NULL @ animation callback\n");
-        }
-    } else {
-        // Append to C file
-        dataString.append(QString("const struct Tileset %1 =\n{\n").arg(this->name));
-        if (projectConfig.tilesetsHaveIsCompressed) dataString.append("    .isCompressed = TRUE,\n");
-        dataString.append(QString("    .isSecondary = %1,\n").arg(isSecondaryStr));
-        dataString.append(QString("    .tiles = gTilesetTiles_%1,\n").arg(friendlyName));
-        dataString.append(QString("    .palettes = gTilesetPalettes_%1,\n").arg(friendlyName));
-        dataString.append(QString("    .metatiles = gMetatiles_%1,\n").arg(friendlyName));
-        dataString.append(QString("    .metatileAttributes = gMetatileAttributes_%1,\n").arg(friendlyName));
-        if (projectConfig.tilesetsHaveCallback) dataString.append("    .callback = NULL,\n");
-        dataString.append("};\n");
-    }
-    file.write(dataString.toUtf8());
+
+    QString text = QString("\nconst struct Tileset %1 =\n{\n%2"
+                           "    .isSecondary = %3,\n"
+                           "    .tiles = gTilesetTiles_%4,\n"
+                           "    .palettes = gTilesetPalettes_%4,\n"
+                           "    .metatiles = gMetatiles_%4,\n"
+                           "    .metatileAttributes = gMetatileAttributes_%4,\n%5};")
+                    .arg(this->name)
+                    .arg(projectConfig.tilesetsHaveIsCompressed ? "    .isCompressed = TRUE,\n" : "")
+                    .arg(this->is_secondary ? "TRUE" : "FALSE")
+                    .arg(friendlyName)
+                    .arg(projectConfig.tilesetsHaveCallback ? "    .callback = NULL,\n" : "");
+
+    file.write(text.toUtf8());
     file.flush();
     file.close();
     return true;
 }
 
-bool Tileset::appendToGraphics(QString root, QString friendlyName, bool usingAsm) {
-    QString graphicsFile = root + "/" + (usingAsm ? projectConfig.getFilePath(ProjectFilePath::tilesets_graphics_asm)
-                                                  : projectConfig.getFilePath(ProjectFilePath::tilesets_graphics));
+bool Tileset::appendToGraphics(const QString &root, const QString &friendlyName) {
+    QString graphicsFile = root + "/" + projectConfig.getFilePath(ProjectFilePath::tilesets_graphics);
     QFile file(graphicsFile);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
         logError(QString("Could not write to file \"%1\"").arg(graphicsFile));
@@ -305,59 +285,32 @@ bool Tileset::appendToGraphics(QString root, QString friendlyName, bool usingAsm
     const QString tilesPath = tilesetDir + "/tiles.4bpp.lz";
     const QString palettesPath = tilesetDir + "/palettes/";
 
-    QString dataString = "\n";
-    if (usingAsm) {
-        // Append to asm file
-        dataString.append("\t.align 2\n");
-        dataString.append(QString("gTilesetPalettes_%1::\n").arg(friendlyName));
-        for (int i = 0; i < Project::getNumPalettesTotal(); i++)
-            dataString.append(QString("\t.incbin \"%1%2.gbapal\"\n").arg(palettesPath).arg(i, 2, 10, QLatin1Char('0')));
-        dataString.append("\n\t.align 2\n");
-        dataString.append(QString("gTilesetTiles_%1::\n").arg(friendlyName));
-        dataString.append(QString("\t.incbin \"%1\"\n").arg(tilesPath));
-    } else {
-        // Append to C file
-        dataString.append(QString("const u16 gTilesetPalettes_%1[][16] =\n{\n").arg(friendlyName));
-        for (int i = 0; i < Project::getNumPalettesTotal(); i++)
-            dataString.append(QString("    INCBIN_U16(\"%1%2.gbapal\"),\n").arg(palettesPath).arg(i, 2, 10, QLatin1Char('0')));
-        dataString.append("};\n");
-        dataString.append(QString("\nconst u32 gTilesetTiles_%1[] = INCBIN_U32(\"%2\");\n").arg(friendlyName, tilesPath));
-    }
-    file.write(dataString.toUtf8());
+    QString text = QString("\nconst u16 gTilesetPalettes_%1[][16] =\n{\n").arg(friendlyName);
+    for (int i = 0; i < Project::getNumPalettesTotal(); i++)
+        text.append(QString("    INCBIN_U16(\"%1%2.gbapal\"),\n").arg(palettesPath).arg(i, 2, 10, QLatin1Char('0')));
+    text.append(QString("};\nconst u32 gTilesetTiles_%1[] = INCBIN_U32(\"%2\");\n").arg(friendlyName, tilesPath));
+
+    file.write(text.toUtf8());
     file.flush();
     file.close();
     return true;
 }
 
-bool Tileset::appendToMetatiles(QString root, QString friendlyName, bool usingAsm) {
-    QString metatileFile = root + "/" + (usingAsm ? projectConfig.getFilePath(ProjectFilePath::tilesets_metatiles_asm)
-                                                  : projectConfig.getFilePath(ProjectFilePath::tilesets_metatiles));
+bool Tileset::appendToMetatiles(const QString &root, const QString &friendlyName) {
+    QString metatileFile = root + "/" + projectConfig.getFilePath(ProjectFilePath::tilesets_metatiles);
     QFile file(metatileFile);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Append)) {
         logError(QString("Could not write to file \"%1\"").arg(metatileFile));
         return false;
     }
 
-    const QString tilesetDir = this->getExpectedDir();
-    const QString metatilesPath = tilesetDir + "/metatiles.bin";
-    const QString metatileAttrsPath = tilesetDir + "/metatile_attributes.bin";
+    QString text = QString("\nconst u16 gMetatiles_%1[] = INCBIN_U16(\"%2/metatiles.bin\");\n"
+                           "const u%3 gMetatileAttributes_%1[] = INCBIN_U%3(\"%2/metatile_attributes.bin\");\n")
+                        .arg(friendlyName)
+                        .arg(getExpectedDir())
+                        .arg(QString::number(projectConfig.metatileAttributesSize * 8));
 
-    QString dataString = "\n";
-    if (usingAsm) {
-        // Append to asm file
-        dataString.append("\t.align 1\n");
-        dataString.append(QString("gMetatiles_%1::\n").arg(friendlyName));
-        dataString.append(QString("\t.incbin \"%1\"\n").arg(metatilesPath));
-        dataString.append(QString("\n\t.align 1\n"));
-        dataString.append(QString("gMetatileAttributes_%1::\n").arg(friendlyName));
-        dataString.append(QString("\t.incbin \"%1\"\n").arg(metatileAttrsPath));
-    } else {
-        // Append to C file
-        dataString.append(QString("const u16 gMetatiles_%1[] = INCBIN_U16(\"%2\");\n").arg(friendlyName, metatilesPath));
-        QString numBits = QString::number(projectConfig.metatileAttributesSize * 8);
-        dataString.append(QString("const u%1 gMetatileAttributes_%2[] = INCBIN_U%1(\"%3\");\n").arg(numBits, friendlyName, metatileAttrsPath));
-    }
-    file.write(dataString.toUtf8());
+    file.write(text.toUtf8());
     file.flush();
     file.close();
     return true;
@@ -381,21 +334,16 @@ QString Tileset::getExpectedDir(QString tilesetName, bool isSecondary)
 
 // Get the expected positions of the members in struct Tileset.
 // Used when parsing asm tileset data, or C tileset data that's missing initializers.
-QHash<int, QString> Tileset::getHeaderMemberMap(bool usingAsm)
-{
-     // The asm header has a padding field that needs to be skipped
-    int paddingOffset = usingAsm ? 1 : 0;
-
+QHash<int, QString> Tileset::getHeaderMemberMap() {
     // The position of metatileAttributes changes between games
     bool isPokefirered = (projectConfig.baseGameVersion == BaseGameVersion::pokefirered);
-    int metatileAttrPosition = (isPokefirered ? 6 : 5) + paddingOffset;
-
-    auto map = QHash<int, QString>();
-    map.insert(1, "isSecondary");
-    map.insert(2 + paddingOffset, "tiles");
-    map.insert(3 + paddingOffset, "palettes");
-    map.insert(4 + paddingOffset, "metatiles");
-    map.insert(metatileAttrPosition, "metatileAttributes");
+    QHash<int, QString> map = {
+        {1, "isSecondary"},
+        {2, "tiles"},
+        {3, "palettes"},
+        {4, "metatiles"},
+        {isPokefirered ? 6 : 5, "metatileAttributes"},
+    };
     return map;
 }
 
@@ -570,6 +518,7 @@ void Tileset::load() {
     loadMetatileAttributes();
     loadTilesImage();
     loadPalettes();
+    this->assetsLoaded = true;
 }
 
 // Because metatile labels are global (and handled by the project) we don't save them here.

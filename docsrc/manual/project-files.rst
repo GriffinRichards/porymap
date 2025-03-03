@@ -31,9 +31,6 @@ The filepath that Porymap expects for each file can be overridden on the ``Files
    src/data/tilesets/headers.h, yes, yes, ``tilesets_headers``,
    src/data/tilesets/graphics.h, yes, yes, ``tilesets_graphics``, also edits palette and tile image files listed in this file
    src/data/tilesets/metatiles.h, yes, yes, ``tilesets_metatiles``, also edits metatile files listed in this file
-   data/tilesets/headers.inc, yes, yes, ``tilesets_headers_asm``, only if ``tilesets_headers`` can't be found
-   data/tilesets/graphics.inc, yes, yes, ``tilesets_graphics_asm``, only if ``tilesets_headers`` can't be found
-   data/tilesets/metatiles.inc, yes, yes, ``tilesets_metatiles_asm``, only if ``tilesets_headers`` can't be found
    data/tilesets/[primary|secondary]/\*, yes, yes, ``data_tilesets_folders``, default tileset data location
    src/data/wild_encounters.json, yes, yes, ``json_wild_encounters``, optional (only required to use Wild Pokémon tab)
    src/data/heal_locations.json, yes, yes, ``json_heal_locations``,
