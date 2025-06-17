@@ -117,7 +117,7 @@ jobs:
         run: powershell.exe -Command "Expand-Archive -Path mingw1310_64.zip -DestinationPath ../mingw1310_64"
       
       - name: Add Qt Static to PATH
-        run: echo "$env:GITHUB_WORKSPACE/../Qt/6.9.0/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+        run: echo "${{ github.workspace }}/../Qt/6.9.0/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Add static config to .pro file
         run: echo "CONFIG += qt static" >> porymap.pro
@@ -130,11 +130,11 @@ jobs:
           QTDIR: ../Qt/6.9.0
           QMAKESPEC: ${{ github.workspace }}/../Qt/6.9.0/mkspecs/win32-g++
         run: |
-          dir $env:GITHUB_WORKSPACE/../Qt/6.9.0/mkspecs
+          dir ${{ github.workspace }}/../Qt/6.9.0/mkspecs
           qmake.exe -o Makefile porymap.pro "CONFIG+=qtquickcompiler"
 
       - name: Add mingw to PATH
-        run: echo "$env:GITHUB_WORKSPACE/../mingw1310_64/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
+        run: echo "${{ github.workspace }}/../mingw1310_64/bin" | Out-File -Append -FilePath $env:GITHUB_PATH -Encoding utf8
 
       - name: Compile
         env:
