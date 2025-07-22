@@ -367,7 +367,6 @@ void MainWindow::initEditor() {
     connect(this->editor, &Editor::currentMetatilesSelectionChanged, this, &MainWindow::currentMetatilesSelectionChanged);
     connect(this->editor, &Editor::wildMonTableEdited, [this] { markMapEdited(this->editor->map); });
     connect(this->editor, &Editor::mapRulerStatusChanged, this, &MainWindow::onMapRulerStatusChanged);
-    connect(this->editor, &Editor::tilesetUpdated, this, &Scripting::cb_TilesetUpdated);
     connect(this->editor, &Editor::editActionSet, this, &MainWindow::setEditActionUi);
     connect(ui->newEventToolButton, &NewEventToolButton::newEventAdded, this->editor, &Editor::addNewEvent);
     connect(ui->toolButton_deleteEvent, &QAbstractButton::clicked, this->editor, &Editor::deleteSelectedEvents);
@@ -1409,7 +1408,7 @@ bool MainWindow::setProjectUI() {
     ui->newEventToolButton->setEventTypeVisible(Event::Type::SecretBase, projectConfig.eventSecretBaseEnabled);
     ui->newEventToolButton->setEventTypeVisible(Event::Type::CloneObject, projectConfig.eventCloneObjectEnabled);
 
-    this->editor->setPlayerViewRect(QRectF(0, 0, 16, 16).marginsAdded(projectConfig.playerViewDistance));
+    this->editor->setPlayerViewRect(QRectF(QPoint(0,0), Metatile::pixelSize()).marginsAdded(projectConfig.playerViewDistance));
 
     editor->setCollisionGraphics();
     ui->spinBox_SelectedElevation->setMaximum(Block::getMaxElevation());
@@ -1810,7 +1809,7 @@ void MainWindow::scrollMetatileSelectorToSelection() {
 
     QPoint pos = editor->metatile_selector_item->getMetatileIdCoordsOnWidget(selection.metatileItems.first().metatileId);
     QPoint size = editor->metatile_selector_item->getSelectionDimensions();
-    pos += QPoint(size.x() - 1, size.y() - 1) * 16 / 2; // We want to focus on the center of the whole selection
+    pos += QPoint((size.x() - 1) * Metatile::pixelWidth(), (size.y() - 1) * Metatile::pixelHeight()) / 2; // We want to focus on the center of the whole selection
     pos *= getMetatilesZoomScale();
 
     auto viewport = ui->scrollArea_MetatileSelector->viewport();
@@ -1821,7 +1820,9 @@ void MainWindow::currentMetatilesSelectionChanged() {
     redrawMetatileSelection();
     if (this->tilesetEditor) {
         MetatileSelection selection = editor->metatile_selector_item->getMetatileSelection();
-        this->tilesetEditor->selectMetatile(selection.metatileItems.first().metatileId);
+        if (!selection.metatileItems.isEmpty()) {
+            this->tilesetEditor->selectMetatile(selection.metatileItems.first().metatileId);
+        }
     }
 
     // Don't scroll to internal selections here, it will disrupt the user while they make their selection.
@@ -2176,7 +2177,6 @@ void MainWindow::on_mapViewTab_tabBarClicked(int index)
                 prefab.updatePrefabUi(this->editor->layout);
         }
     }
-    editor->setCursorRectVisible(false);
 }
 
 void MainWindow::on_mainTabBar_tabBarClicked(int index)
@@ -2240,11 +2240,7 @@ void MainWindow::on_actionPlayer_View_Rectangle_triggered()
     bool enabled = ui->actionPlayer_View_Rectangle->isChecked();
     porymapConfig.showPlayerView = enabled;
     this->editor->settings->playerViewRectEnabled = enabled;
-    if ((this->editor->map_item && this->editor->map_item->has_mouse)
-     || (this->editor->collision_item && this->editor->collision_item->has_mouse)) {
-        this->editor->playerViewRect->setVisible(enabled && this->editor->playerViewRect->getActive());
-        ui->graphicsView_Map->scene()->update();
-    }
+    this->editor->updateCursorRectVisibility();
 }
 
 void MainWindow::on_actionCursor_Tile_Outline_triggered()
@@ -2252,11 +2248,7 @@ void MainWindow::on_actionCursor_Tile_Outline_triggered()
     bool enabled = ui->actionCursor_Tile_Outline->isChecked();
     porymapConfig.showCursorTile = enabled;
     this->editor->settings->cursorTileRectEnabled = enabled;
-    if ((this->editor->map_item && this->editor->map_item->has_mouse)
-     || (this->editor->collision_item && this->editor->collision_item->has_mouse)) {
-        this->editor->cursorMapTileRect->setVisible(enabled && this->editor->cursorMapTileRect->getActive());
-        ui->graphicsView_Map->scene()->update();
-    }
+    this->editor->updateCursorRectVisibility();
 }
 
 void MainWindow::on_actionShow_Events_In_Map_View_triggered() {
@@ -2588,19 +2580,6 @@ void MainWindow::on_toolButton_Move_clicked()    { editor->setEditAction(Editor:
 void MainWindow::on_toolButton_Shift_clicked()   { editor->setEditAction(Editor::EditAction::Shift); }
 
 void MainWindow::setEditActionUi(Editor::EditAction editAction) {
-    if (editAction == Editor::EditAction::Move) {
-        ui->graphicsView_Map->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        ui->graphicsView_Map->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-        QScroller::grabGesture(ui->graphicsView_Map, QScroller::LeftMouseButtonGesture);
-        ui->graphicsView_Map->setViewportUpdateMode(QGraphicsView::ViewportUpdateMode::FullViewportUpdate);
-    } else {
-        ui->graphicsView_Map->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        ui->graphicsView_Map->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-        QScroller::ungrabGesture(ui->graphicsView_Map);
-        ui->graphicsView_Map->setViewportUpdateMode(QGraphicsView::ViewportUpdateMode::MinimalViewportUpdate);
-    }
-    ui->graphicsView_Map->setFocus();
-
     ui->toolButton_Paint->setChecked(editAction == Editor::EditAction::Paint);
     ui->toolButton_Select->setChecked(editAction == Editor::EditAction::Select);
     ui->toolButton_Fill->setChecked(editAction == Editor::EditAction::Fill);
@@ -2867,7 +2846,9 @@ void MainWindow::on_actionTileset_Editor_triggered()
     openSubWindow(this->tilesetEditor);
 
     MetatileSelection selection = this->editor->metatile_selector_item->getMetatileSelection();
-    this->tilesetEditor->selectMetatile(selection.metatileItems.first().metatileId);
+    if (!selection.metatileItems.isEmpty()) {
+        this->tilesetEditor->selectMetatile(selection.metatileItems.first().metatileId);
+    }
 }
 
 void MainWindow::initTilesetEditor() {
@@ -2938,6 +2919,7 @@ void MainWindow::on_actionPreferences_triggered() {
         // require us to repopulate the EventFrames and redraw event pixmaps, respectively.
         connect(preferenceEditor, &PreferenceEditor::preferencesSaved, editor, &Editor::updateEvents);
         connect(preferenceEditor, &PreferenceEditor::scriptSettingsChanged, editor->project, &Project::readEventScriptLabels);
+        connect(preferenceEditor, &PreferenceEditor::reloadProjectRequested, this, &MainWindow::on_action_Reload_Project_triggered);
     }
 
     openSubWindow(preferenceEditor);

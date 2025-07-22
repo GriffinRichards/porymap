@@ -32,9 +32,7 @@ int Project::num_pals_total = 13;
 
 Project::Project(QObject *parent) :
     QObject(parent)
-{
-    QObject::connect(&this->fileWatcher, &QFileSystemWatcher::fileChanged, this, &Project::recordFileChange);
-}
+{ }
 
 Project::~Project()
 {
@@ -186,6 +184,7 @@ int Project::getSupportedMajorVersion(QString *errorOut) {
 
 bool Project::load() {
     this->parser.setUpdatesSplashScreen(true);
+    resetFileWatcher();
     resetFileCache();
     this->disabledSettingsNames.clear();
     bool success = readGlobalConstants()
@@ -225,6 +224,7 @@ bool Project::load() {
         initNewLayoutSettings();
         initNewMapSettings();
         applyParsedLimits();
+        logFileWatchStatus();
     }
     this->parser.setUpdatesSplashScreen(false);
     return success;
@@ -232,7 +232,6 @@ bool Project::load() {
 
 void Project::resetFileCache() {
     this->parser.clearFileCache();
-    this->failedFileWatchPaths.clear();
 
     const QSet<QString> filepaths = {
         // Whenever we load a tileset we'll need to parse some data from these files, so we cache them to avoid the overhead of opening the files.
@@ -749,16 +748,21 @@ bool Project::saveMapLayouts() {
 }
 
 bool Project::watchFile(const QString &filename) {
+    if (!porymapConfig.monitorFiles)
+        return true;
+
+    if (!this->fileWatcher) {
+        // Only create the file watcher when it's first needed (even an empty QFileSystemWatcher will consume system resources).
+        this->fileWatcher = new QFileSystemWatcher(this);
+        QObject::connect(this->fileWatcher, &QFileSystemWatcher::fileChanged, this, &Project::recordFileChange);
+    }
+
     QString filepath = filename.startsWith(this->root) ? filename : QString("%1/%2").arg(this->root).arg(filename);
-    if (!this->fileWatcher.addPath(filepath) && !this->fileWatcher.files().contains(filepath)) {
+    if (!this->fileWatcher->addPath(filepath) && !this->fileWatcher->files().contains(filepath)) {
         // We failed to watch the file, and this wasn't a file we were already watching.
-        // Log a warning, but only if A. we actually care that we failed, because 'monitor files' is enabled,
-        // B. we haven't logged a warning for this file yet, and C. we would have otherwise been able to watch it, because the file exists.
-        if (porymapConfig.monitorFiles && !this->failedFileWatchPaths.contains(filepath) && QFileInfo::exists(filepath)) {
+        // Record the filepath for logging later, assuming we should have been able to watch the file.
+        if (QFileInfo::exists(filepath)) {
             this->failedFileWatchPaths.insert(filepath);
-            logWarn(QString("Failed to add '%1' to file watcher. Currently watching %2 files.")
-                            .arg(Util::stripPrefix(filepath, this->root))
-                            .arg(this->fileWatcher.files().length()));
         }
         return false;
     }
@@ -774,8 +778,11 @@ bool Project::watchFiles(const QStringList &filenames) {
 }
 
 bool Project::stopFileWatch(const QString &filename) {
+    if (!this->fileWatcher)
+        return true;
+
     QString filepath = filename.startsWith(this->root) ? filename : QString("%1/%2").arg(this->root).arg(filename);
-    return this->fileWatcher.removePath(filepath);
+    return this->fileWatcher->removePath(filepath);
 }
 
 void Project::ignoreWatchedFileTemporarily(const QString &filepath) {
@@ -794,8 +801,8 @@ void Project::recordFileChange(const QString &filepath) {
     // Note: As a safety measure, many applications save an open file by writing a new file and then deleting the old one.
     //       In your slot function, you can check watcher.files().contains(path).
     //       If it returns false, check whether the file still exists and then call addPath() to continue watching it.
-    if (!this->fileWatcher.files().contains(filepath) && QFileInfo::exists(filepath)) {
-        this->fileWatcher.addPath(filepath);
+    if (this->fileWatcher && !this->fileWatcher->files().contains(filepath) && QFileInfo::exists(filepath)) {
+        this->fileWatcher->addPath(filepath);
     }
 
     if (this->modifiedFiles.contains(filepath)) {
@@ -813,6 +820,38 @@ void Project::recordFileChange(const QString &filepath) {
 
     this->modifiedFiles.insert(filepath);
     emit fileChanged(filepath);
+}
+
+// When calling 'watchFile' we record failures rather than log them immediately.
+// We do this primarily to condense the warning if we fail to monitor any files.
+void Project::logFileWatchStatus() {
+    if (!this->fileWatcher)
+        return;
+
+    int numSuccessful = this->fileWatcher->files().length();
+    int numAttempted = numSuccessful + this->failedFileWatchPaths.count();
+    if (numAttempted == 0)
+        return;
+
+    if (numSuccessful == 0) {
+        // We failed to watch every file we tried. As of writing this happens if Porymap is running
+        // on Windows and the project files are in WSL2. Rather than filling the log by
+        // outputting a warning for every file, just log that we failed to monitor any of them.
+        logWarn(QString("Failed to monitor project files"));
+        return;
+    } else {
+        logInfo(QString("Successfully monitoring %1/%2 project files").arg(numSuccessful).arg(numAttempted));
+    }
+
+    for (const auto &failedPath : this->failedFileWatchPaths) {
+        logWarn(QString("Failed to monitor project file '%1'").arg(failedPath));
+    }
+}
+
+void Project::resetFileWatcher() {
+    this->failedFileWatchPaths.clear();
+    delete this->fileWatcher;
+    this->fileWatcher = nullptr;
 }
 
 bool Project::saveMapGroups() {
@@ -1519,9 +1558,8 @@ Tileset *Project::createNewTileset(QString name, bool secondary, bool checkerboa
     tileset->loadTilesImage(&tilesImage);
 
     // Create default metatiles
-    const int numMetatiles = tileset->is_secondary ? (Project::getNumMetatilesTotal() - Project::getNumMetatilesPrimary()) : Project::getNumMetatilesPrimary();
     const int tilesPerMetatile = projectConfig.getNumTilesInMetatile();
-    for (int i = 0; i < numMetatiles; ++i) {
+    for (int i = 0; i < tileset->maxMetatiles(); ++i) {
         auto metatile = new Metatile();
         for(int j = 0; j < tilesPerMetatile; ++j){
             Tile tile = Tile();
@@ -1579,7 +1617,7 @@ Tileset *Project::createNewTileset(QString name, bool secondary, bool checkerboa
         metatilesFilepath.append(projectConfig.getFilePath(ProjectFilePath::tilesets_metatiles));
     }
     ignoreWatchedFilesTemporarily({headersFilepath, graphicsFilepath, metatilesFilepath});
-    name.remove(0, prefix.length()); // Strip prefix from name to get base name for use in other symbols.
+    name = Tileset::stripPrefix(name);
     tileset->appendToHeaders(headersFilepath, name, this->usingAsmTilesets);
     tileset->appendToGraphics(graphicsFilepath, name, this->usingAsmTilesets);
     tileset->appendToMetatiles(metatilesFilepath, name, this->usingAsmTilesets);
@@ -2361,12 +2399,11 @@ bool Project::readFieldmapProperties() {
         // We can determine whether triple-layer metatiles are in-use by reading this constant.
         // If the constant is missing (or is using a value other than 8 or 12) the user must tell
         // us whether they're using triple-layer metatiles under Project Settings.
-        static const int numTilesPerLayer = 4;
         int numTilesPerMetatile = it.value();
-        if (numTilesPerMetatile == 2 * numTilesPerLayer) {
+        if (numTilesPerMetatile == 2 * Metatile::tilesPerLayer()) {
             projectConfig.tripleLayerMetatilesEnabled = false;
             this->disabledSettingsNames.insert(numTilesPerMetatileName);
-        } else if (numTilesPerMetatile == 3 * numTilesPerLayer) {
+        } else if (numTilesPerMetatile == 3 * Metatile::tilesPerLayer()) {
             projectConfig.tripleLayerMetatilesEnabled = true;
             this->disabledSettingsNames.insert(numTilesPerMetatileName);
         }
@@ -2423,6 +2460,7 @@ bool Project::readFieldmapMasks() {
         projectConfig.blockCollisionMask = blockMask;
     if (readBlockMask(elevationMaskName, &blockMask))
         projectConfig.blockElevationMask = blockMask;
+    Block::setLayout();
 
     // Read RSE metatile attribute masks
     auto it = defines.find(behaviorMaskName);
@@ -2602,7 +2640,10 @@ void Project::setRegionMapEntries(const QHash<QString, MapSectionEntry> &entries
 QHash<QString, MapSectionEntry> Project::getRegionMapEntries() const {
     QHash<QString, MapSectionEntry> entries;
     for (auto it = this->locationData.constBegin(); it != this->locationData.constEnd(); it++) {
-        entries[it.key()] = it.value().map;
+        const MapSectionEntry regionMapData = it.value().map;
+        if (regionMapData.valid) {
+            entries[it.key()] = regionMapData;
+        }
     }
     return entries;
 }
@@ -3380,14 +3421,25 @@ QString Project::getEmptySpeciesName() {
     return projectConfig.getIdentifier(ProjectIdentifier::define_species_prefix) + projectConfig.getIdentifier(ProjectIdentifier::define_species_empty);
 }
 
-// Get the distance in metatiles (rounded up) that the player is able to see in each direction in-game.
+// Get the distance in pixels that the player is able to see in each direction in-game,
+// rounded up to a multiple of a metatile's pixel size.
+QMargins Project::getPixelViewDistance() {
+    QMargins viewDistance = projectConfig.playerViewDistance;
+    viewDistance.setTop(Util::roundUpToMultiple(viewDistance.top(), Metatile::pixelHeight()));
+    viewDistance.setBottom(Util::roundUpToMultiple(viewDistance.bottom(), Metatile::pixelHeight()));
+    viewDistance.setLeft(Util::roundUpToMultiple(viewDistance.left(), Metatile::pixelWidth()));
+    viewDistance.setRight(Util::roundUpToMultiple(viewDistance.right(), Metatile::pixelWidth()));
+    return viewDistance;
+}
+
+// Get the distance in metatiles that the player is able to see in each direction in-game.
 // For the default view distance (i.e. assuming the player is centered in a 240x160 pixel GBA screen) this is 7x5 metatiles.
 QMargins Project::getMetatileViewDistance() {
-    QMargins viewDistance = projectConfig.playerViewDistance;
-    viewDistance.setTop(qCeil(viewDistance.top() / 16.0));
-    viewDistance.setBottom(qCeil(viewDistance.bottom() / 16.0));
-    viewDistance.setLeft(qCeil(viewDistance.left() / 16.0));
-    viewDistance.setRight(qCeil(viewDistance.right() / 16.0));
+    QMargins viewDistance = getPixelViewDistance();
+    viewDistance.setTop(viewDistance.top() / Metatile::pixelHeight());
+    viewDistance.setBottom(viewDistance.bottom() / Metatile::pixelHeight());
+    viewDistance.setLeft(viewDistance.left() / Metatile::pixelWidth());
+    viewDistance.setRight(viewDistance.right() / Metatile::pixelWidth());
     return viewDistance;
 }
 
@@ -3417,15 +3469,14 @@ void Project::applyParsedLimits() {
     projectConfig.metatileEncounterTypeMask &= maxMask;
     projectConfig.metatileLayerTypeMask &= maxMask;
 
-    Block::setLayout();
     Metatile::setLayout(this);
 
-    Project::num_metatiles_primary = qMin(qMax(Project::num_metatiles_primary, 1), Block::getMaxMetatileId() + 1);
+    Project::num_metatiles_primary = qBound(1, Project::num_metatiles_primary, Block::getMaxMetatileId() + 1);
     projectConfig.defaultMetatileId = qMin(projectConfig.defaultMetatileId, Block::getMaxMetatileId());
     projectConfig.defaultElevation = qMin(projectConfig.defaultElevation, Block::getMaxElevation());
     projectConfig.defaultCollision = qMin(projectConfig.defaultCollision, Block::getMaxCollision());
-    projectConfig.collisionSheetSize.setHeight(qMin(qMax(projectConfig.collisionSheetSize.height(), 1), Block::getMaxElevation() + 1));
-    projectConfig.collisionSheetSize.setWidth(qMin(qMax(projectConfig.collisionSheetSize.width(), 1), Block::getMaxCollision() + 1));
+    projectConfig.collisionSheetSize.setHeight(qBound(1, projectConfig.collisionSheetSize.height(), Block::getMaxElevation() + 1));
+    projectConfig.collisionSheetSize.setWidth(qBound(1, projectConfig.collisionSheetSize.width(), Block::getMaxCollision() + 1));
 }
 
 bool Project::hasUnsavedChanges() {

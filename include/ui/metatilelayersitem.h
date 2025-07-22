@@ -9,14 +9,7 @@
 class MetatileLayersItem: public SelectablePixmapItem {
     Q_OBJECT
 public:
-    MetatileLayersItem(Metatile *metatile, Tileset *primaryTileset, Tileset *secondaryTileset): SelectablePixmapItem(16, 16, 6, 2) {
-        this->metatile = metatile;
-        this->primaryTileset = primaryTileset;
-        this->secondaryTileset = secondaryTileset;
-        this->clearLastModifiedCoords();
-        this->clearLastHoveredCoords();
-        setAcceptHoverEvents(true);
-    }
+    MetatileLayersItem(Metatile *metatile, Tileset *primaryTileset, Tileset *secondaryTileset);
     void draw();
     void setTilesets(Tileset*, Tileset*);
     void setMetatile(Metatile*);
@@ -33,7 +26,7 @@ private:
 signals:
     void tileChanged(int, int);
     void selectedTilesChanged(QPoint, int, int);
-    void hoveredTileChanged(uint16_t);
+    void hoveredTileChanged(const Tile &tile);
     void hoveredTileCleared();
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent*);

@@ -61,7 +61,6 @@ public:
     QMap<QString, uint32_t> metatileBehaviorMap;
     QMap<uint32_t, QString> metatileBehaviorMapInverse;
     ParseUtil parser;
-    QFileSystemWatcher fileWatcher;
     QSet<QString> modifiedFiles;
     bool usingAsmTilesets;
     QSet<QString> disabledSettingsNames;
@@ -252,17 +251,22 @@ public:
     static QString getDynamicMapDefineName();
     static QString getDynamicMapName();
     static QString getEmptySpeciesName();
+    static QMargins getPixelViewDistance();
     static QMargins getMetatileViewDistance();
     static int getNumTilesPrimary() { return num_tiles_primary; }
     static int getNumTilesTotal() { return num_tiles_total; }
+    static int getNumTilesSecondary() { return getNumTilesTotal() - getNumTilesPrimary(); }
     static int getNumMetatilesPrimary() { return num_metatiles_primary; }
     static int getNumMetatilesTotal() { return Block::getMaxMetatileId() + 1; }
+    static int getNumMetatilesSecondary() { return getNumMetatilesTotal() - getNumMetatilesPrimary(); }
     static int getNumPalettesPrimary(){ return num_pals_primary; }
     static int getNumPalettesTotal() { return num_pals_total; }
+    static int getNumPalettesSecondary() { return getNumPalettesTotal() - getNumPalettesPrimary(); }
     static QString getEmptyMapsecName();
     static QString getMapGroupPrefix();
 
 private:
+    QPointer<QFileSystemWatcher> fileWatcher;
     QMap<QString, qint64> modifiedFileTimestamps;
     QMap<QString, QString> facingDirections;
     QHash<QString, QString> speciesToIconPath;
@@ -332,6 +336,8 @@ private:
     void ignoreWatchedFilesTemporarily(const QStringList &filepaths);
     void recordFileChange(const QString &filepath);
     void resetFileCache();
+    void resetFileWatcher();
+    void logFileWatchStatus();
 
     bool saveMapLayouts();
     bool saveMapGroups();
