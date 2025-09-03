@@ -132,6 +132,9 @@ public:
             int>::type = 0>
     Json(const V & v) : Json(array(v.begin(), v.end())) {}
 
+    static QJsonValue toQJsonValue(const Json &json);
+    QJsonValue toQJsonValue() const { return Json::toQJsonValue(*this); }
+
     static Json fromQJsonValue(const QJsonValue &value);
 
     static void append(Json::array *array, const QJsonArray &addendum) {
@@ -147,6 +150,13 @@ public:
     static void append(Json::object *object, const Json::object &addendum) {
         for (auto it = addendum.cbegin(); it != addendum.cend(); it++)
             (*object)[it.key()] = it.value();
+    }
+    static void append(QJsonArray *array, const Json::array &addendum) {
+        for (const auto &i : addendum) array->append(toQJsonValue(i));
+    }
+    static void append(QJsonObject *object, const Json::object &addendum) {
+        for (auto it = addendum.cbegin(); it != addendum.cend(); it++)
+            (*object)[it.key()] = toQJsonValue(it.value());
     }
 
     // This prevents Json(some_pointer) from accidentally producing a bool. Use

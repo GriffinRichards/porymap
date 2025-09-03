@@ -219,7 +219,7 @@ struct Statics {
     const std::shared_ptr<JsonValue> t = make_shared<JsonBoolean>(true);
     const std::shared_ptr<JsonValue> f = make_shared<JsonBoolean>(false);
     const QString empty_string;
-    const QVector<Json> empty_vector;
+    const Json::array empty_vector;
     const Json::object empty_map;
     Statics() {}
 };
@@ -244,8 +244,8 @@ Json::Json(std::nullptr_t) noexcept    : m_ptr(statics().null) {}
 Json::Json(double value)               : m_ptr(make_shared<JsonDouble>(value)) {}
 Json::Json(int value)                  : m_ptr(make_shared<JsonInt>(value)) {}
 Json::Json(bool value)                 : m_ptr(value ? statics().t : statics().f) {}
-Json::Json(const QString &value)        : m_ptr(make_shared<JsonString>(value)) {}
-Json::Json(QString &&value)             : m_ptr(make_shared<JsonString>(std::move(value))) {}
+Json::Json(const QString &value)       : m_ptr(make_shared<JsonString>(value)) {}
+Json::Json(QString &&value)            : m_ptr(make_shared<JsonString>(std::move(value))) {}
 Json::Json(const char * value)         : m_ptr(make_shared<JsonString>(value)) {}
 Json::Json(const Json::array &values)  : m_ptr(make_shared<JsonArray>(values)) {}
 Json::Json(Json::array &&values)       : m_ptr(make_shared<JsonArray>(std::move(values))) {}
@@ -256,23 +256,23 @@ Json::Json(Json::object &&values)      : m_ptr(make_shared<JsonObject>(std::move
  * Accessors
  */
 
-Json::Type Json::type()                           const { return m_ptr->type();         }
-double Json::number_value()                       const { return m_ptr->number_value(); }
-int Json::int_value()                             const { return m_ptr->int_value();    }
-bool Json::bool_value()                           const { return m_ptr->bool_value();   }
+Json::Type Json::type()                            const { return m_ptr->type();         }
+double Json::number_value()                        const { return m_ptr->number_value(); }
+int Json::int_value()                              const { return m_ptr->int_value();    }
+bool Json::bool_value()                            const { return m_ptr->bool_value();   }
 const QString & Json::string_value()               const { return m_ptr->string_value(); }
-const QVector<Json> & Json::array_items()          const { return m_ptr->array_items();  }
-const Json::object & Json::object_items()    const { return m_ptr->object_items(); }
-const Json & Json::operator[] (int i)          const { return (*m_ptr)[i];           }
+const Json::array & Json::array_items()            const { return m_ptr->array_items();  }
+const Json::object & Json::object_items()          const { return m_ptr->object_items(); }
+const Json & Json::operator[] (int i)              const { return (*m_ptr)[i];           }
 const Json & Json::operator[] (const QString &key) const { return (*m_ptr)[key];         }
 
-double                    JsonValue::number_value()              const { return 0; }
-int                       JsonValue::int_value()                 const { return 0; }
-bool                      JsonValue::bool_value()                const { return false; }
-const QString &            JsonValue::string_value()              const { return statics().empty_string; }
-const QVector<Json> &      JsonValue::array_items()               const { return statics().empty_vector; }
-const Json::object & JsonValue::object_items()              const { return statics().empty_map; }
-const Json &              JsonValue::operator[] (int)         const { return static_null(); }
+double                    JsonValue::number_value()               const { return 0; }
+int                       JsonValue::int_value()                  const { return 0; }
+bool                      JsonValue::bool_value()                 const { return false; }
+const QString &           JsonValue::string_value()               const { return statics().empty_string; }
+const Json::array &       JsonValue::array_items()                const { return statics().empty_vector; }
+const Json::object &      JsonValue::object_items()               const { return statics().empty_map; }
+const Json &              JsonValue::operator[] (int)             const { return static_null(); }
 const Json &              JsonValue::operator[] (const QString &) const { return static_null(); }
 
 const Json & JsonObject::operator[] (const QString &key) const {
@@ -282,6 +282,26 @@ const Json & JsonObject::operator[] (const QString &key) const {
 const Json & JsonArray::operator[] (int i) const {
     if (i >= m_value.size()) return static_null();
     else return m_value[i];
+}
+
+QJsonValue Json::toQJsonValue(const Json &json) {
+    switch(json.type())
+    {
+    case Json::STRING: return QJsonValue(json.string_value());
+    case Json::NUMBER: return QJsonValue(json.number_value());
+    case Json::BOOL:   return QJsonValue(json.bool_value());
+    case Json::ARRAY: {
+        QJsonArray array;
+        Json::append(&array, json.array_items());
+        return array;
+    }
+    case Json::OBJECT: {
+        QJsonObject object;
+        Json::append(&object, json.object_items());
+        return object;
+    }
+    default: return QJsonValue();
+    }
 }
 
 Json Json::fromQJsonValue(const QJsonValue &value) {
@@ -713,7 +733,7 @@ struct JsonParser final {
         }
 
         if (ch == '[') {
-            QVector<Json> data;
+            Json::array data;
             ch = get_next_token();
             if (ch == ']')
                 return data;
