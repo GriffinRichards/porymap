@@ -63,14 +63,24 @@ void Event::modify() {
     this->map->modify();
 }
 
+static const QMap<Event::Group, QString> groupToJsonKeyMap = {
+    {Event::Group::Object, "object_events"},
+    {Event::Group::Warp, "warp_events"},
+    {Event::Group::Coord, "coord_events"},
+    {Event::Group::Bg, "bg_events"},
+};
+
 QString Event::groupToJsonKey(Event::Group group) {
-    static const QMap<Event::Group, QString> map = {
-        {Event::Group::Object, "object_events"},
-        {Event::Group::Warp, "warp_events"},
-        {Event::Group::Coord, "coord_events"},
-        {Event::Group::Bg, "bg_events"},
-    };
-    return map.value(group);
+    return groupToJsonKeyMap.value(group);
+}
+
+Event::Group Event::groupFromJsonKey(const QString &key) {
+    Event::Group group = groupToJsonKeyMap.key(key, Event::Group::None);
+    if (group == Event::Group::None) {
+        // Allow e.g. 'object_events' to be referred to using the key 'object'
+        group = groupToJsonKeyMap.key(key + "_events", Event::Group::None);
+    }
+    return group;
 }
 
 const QMap<Event::Group, QString> groupToStringMap = {
@@ -108,7 +118,7 @@ QString Event::typeToJsonKey(Event::Type type) {
     return typeToJsonKeyMap.value(type);
 }
 
-Event::Type Event::typeFromJsonKey(QString type) {
+Event::Type Event::typeFromJsonKey(const QString &type) {
     return typeToJsonKeyMap.key(type, Event::Type::None);
 }
 
@@ -168,7 +178,7 @@ EventFrame *ObjectEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object ObjectEvent::buildEventJson(Project *) {
+OrderedJson::object ObjectEvent::buildEventJson(Project *) const {
     OrderedJson::object objectJson;
 
     QString idName = this->getIdName();
@@ -278,7 +288,7 @@ EventFrame *CloneObjectEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object CloneObjectEvent::buildEventJson(Project *project) {
+OrderedJson::object CloneObjectEvent::buildEventJson(Project *project) const {
     OrderedJson::object cloneJson;
 
     QString idName = this->getIdName();
@@ -379,7 +389,7 @@ EventFrame *WarpEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object WarpEvent::buildEventJson(Project *project) {
+OrderedJson::object WarpEvent::buildEventJson(Project *project) const {
     OrderedJson::object warpJson;
 
     QString idName = this->getIdName();
@@ -466,7 +476,7 @@ EventFrame *TriggerEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object TriggerEvent::buildEventJson(Project *) {
+OrderedJson::object TriggerEvent::buildEventJson(Project *) const {
     OrderedJson::object triggerJson;
 
     triggerJson["type"] = Event::typeToJsonKey(Event::Type::Trigger);
@@ -536,7 +546,7 @@ EventFrame *WeatherTriggerEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object WeatherTriggerEvent::buildEventJson(Project *) {
+OrderedJson::object WeatherTriggerEvent::buildEventJson(Project *) const {
     OrderedJson::object weatherJson;
 
     weatherJson["type"] = Event::typeToJsonKey(Event::Type::WeatherTrigger);
@@ -599,7 +609,7 @@ EventFrame *SignEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object SignEvent::buildEventJson(Project *) {
+OrderedJson::object SignEvent::buildEventJson(Project *) const {
     OrderedJson::object signJson;
 
     signJson["type"] = Event::typeToJsonKey(Event::Type::Sign);
@@ -668,7 +678,7 @@ EventFrame *HiddenItemEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object HiddenItemEvent::buildEventJson(Project *) {
+OrderedJson::object HiddenItemEvent::buildEventJson(Project *) const {
     OrderedJson::object hiddenItemJson;
 
     hiddenItemJson["type"] = Event::typeToJsonKey(Event::Type::HiddenItem);
@@ -757,7 +767,7 @@ EventFrame *SecretBaseEvent::createEventFrame() {
     return this->eventFrame;
 }
 
-OrderedJson::object SecretBaseEvent::buildEventJson(Project *) {
+OrderedJson::object SecretBaseEvent::buildEventJson(Project *) const {
     OrderedJson::object secretBaseJson;
 
     secretBaseJson["type"] = Event::typeToJsonKey(Event::Type::SecretBase);
@@ -825,7 +835,7 @@ QString HealLocationEvent::getHostMapName() const {
     return this->getMap() ? this->getMap()->constantName() : this->hostMapName;
 }
 
-OrderedJson::object HealLocationEvent::buildEventJson(Project *project) {
+OrderedJson::object HealLocationEvent::buildEventJson(Project *project) const {
     OrderedJson::object healLocationJson;
 
     healLocationJson["id"] = this->getIdName();

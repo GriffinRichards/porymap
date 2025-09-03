@@ -2038,9 +2038,11 @@ void Editor::redrawAllEvents() {
 }
 
 void Editor::redrawEvents(const QList<Event*> &events) {
-    for (const auto &event : events) {
-        redrawEventPixmapItem(event->getPixmapItem());
-    }
+    for (const auto &event : events) redrawEvent(event);
+}
+
+void Editor::redrawEvent(const Event *event) {
+    redrawEventPixmapItem(event->getPixmapItem());
 }
 
 qreal Editor::getEventOpacity(const Event *event) const {

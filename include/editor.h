@@ -116,6 +116,7 @@ public:
     void duplicateSelectedEvents();
     void redrawAllEvents();
     void redrawEvents(const QList<Event*> &events);
+    void redrawEvent(const Event *event);
     void redrawEventPixmapItem(EventPixmapItem *item);
     void updateEventPixmapItemZValue(EventPixmapItem *item);
     qreal getEventOpacity(const Event *event) const;

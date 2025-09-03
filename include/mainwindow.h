@@ -177,6 +177,9 @@ public:
     Q_INVOKABLE void setAllowEscaping(bool allow);
     Q_INVOKABLE int getFloorNumber();
     Q_INVOKABLE void setFloorNumber(int floorNumber);
+    Q_INVOKABLE QJSValue getEvents(const QString &groupKey);
+    Q_INVOKABLE QJSValue getEvent(const QString &groupKey, int index);
+    Q_INVOKABLE void setEvent(const QString &groupKey, int index, const QJSValue &event);
 #endif // QT_QML_LIB
 
 public slots:

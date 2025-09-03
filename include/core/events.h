@@ -132,7 +132,7 @@ public:
     Event::Group getEventGroup() const { return this->eventGroup; }
     Event::Type getEventType() const { return this->eventType; }
 
-    virtual OrderedJson::object buildEventJson(Project *project) = 0;
+    virtual OrderedJson::object buildEventJson(Project *project) const = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) = 0;
 
     virtual void setDefaultValues(Project *project);
@@ -162,9 +162,10 @@ public:
 
     static QString groupToString(Event::Group group);
     static QString groupToJsonKey(Event::Group group);
+    static Event::Group groupFromJsonKey(const QString &key);
     static QString typeToString(Event::Type type);
     static QString typeToJsonKey(Event::Type type);
-    static Event::Type typeFromJsonKey(QString type);
+    static Event::Type typeFromJsonKey(const QString &key);
     static QList<Event::Type> types();
     static QList<Event::Group> groups();
 
@@ -216,7 +217,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -285,7 +286,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -323,7 +324,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -360,7 +361,7 @@ public:
 
     virtual EventFrame *createEventFrame() override = 0;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override = 0;
+    virtual OrderedJson::object buildEventJson(Project *project) const override = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
 
     virtual void setDefaultValues(Project *project) override = 0;
@@ -386,7 +387,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -428,7 +429,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -459,7 +460,7 @@ public:
 
     virtual EventFrame *createEventFrame() override = 0;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override = 0;
+    virtual OrderedJson::object buildEventJson(Project *project) const override = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
 
     virtual void setDefaultValues(Project *project) override = 0;
@@ -484,7 +485,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -521,7 +522,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -566,7 +567,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;
@@ -598,7 +599,7 @@ public:
 
     virtual EventFrame *createEventFrame() override;
 
-    virtual OrderedJson::object buildEventJson(Project *project) override;
+    virtual OrderedJson::object buildEventJson(Project *project) const override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
 
     virtual void setDefaultValues(Project *project) override;

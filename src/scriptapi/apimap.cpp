@@ -6,6 +6,7 @@
 #include "config.h"
 #include "imageproviders.h"
 #include "scriptutility.h"
+#include "eventframes.h"
 
 // TODO: "tilesetNeedsRedraw" is used when redrawing the map after
 // changing a metatile's tiles via script. It is unnecessarily
@@ -964,5 +965,44 @@ void MainWindow::setFloorNumber(int floorNumber) {
     this->editor->map->header()->setFloorNumber(floorNumber);
 }
 
+//================
+// Editing events
+//================
+
+QJSValue MainWindow::getEvents(const QString &groupKey) {
+    if (!this->editor || !this->editor->map)
+        return QJSValue();
+
+    Event::Group group = Event::groupFromJsonKey(groupKey);
+    QList<Event*> events = this->editor->map->getEvents(group);
+    return Scripting::fromEvents(events);
+}
+
+QJSValue MainWindow::getEvent(const QString &groupKey, int index) {
+    if (!this->editor || !this->editor->map)
+        return QJSValue();
+
+    Event::Group group = Event::groupFromJsonKey(groupKey);
+    Event *event = this->editor->map->getEvent(group, index);
+    return Scripting::fromEvent(event);
+}
+
+void MainWindow::setEvent(const QString &groupKey, int index, const QJSValue &value) {
+    if (!this->editor || !this->editor->map || !this->editor->project)
+        return;
+
+    Event::Group group = Event::groupFromJsonKey(groupKey);
+    Event *event = this->editor->map->getEvent(group, index);
+    if (!event)
+        return;
+
+    event->loadFromJson(Scripting::toQJsonObject(value), this->editor->project);
+    this->editor->redrawEvent(event);
+
+    auto frame = event->getEventFrame();
+    if (frame) frame->invalidateUi();
+
+    this->editor->map->setHasUnsavedDataChanges(true);
+}
 
 #endif // QT_QML_LIB

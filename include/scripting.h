@@ -8,6 +8,7 @@
 class Block;
 class Tile;
 class MainWindow;
+class Event;
 
 #if __has_include(<QJSEngine>)
 #include <QJSEngine>
@@ -63,10 +64,13 @@ public:
     static void cb_MapViewTabChanged(int oldTab, int newTab);
     static void cb_BorderVisibilityToggled(bool visible);
 
-    static bool tryErrorJS(QJSValue js);
-    static QJSValue fromBlock(Block block);
-    static QJSValue fromTile(Tile tile);
-    static Tile toTile(QJSValue obj);
+    static bool tryErrorJS(const QJSValue &js);
+    static QJSValue fromBlock(const Block &block);
+    static QJSValue fromTile(const Tile &tile);
+    static Tile toTile(const QJSValue &obj);
+    static QJSValue fromEvents(const QList<Event*> &events);
+    static QJSValue fromEvent(const Event *event);
+    static QJsonObject toQJsonObject(const QJSValue &js);
     static QJSValue dimensions(int width, int height);
     static QJSValue margins(const QMargins &margins);
     static QJSValue position(int x, int y);

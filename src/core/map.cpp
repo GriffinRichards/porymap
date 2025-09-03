@@ -211,11 +211,7 @@ QString Map::getJsonFilepath(const QString &mapName) {
 }
 
 void Map::resetEvents() {
-    m_events[Event::Group::Object].clear();
-    m_events[Event::Group::Warp].clear();
-    m_events[Event::Group::Coord].clear();
-    m_events[Event::Group::Bg].clear();
-    m_events[Event::Group::Heal].clear();
+    m_events.clear();
 }
 
 QList<Event *> Map::getEvents(Event::Group group) const {

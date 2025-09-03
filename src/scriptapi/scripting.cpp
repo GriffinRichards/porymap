@@ -131,7 +131,7 @@ void Scripting::populateGlobalObject(MainWindow *mainWindow) {
     instance->engine->evaluate("Object.freeze(constants);");
 }
 
-bool Scripting::tryErrorJS(QJSValue js) {
+bool Scripting::tryErrorJS(const QJSValue &js) {
     if (!js.isError())
         return false;
 
@@ -342,7 +342,7 @@ void Scripting::cb_BorderVisibilityToggled(bool visible) {
     instance->invokeCallback(OnBorderVisibilityToggled, args);
 }
 
-QJSValue Scripting::fromBlock(Block block) {
+QJSValue Scripting::fromBlock(const Block &block) {
     QJSValue obj = instance->engine->newObject();
     obj.setProperty("metatileId", block.metatileId());
     obj.setProperty("collision", block.collision());
@@ -374,7 +374,7 @@ QJSValue Scripting::position(int x, int y) {
     return obj;
 }
 
-Tile Scripting::toTile(QJSValue obj) {
+Tile Scripting::toTile(const QJSValue &obj) {
     Tile tile = Tile();
 
     if (obj.hasProperty("tileId"))
@@ -389,13 +389,33 @@ Tile Scripting::toTile(QJSValue obj) {
     return tile;
 }
 
-QJSValue Scripting::fromTile(Tile tile) {
+QJSValue Scripting::fromTile(const Tile &tile) {
     QJSValue obj = instance->engine->newObject();
     obj.setProperty("tileId", tile.tileId);
     obj.setProperty("xflip", tile.xflip);
     obj.setProperty("yflip", tile.yflip);
     obj.setProperty("palette", tile.palette);
     return obj;
+}
+
+QJSValue Scripting::fromEvents(const QList<Event*> &events) {
+    if (!instance) return QJSValue();
+
+    QJSValue array = instance->engine->newArray(events.length());
+    for (int i = 0; i < events.length(); i++) {
+        array.setProperty(i, Scripting::fromEvent(events.at(i)));
+    }
+    return array;
+}
+
+QJSValue Scripting::fromEvent(const Event *event) {
+    if (!event || !instance) return QJSValue();
+    OrderedJson::object json = event->buildEventJson(instance->mainWindow->editor->project);
+    return instance->engine->toScriptValue(OrderedJson::toQJsonValue(json));
+}
+
+QJsonObject Scripting::toQJsonObject(const QJSValue &js) {
+    return instance ? instance->engine->fromScriptValue<QJsonValue>(js).toObject() : QJsonObject();
 }
 
 QJSValue Scripting::dialogInput(QJSValue input, bool selectedOk) {

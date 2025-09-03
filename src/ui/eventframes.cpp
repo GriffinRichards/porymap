@@ -166,11 +166,15 @@ void EventFrame::invalidateConnections() {
 
 void EventFrame::invalidateUi() {
     this->initialized = false;
+    if (this->isVisibleTo(parentWidget())) {
+        // Refresh immediately
+        this->initialize();
+    }
 }
 
 void EventFrame::invalidateValues() {
     this->populated = false;
-    if (this->isVisible()) {
+    if (this->isVisibleTo(parentWidget())) {
         // Repopulate immediately
         this->populate(this->project);
     }
