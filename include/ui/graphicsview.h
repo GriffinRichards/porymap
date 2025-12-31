@@ -1,6 +1,8 @@
 #ifndef GRAPHICSVIEW_H
 #define GRAPHICSVIEW_H
 
+#include "noscrollwidgets.h"
+
 #include <QGraphicsView>
 #include <QMouseEvent>
 
@@ -90,11 +92,8 @@ class NoScrollGraphicsView : public GraphicsView
 {
     Q_OBJECT
 public:
-    NoScrollGraphicsView(QWidget *parent = nullptr) : GraphicsView(parent) {}
-
-protected:
-    void wheelEvent(QWheelEvent *event) {
-        event->ignore();
+    NoScrollGraphicsView(QWidget *parent = nullptr) : GraphicsView(parent) {
+        NoScrollFilter::apply(this, false);
     }
 };
 

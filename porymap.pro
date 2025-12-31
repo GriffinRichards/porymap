@@ -78,6 +78,7 @@ SOURCES += src/core/advancemapparser.cpp \
     src/ui/aboutporymap.cpp \
     src/ui/checkeredbgscene.cpp \
     src/ui/colorinputwidget.cpp \
+    src/ui/combobox.cpp \
     src/ui/connectionslistitem.cpp \
     src/ui/customattributesdialog.cpp \
     src/ui/customattributestable.cpp \
@@ -121,8 +122,7 @@ SOURCES += src/core/advancemapparser.cpp \
     src/ui/newlayoutform.cpp \
     src/ui/newlocationdialog.cpp \
     src/ui/newmapgroupdialog.cpp \
-    src/ui/noscrollcombobox.cpp \
-    src/ui/noscrollspinbox.cpp \
+    src/ui/noscrollwidgets.cpp \
     src/ui/montabwidget.cpp \
     src/ui/encountertablemodel.cpp \
     src/ui/encountertabledelegates.cpp \
@@ -195,12 +195,15 @@ HEADERS  += include/core/advancemapparser.h \
     include/lib/orderedjson.h \
     include/ui/aboutporymap.h \
     include/ui/checkeredbgscene.h \
+    include/ui/combobox.h \
     include/ui/connectionslistitem.h \
     include/ui/customattributesdialog.h \
     include/ui/customattributestable.h \
     include/ui/customscriptseditor.h \
     include/ui/customscriptslistitem.h \
     include/ui/divingmappixmapitem.h \
+    include/ui/edithistoryspinbox.h \
+    include/ui/eventcombobox.h \
     include/ui/eventpixmapitem.h \
     include/ui/bordermetatilespixmapitem.h \
     include/ui/collisionpixmapitem.h \
@@ -239,9 +242,7 @@ HEADERS  += include/core/advancemapparser.h \
     include/ui/newlayoutform.h \
     include/ui/newlocationdialog.h \
     include/ui/newmapgroupdialog.h \
-    include/ui/noscrollcombobox.h \
-    include/ui/noscrollspinbox.h \
-    include/ui/noscrolltextedit.h \
+    include/ui/noscrollwidgets.h \
     include/ui/montabwidget.h \
     include/ui/encountertablemodel.h \
     include/ui/encountertabledelegates.h \

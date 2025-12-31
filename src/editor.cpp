@@ -541,8 +541,6 @@ void Editor::configureEncounterJSON(QWidget *window) {
         QVBoxLayout *slotChoiceLayout = new QVBoxLayout;
         if (useGroups) {
             auto groupCombo = new NoScrollComboBox;
-            groupCombo->setEditable(false);
-            groupCombo->setMinimumContentsLength(10);
             connect(groupCombo, QOverload<const QString &>::of(&QComboBox::textActivated), [&tempFields, &currentField, &updateTotal, index](QString newGroupName) {
                 for (EncounterField &field : tempFields) {
                     if (field.name == currentField.name) {
@@ -1035,7 +1033,7 @@ QString Editor::getDivingMapName(const QString &direction) const {
     return (pixmapItem && pixmapItem->connection()) ? pixmapItem->connection()->targetMapName() : QString();
 }
 
-void Editor::onDivingMapEditingFinished(NoScrollComboBox *combo, const QString &direction) {
+void Editor::onDivingMapEditingFinished(ComboBox *combo, const QString &direction) {
     if (!setDivingMapName(combo->currentText(), direction)) {
         // If user input was invalid, restore the combo to the previously-valid text.
         combo->setTextItem(getDivingMapName(direction));

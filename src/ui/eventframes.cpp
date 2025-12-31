@@ -30,7 +30,7 @@ void EventFrame::setup() {
     QHBoxLayout *l_layout_xyz = new QHBoxLayout();
 
     // x spinner & label
-    this->spinner_x = new NoScrollSpinBox(this);
+    this->spinner_x = new EditHistorySpinBox(this);
     this->spinner_x->setMinimum(numeric_limits<int16_t>::min());
     this->spinner_x->setMaximum(numeric_limits<int16_t>::max());
 
@@ -43,7 +43,7 @@ void EventFrame::setup() {
     l_layout_xyz->addLayout(l_layout_x);
 
     // y spinner & label
-    this->spinner_y = new NoScrollSpinBox(this);
+    this->spinner_y = new EditHistorySpinBox(this);
     this->spinner_y->setMinimum(numeric_limits<int16_t>::min());
     this->spinner_y->setMaximum(numeric_limits<int16_t>::max());
 
@@ -114,7 +114,7 @@ void EventFrame::connectSignals(MainWindow *) {
         }
     });
 
-    connect(this->event->getPixmapItem(), &EventPixmapItem::xChanged, this->spinner_x, &NoScrollSpinBox::setValue);
+    connect(this->event->getPixmapItem(), &EventPixmapItem::xChanged, this->spinner_x, &EditHistorySpinBox::setValue);
     
     this->spinner_y->disconnect();
     connect(this->spinner_y, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
@@ -123,7 +123,7 @@ void EventFrame::connectSignals(MainWindow *) {
             this->event->getMap()->commit(new EventMove(QList<Event *>() << this->event, 0, delta, this->spinner_y->getActionId()));
         }
     });
-    connect(this->event->getPixmapItem(), &EventPixmapItem::yChanged, this->spinner_y, &NoScrollSpinBox::setValue);
+    connect(this->event->getPixmapItem(), &EventPixmapItem::yChanged, this->spinner_y, &EditHistorySpinBox::setValue);
     
     this->spinner_z->disconnect();
     connect(this->spinner_z, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
@@ -181,7 +181,7 @@ void EventFrame::setActive(bool active) {
     this->blockSignals(!active);
 }
 
-void EventFrame::populateDropdown(NoScrollComboBox * combo, const QStringList &items) {
+void EventFrame::populateDropdown(EventComboBox * combo, const QStringList &items) {
     // Set the items in the combo box. This may be called after the frame is initialized
     // if the frame needs to be repopulated, so ensure the text in the combo is preserved
     // and that we don't accidentally fire 'currentTextChanged'.
@@ -192,7 +192,7 @@ void EventFrame::populateDropdown(NoScrollComboBox * combo, const QStringList &i
     combo->setTextItem(savedText);
 }
 
-void EventFrame::populateScriptDropdown(NoScrollComboBox * combo, Project * project) {
+void EventFrame::populateScriptDropdown(EventComboBox * combo, Project * project) {
     // The script dropdown and autocomplete are populated with scripts used by the map's events and from its scripts file.
     Map *map = this->event ? this->event->getMap() : nullptr;
     if (!map)
@@ -223,7 +223,7 @@ void EventFrame::populateScriptDropdown(NoScrollComboBox * combo, Project * proj
     connect(map, &Map::scriptsModified, this, &EventFrame::invalidateValues, Qt::UniqueConnection);
 }
 
-void EventFrame::populateMapNameDropdown(NoScrollComboBox * combo, Project * project) {
+void EventFrame::populateMapNameDropdown(EventComboBox * combo, Project * project) {
     if (!project)
         return;
 
@@ -233,7 +233,7 @@ void EventFrame::populateMapNameDropdown(NoScrollComboBox * combo, Project * pro
     connect(project, &Project::mapCreated, this, &EventFrame::invalidateValues, Qt::UniqueConnection);
 }
 
-void EventFrame::populateIdNameDropdown(NoScrollComboBox * combo, Project * project, const QString &mapName, Event::Group group) {
+void EventFrame::populateIdNameDropdown(EventComboBox * combo, Project * project, const QString &mapName, Event::Group group) {
     if (!project || !project->isKnownMap(mapName))
         return;
 
@@ -257,7 +257,7 @@ void ObjectFrame::setup() {
 
     // sprite combo
     QFormLayout *l_form_sprite = new QFormLayout();
-    this->combo_sprite = new NoScrollComboBox(this);
+    this->combo_sprite = new EventComboBox(this);
     static const QString combo_sprite_toolTip = Util::toHtmlParagraph("The sprite graphics to use for this object.");
     this->combo_sprite->setToolTip(combo_sprite_toolTip);
     l_form_sprite->addRow("Sprite", this->combo_sprite);
@@ -265,7 +265,7 @@ void ObjectFrame::setup() {
 
     // movement
     QFormLayout *l_form_movement = new QFormLayout();
-    this->combo_movement = new NoScrollComboBox(this);
+    this->combo_movement = new EventComboBox(this);
     static const QString combo_movement_toolTip = Util::toHtmlParagraph("The object's natural movement behavior when the player is not interacting with it.");
     this->combo_movement->setToolTip(combo_movement_toolTip);
     l_form_movement->addRow("Movement", this->combo_movement);
@@ -291,7 +291,7 @@ void ObjectFrame::setup() {
 
     // script
     QFormLayout *l_form_script = new QFormLayout();
-    this->combo_script = new NoScrollComboBox(this);
+    this->combo_script = new EventComboBox(this);
     static const QString combo_script_toolTip = Util::toHtmlParagraph("The script that is executed with this event.");
     this->combo_script->setToolTip(combo_script_toolTip);
 
@@ -312,7 +312,7 @@ void ObjectFrame::setup() {
 
     // event flag
     QFormLayout *l_form_flag = new QFormLayout();
-    this->combo_flag = new NoScrollComboBox(this);
+    this->combo_flag = new EventComboBox(this);
     static const QString combo_flag_toolTip = Util::toHtmlParagraph("The flag that hides the object when set.");
     this->combo_flag->setToolTip(combo_flag_toolTip);
     l_form_flag->addRow("Event Flag", this->combo_flag);
@@ -320,7 +320,7 @@ void ObjectFrame::setup() {
 
     // trainer type
     QFormLayout *l_form_trainer = new QFormLayout();
-    this->combo_trainer_type = new NoScrollComboBox(this);
+    this->combo_trainer_type = new EventComboBox(this);
     static const QString combo_trainer_type_toolTip = Util::toHtmlParagraph("The trainer type of this object event. If it is not a trainer, use NONE. "
                                                                             "SEE ALL DIRECTIONS should only be used with a sight radius of 1.");
     this->combo_trainer_type->setToolTip(combo_trainer_type_toolTip);
@@ -329,7 +329,7 @@ void ObjectFrame::setup() {
 
     // sight radius / berry tree id
     QFormLayout *l_form_radius_treeid = new QFormLayout();
-    this->combo_radius_treeid = new NoScrollComboBox(this);
+    this->combo_radius_treeid = new EventComboBox(this);
     static const QString combo_radius_treeid_toolTip = Util::toHtmlParagraph("The maximum sight range of a trainer, OR the unique id of the berry tree.");
     this->combo_radius_treeid->setToolTip(combo_radius_treeid_toolTip);
     l_form_radius_treeid->addRow("Sight Radius / Berry Tree ID", this->combo_radius_treeid);
@@ -482,7 +482,7 @@ void CloneObjectFrame::setup() {
 
     // sprite combo (edits disabled)
     QFormLayout *l_form_sprite = new QFormLayout();
-    this->combo_sprite = new NoScrollComboBox(this);
+    this->combo_sprite = new EventComboBox(this);
     static const QString combo_sprite_toolTip = Util::toHtmlParagraph("The sprite graphics to use for this object. This is updated automatically "
                                                                       "to match the target object, and so can't be edited. By default the games "
                                                                       "will get the graphics directly from the target object, so this field is ignored.");
@@ -493,7 +493,7 @@ void CloneObjectFrame::setup() {
 
     // clone map id combo
     QFormLayout *l_form_dest_map = new QFormLayout();
-    this->combo_target_map = new NoScrollComboBox(this);
+    this->combo_target_map = new EventComboBox(this);
     static const QString combo_target_map_toolTip = Util::toHtmlParagraph("The name of the map that the object being cloned is on.");
     this->combo_target_map->setToolTip(combo_target_map_toolTip);
     l_form_dest_map->addRow("Target Map", this->combo_target_map);
@@ -501,7 +501,7 @@ void CloneObjectFrame::setup() {
 
     // clone local id combo
     QFormLayout *l_form_dest_id = new QFormLayout();
-    this->combo_target_id = new NoScrollComboBox(this);
+    this->combo_target_id = new EventComboBox(this);
     static const QString combo_target_id_toolTip = Util::toHtmlParagraph("The Local ID name or number of the object being cloned.");
     this->combo_target_id->setToolTip(combo_target_id_toolTip);
     l_form_dest_id->addRow("Target Local ID", this->combo_target_id);
@@ -599,7 +599,7 @@ void WarpFrame::setup() {
 
     // desination map combo
     QFormLayout *l_form_dest_map = new QFormLayout();
-    this->combo_dest_map = new NoScrollComboBox(this);
+    this->combo_dest_map = new EventComboBox(this);
     static const QString combo_dest_map_toolTip = Util::toHtmlParagraph("The destination map name of the warp.");
     this->combo_dest_map->setToolTip(combo_dest_map_toolTip);
     l_form_dest_map->addRow("Destination Map", this->combo_dest_map);
@@ -607,7 +607,7 @@ void WarpFrame::setup() {
 
     // desination warp id
     QFormLayout *l_form_dest_warp = new QFormLayout();
-    this->combo_dest_warp = new NoScrollComboBox(this);
+    this->combo_dest_warp = new EventComboBox(this);
     static const QString combo_dest_warp_toolTip = Util::toHtmlParagraph("The warp id on the destination map.");
     this->combo_dest_warp->setToolTip(combo_dest_warp_toolTip);
     l_form_dest_warp->addRow("Destination Warp", this->combo_dest_warp);
@@ -701,7 +701,7 @@ void TriggerFrame::setup() {
 
     // script combo
     QFormLayout *l_form_script = new QFormLayout();
-    this->combo_script = new NoScrollComboBox(this);
+    this->combo_script = new EventComboBox(this);
     static const QString combo_script_toolTip = Util::toHtmlParagraph("The script that is executed with this event.");
     this->combo_script->setToolTip(combo_script_toolTip);
     l_form_script->addRow("Script", this->combo_script);
@@ -709,7 +709,7 @@ void TriggerFrame::setup() {
 
     // var combo
     QFormLayout *l_form_var = new QFormLayout();
-    this->combo_var = new NoScrollComboBox(this);
+    this->combo_var = new EventComboBox(this);
     static const QString combo_var_toolTip = Util::toHtmlParagraph("The variable by which the script is triggered. "
                                                                     "The script is triggered when this variable's value matches 'Var Value'.");
     this->combo_var->setToolTip(combo_var_toolTip);
@@ -718,7 +718,7 @@ void TriggerFrame::setup() {
 
     // var value combo
     QFormLayout *l_form_var_val = new QFormLayout();
-    this->combo_var_value = new NoScrollComboBox(this);
+    this->combo_var_value = new EventComboBox(this);
     static const QString combo_var_value_toolTip = Util::toHtmlParagraph("The variable's value that triggers the script.");
     this->combo_var_value->setToolTip(combo_var_value_toolTip);
     l_form_var_val->addRow("Var Value", this->combo_var_value);
@@ -788,7 +788,7 @@ void WeatherTriggerFrame::setup() {
 
     // weather combo
     QFormLayout *l_form_weather = new QFormLayout();
-    this->combo_weather = new NoScrollComboBox(this);
+    this->combo_weather = new EventComboBox(this);
     static const QString combo_weather_toolTip = Util::toHtmlParagraph("The weather that starts when the player steps on this spot.");
     this->combo_weather->setToolTip(combo_weather_toolTip);
     l_form_weather->addRow("Weather", this->combo_weather);
@@ -837,7 +837,7 @@ void SignFrame::setup() {
 
     // facing dir combo
     QFormLayout *l_form_facing_dir = new QFormLayout();
-    this->combo_facing_dir = new NoScrollComboBox(this);
+    this->combo_facing_dir = new EventComboBox(this);
     static const QString combo_facing_dir_toolTip = Util::toHtmlParagraph("The direction that the player must be facing to be able to interact with this event.");
     this->combo_facing_dir->setToolTip(combo_facing_dir_toolTip);
     l_form_facing_dir->addRow("Player Facing Direction", this->combo_facing_dir);
@@ -845,7 +845,7 @@ void SignFrame::setup() {
 
     // script combo
     QFormLayout *l_form_script = new QFormLayout();
-    this->combo_script = new NoScrollComboBox(this);
+    this->combo_script = new EventComboBox(this);
     static const QString combo_script_toolTip = Util::toHtmlParagraph("The script that is executed with this event.");
     this->combo_script->setToolTip(combo_script_toolTip);
     l_form_script->addRow("Script", this->combo_script);
@@ -905,7 +905,7 @@ void HiddenItemFrame::setup() {
 
     // item combo
     QFormLayout *l_form_item = new QFormLayout();
-    this->combo_item = new NoScrollComboBox(this);
+    this->combo_item = new EventComboBox(this);
     static const QString combo_item_toolTip = Util::toHtmlParagraph("The item to be given.");
     this->combo_item->setToolTip(combo_item_toolTip);
     l_form_item->addRow("Item", this->combo_item);
@@ -913,7 +913,7 @@ void HiddenItemFrame::setup() {
 
     // flag combo
     QFormLayout *l_form_flag = new QFormLayout();
-    this->combo_flag = new NoScrollComboBox(this);
+    this->combo_flag = new EventComboBox(this);
     static const QString combo_flag_toolTip = Util::toHtmlParagraph("The flag that is set when the hidden item is picked up.");
     this->combo_flag->setToolTip(combo_flag_toolTip);
     l_form_flag->addRow("Flag", this->combo_flag);
@@ -1023,7 +1023,7 @@ void SecretBaseFrame::setup() {
 
     // item combo
     QFormLayout *l_form_base_id = new QFormLayout();
-    this->combo_base_id = new NoScrollComboBox(this);
+    this->combo_base_id = new EventComboBox(this);
     static const QString combo_base_id_toolTip = Util::toHtmlParagraph("The secret base id that is inside this secret base entrance. "
                                                                        "Secret base ids are meant to be unique to each and every secret base entrance.");
     this->combo_base_id->setToolTip(combo_base_id_toolTip);
@@ -1086,7 +1086,7 @@ void HealLocationFrame::setup() {
     this->hideable_respawn_map = new QFrame;
     QFormLayout *l_form_respawn_map = new QFormLayout(hideable_respawn_map);
     l_form_respawn_map->setContentsMargins(0, 0, 0, 0);
-    this->combo_respawn_map = new NoScrollComboBox(hideable_respawn_map);
+    this->combo_respawn_map = new EventComboBox(hideable_respawn_map);
     static const QString combo_respawn_map_toolTip = Util::toHtmlParagraph("The map where the player will respawn after whiteout.");
     this->combo_respawn_map->setToolTip(combo_respawn_map_toolTip);
     l_form_respawn_map->addRow("Respawn Map", this->combo_respawn_map);
@@ -1096,7 +1096,7 @@ void HealLocationFrame::setup() {
     this->hideable_respawn_npc = new QFrame;
     QFormLayout *l_form_respawn_npc = new QFormLayout(hideable_respawn_npc);
     l_form_respawn_npc->setContentsMargins(0, 0, 0, 0);
-    this->combo_respawn_npc = new NoScrollComboBox(hideable_respawn_npc);
+    this->combo_respawn_npc = new EventComboBox(hideable_respawn_npc);
     static const QString combo_respawn_npc_toolTip = Util::toHtmlParagraph("The Local ID name or number of the NPC the player "
                                                                            "interacts with upon respawning after whiteout.");
     this->combo_respawn_npc->setToolTip(combo_respawn_npc_toolTip);

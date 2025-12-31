@@ -1,8 +1,7 @@
 #include "uintspinbox.h"
-#include <QWheelEvent>
 
 UIntSpinBox::UIntSpinBox(QWidget *parent)
-   : QAbstractSpinBox(parent),
+   : NoScrollAbstractSpinBox(parent),
      m_minimum(0),
      m_maximum(99),
      m_value(m_minimum),
@@ -11,9 +10,6 @@ UIntSpinBox::UIntSpinBox(QWidget *parent)
      m_hasPadding(false),
      m_numChars(2)
 {
-    // Don't let scrolling hijack focus.
-    setFocusPolicy(Qt::StrongFocus);
-
     this->updateEdit();
     connect(lineEdit(), SIGNAL(textEdited(QString)), this, SLOT(onEditFinished()));
 };
@@ -191,15 +187,6 @@ QAbstractSpinBox::StepEnabled UIntSpinBox::stepEnabled() const {
         flags |= QAbstractSpinBox::StepDownEnabled;
 
     return flags;
-}
-
-void UIntSpinBox::wheelEvent(QWheelEvent *event) {
-    // Only allow scrolling to modify contents when it explicitly has focus.
-    if (hasFocus()) {
-        QAbstractSpinBox::wheelEvent(event);
-    } else {
-        event->ignore();
-    }
 }
 
 void UIntSpinBox::focusOutEvent(QFocusEvent *event) {

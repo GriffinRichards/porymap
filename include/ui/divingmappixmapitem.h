@@ -2,7 +2,7 @@
 #define DIVINGMAPPIXMAPITEM_H
 
 #include "mapconnection.h"
-#include "noscrollcombobox.h"
+#include "combobox.h"
 
 #include <QGraphicsPixmapItem>
 #include <QPointer>
@@ -11,7 +11,7 @@
 class DivingMapPixmapItem : public QObject, public QGraphicsPixmapItem {
     Q_OBJECT
 public:
-    DivingMapPixmapItem(MapConnection *connection, NoScrollComboBox *combo);
+    DivingMapPixmapItem(MapConnection *connection, ComboBox *combo);
     ~DivingMapPixmapItem();
 
     MapConnection* connection() const { return m_connection; }
@@ -19,7 +19,7 @@ public:
 
 private:
     QPointer<MapConnection> m_connection;
-    QPointer<NoScrollComboBox> m_combo;
+    QPointer<ComboBox> m_combo;
 
     void setComboText(const QString &text);
     static QPixmap getBasePixmap(MapConnection* connection);

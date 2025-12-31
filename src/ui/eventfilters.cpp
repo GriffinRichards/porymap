@@ -3,16 +3,6 @@
 #include <QGraphicsSceneWheelEvent>
 
 
-
-bool WheelFilter::eventFilter(QObject *, QEvent *event) {
-    if (event->type() == QEvent::Wheel) {
-        return true;
-    }
-    return false;
-}
-
-
-
 bool MapSceneEventFilter::eventFilter(QObject*, QEvent *event) {
     if (event->type() == QEvent::GraphicsSceneWheel) {
         QGraphicsSceneWheelEvent *wheelEvent = static_cast<QGraphicsSceneWheelEvent *>(event);

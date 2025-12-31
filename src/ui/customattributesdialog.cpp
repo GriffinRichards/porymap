@@ -16,7 +16,6 @@ CustomAttributesDialog::CustomAttributesDialog(CustomAttributesTable *table) :
 
     // Type combo box
     ui->comboBox_Type->addItems({"String", "Number", "Boolean"});
-    ui->comboBox_Type->setEditable(false);
 
     // When the value type is changed, update the value input widget
     connect(ui->comboBox_Type, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &CustomAttributesDialog::setInputType);

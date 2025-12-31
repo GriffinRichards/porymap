@@ -4,7 +4,6 @@
 #include <QMainWindow>
 #include "config.h"
 
-class NoScrollComboBox;
 class QAbstractButton;
 
 

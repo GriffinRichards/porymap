@@ -5,7 +5,6 @@
 #include "project.h"
 #include "ui_projectsettingseditor.h"
 
-class NoScrollComboBox;
 class QAbstractButton;
 
 

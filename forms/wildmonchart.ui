@@ -43,7 +43,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBox_Theme"/>
+       <widget class="NoScrollComboBox" name="comboBox_Theme"/>
       </item>
       <item>
        <spacer name="horizontalSpacer_2">
@@ -140,10 +140,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QComboBox" name="comboBox_Group">
-            <property name="editable">
-             <bool>false</bool>
-            </property>
+           <widget class="NoScrollComboBox" name="comboBox_Group">
             <property name="sizeAdjustPolicy">
              <enum>QComboBox::AdjustToMinimumContentsLengthWithIcon</enum>
             </property>
@@ -240,7 +237,7 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <resources>

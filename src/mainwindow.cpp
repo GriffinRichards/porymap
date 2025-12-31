@@ -385,7 +385,7 @@ void MainWindow::initExtraSignals() {
 
     connect(ui->action_NewMap, &QAction::triggered, this, &MainWindow::openNewMapDialog);
     connect(ui->action_NewLayout, &QAction::triggered, this, &MainWindow::openNewLayoutDialog);
-    connect(ui->comboBox_LayoutSelector, &NoScrollComboBox::editingFinished, this, &MainWindow::onLayoutSelectorEditingFinished);
+    connect(ui->comboBox_LayoutSelector, &ComboBox::editingFinished, this, &MainWindow::onLayoutSelectorEditingFinished);
     connect(ui->checkBox_smartPaths, &QCheckBox::toggled, this, &MainWindow::setSmartPathsEnabled);
     connect(ui->checkBox_ToggleBorder, &QCheckBox::toggled, this, &MainWindow::setBorderVisibility);
     connect(ui->checkBox_MirrorConnections, &QCheckBox::toggled, this, &MainWindow::setMirrorConnectionsEnabled);
@@ -502,9 +502,9 @@ void MainWindow::initMiscHeapObjects() {
 void MainWindow::initMapList() {
     ui->mapListContainer->setCurrentIndex(porymapConfig.mapListTab);
 
-    WheelFilter *wheelFilter = new WheelFilter(this);
-    ui->mainTabBar->installEventFilter(wheelFilter);
-    ui->mapListContainer->tabBar()->installEventFilter(wheelFilter);
+    auto noScrollFilter = new NoScrollFilter(this, false);
+    ui->mainTabBar->installEventFilter(noScrollFilter);
+    ui->mapListContainer->tabBar()->installEventFilter(noScrollFilter);
 
     // Create buttons for adding and removing items from the mapList
     QFrame *buttonFrame = new QFrame(this->ui->mapListContainer);
@@ -1455,13 +1455,13 @@ bool MainWindow::setProjectUI() {
     ui->comboBox_DiveMap->clear();
     ui->comboBox_DiveMap->addItems(project->mapNames());
     ui->comboBox_DiveMap->setClearButtonEnabled(true);
-    ui->comboBox_DiveMap->setFocusedScrollingEnabled(false);
+    ui->comboBox_DiveMap->setAllowScrollingIfFocused(false);
 
     const QSignalBlocker b_EmergeMap(ui->comboBox_EmergeMap);
     ui->comboBox_EmergeMap->clear();
     ui->comboBox_EmergeMap->addItems(project->mapNames());
     ui->comboBox_EmergeMap->setClearButtonEnabled(true);
-    ui->comboBox_EmergeMap->setFocusedScrollingEnabled(false);
+    ui->comboBox_EmergeMap->setAllowScrollingIfFocused(false);
 
     // Show/hide parts of the UI that are dependent on the user's project settings
 

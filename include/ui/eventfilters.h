@@ -2,18 +2,6 @@
 #include <QEvent>
 
 
-
-/// Prevent wheel scroll
-class WheelFilter : public QObject {
-    Q_OBJECT
-public:
-    WheelFilter(QObject *parent) : QObject(parent) {}
-    virtual ~WheelFilter() {}
-    bool eventFilter(QObject *obj, QEvent *event) override;
-};
-
-
-
 /// Ctrl+Wheel = zoom
 class MapSceneEventFilter : public QObject {
     Q_OBJECT

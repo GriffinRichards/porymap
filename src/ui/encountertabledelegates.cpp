@@ -3,7 +3,7 @@
 
 #include <QSpinBox>
 #include "project.h"
-#include "noscrollcombobox.h"
+#include "noscrollwidgets.h"
 
 
 
@@ -20,6 +20,7 @@ void SpeciesComboDelegate::paint(QPainter *painter, const QStyleOptionViewItem &
 
 QWidget *SpeciesComboDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &, const QModelIndex &) const {
     NoScrollComboBox *editor = new NoScrollComboBox(parent);
+    editor->setEditable(true);
     editor->setFrame(false);
     editor->addItems(this->project->speciesNames);
     return editor;

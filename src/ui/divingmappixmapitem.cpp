@@ -1,7 +1,7 @@
 #include "divingmappixmapitem.h"
 #include "config.h"
 
-DivingMapPixmapItem::DivingMapPixmapItem(MapConnection *connection, NoScrollComboBox *combo)
+DivingMapPixmapItem::DivingMapPixmapItem(MapConnection *connection, ComboBox *combo)
     : QGraphicsPixmapItem(getBasePixmap(connection))
 {
     m_connection = connection;

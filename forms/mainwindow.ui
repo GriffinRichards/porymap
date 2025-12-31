@@ -1105,17 +1105,11 @@
                         </item>
                         <item row="1" column="1">
                          <widget class="NoScrollComboBox" name="comboBox_PrimaryTileset">
-                          <property name="focusPolicy">
-                           <enum>Qt::FocusPolicy::StrongFocus</enum>
-                          </property>
                           <property name="toolTip">
                            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Primary Tileset&lt;/p&gt;&lt;p&gt;Defines the first 0x200 metatiles available for the map.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                           </property>
                           <property name="editable">
                            <bool>true</bool>
-                          </property>
-                          <property name="minimumContentsLength">
-                           <number>0</number>
                           </property>
                          </widget>
                         </item>
@@ -1128,24 +1122,18 @@
                         </item>
                         <item row="2" column="1">
                          <widget class="NoScrollComboBox" name="comboBox_SecondaryTileset">
-                          <property name="focusPolicy">
-                           <enum>Qt::FocusPolicy::StrongFocus</enum>
-                          </property>
                           <property name="toolTip">
                            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Secondary Tileset&lt;/p&gt;&lt;p&gt;Defines the second 0x200 metatiles available for the map.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                           </property>
                           <property name="editable">
                            <bool>true</bool>
                           </property>
-                          <property name="minimumContentsLength">
-                           <number>0</number>
-                          </property>
                          </widget>
                         </item>
                         <item row="0" column="1">
                          <widget class="NoScrollComboBox" name="comboBox_LayoutSelector">
-                          <property name="minimumContentsLength">
-                           <number>0</number>
+                          <property name="editable">
+                           <bool>true</bool>
                           </property>
                          </widget>
                         </item>
@@ -2720,9 +2708,6 @@
                   </item>
                   <item>
                    <widget class="NoScrollComboBox" name="comboBox_EncounterGroupLabel">
-                    <property name="editable">
-                     <bool>false</bool>
-                    </property>
                     <property name="sizeAdjustPolicy">
                      <enum>QComboBox::SizeAdjustPolicy::AdjustToContents</enum>
                     </property>
@@ -3274,7 +3259,7 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>AdjustingStackedWidget</class>

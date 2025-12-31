@@ -1,6 +1,5 @@
 #include "projectsettingseditor.h"
 #include "config.h"
-#include "noscrollcombobox.h"
 #include "prefab.h"
 #include "filedialog.h"
 #include "newdefinedialog.h"
@@ -80,7 +79,7 @@ void ProjectSettingsEditor::connectSignals() {
     connect(ui->spinBox_TerrainTypeMask,   &UIntSpinBox::textChanged, this, &ProjectSettingsEditor::updateAttributeMaskOverlapWarning);
 
     // Record that there are unsaved changes if any of the settings are modified
-    for (auto combo : ui->centralwidget->findChildren<NoScrollComboBox *>()){
+    for (auto combo : ui->centralwidget->findChildren<ComboBox *>()){
          // Changes to these two combo boxes are just for info display, don't mark as unsaved
         if (combo != ui->comboBox_IconSpecies && combo != ui->comboBox_WarpBehaviors)
             connect(combo, &QComboBox::currentTextChanged, this, &ProjectSettingsEditor::markEdited);
