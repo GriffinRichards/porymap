@@ -11,9 +11,6 @@ MapHeaderForm::MapHeaderForm(QWidget *parent)
     ui->spinBox_FloorNumber->setMinimum(INT_MIN);
     ui->spinBox_FloorNumber->setMaximum(INT_MAX);
 
-    // The layout for this UI keeps fields at their size hint, which is a little short for the line edit.
-    ui->lineEdit_LocationName->setMinimumWidth(ui->comboBox_Location->sizeHint().width());
-
     connect(ui->comboBox_Song,        &QComboBox::currentTextChanged, this, &MapHeaderForm::onSongUpdated);
     connect(ui->comboBox_Location,    &QComboBox::currentTextChanged, this, &MapHeaderForm::onLocationChanged);
     connect(ui->comboBox_Weather,     &QComboBox::currentTextChanged, this, &MapHeaderForm::onWeatherChanged);
