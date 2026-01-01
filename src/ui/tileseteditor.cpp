@@ -145,7 +145,6 @@ void TilesetEditor::initAttributesUi() {
         for (auto i = project->metatileBehaviorMapInverse.constBegin(); i != project->metatileBehaviorMapInverse.constEnd(); i++) {
             this->ui->comboBox_MetatileBehaviors->addItem(i.value(), i.key());
         }
-        this->ui->comboBox_MetatileBehaviors->setMinimumContentsLength(0);
     } else {
         this->ui->frame_MetatileBehavior->setVisible(false);
     }
@@ -155,7 +154,6 @@ void TilesetEditor::initAttributesUi() {
         for (auto i = project->terrainTypeToName.constBegin(); i != project->terrainTypeToName.constEnd(); i++) {
             this->ui->comboBox_TerrainType->addItem(i.value(), i.key());
         }
-        this->ui->comboBox_TerrainType->setMinimumContentsLength(0);
     } else {
         this->ui->frame_TerrainType->setVisible(false);
     }
@@ -165,7 +163,6 @@ void TilesetEditor::initAttributesUi() {
         for (auto i = project->encounterTypeToName.constBegin(); i != project->encounterTypeToName.constEnd(); i++) {
             this->ui->comboBox_EncounterType->addItem(i.value(), i.key());
         }
-        this->ui->comboBox_EncounterType->setMinimumContentsLength(0);
     } else {
         this->ui->frame_EncounterType->setVisible(false);
     }
@@ -175,8 +172,6 @@ void TilesetEditor::initAttributesUi() {
         this->ui->comboBox_LayerType->addItem("Normal - Middle/Top",     Metatile::LayerType::Normal);
         this->ui->comboBox_LayerType->addItem("Covered - Bottom/Middle", Metatile::LayerType::Covered);
         this->ui->comboBox_LayerType->addItem("Split - Bottom/Top",      Metatile::LayerType::Split);
-        this->ui->comboBox_LayerType->setEditable(false);
-        this->ui->comboBox_LayerType->setMinimumContentsLength(0);
         if (!projectConfig.metatileLayerTypeMask) {
             // User doesn't have triple layer metatiles, but has no layer type attribute.
             // Porymap is still using the layer type value to render metatiles, and with
@@ -668,7 +663,7 @@ uint32_t TilesetEditor::attributeNameToValue(Metatile::Attr attribute, const QSt
     return text.toUInt(ok, 0);
 }
 
-void TilesetEditor::commitAttributeFromComboBox(Metatile::Attr attribute, NoScrollComboBox *combo) {
+void TilesetEditor::commitAttributeFromComboBox(Metatile::Attr attribute, ComboBox *combo) {
     if (!this->metatile) return;
 
     bool ok;

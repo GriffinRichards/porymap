@@ -4,8 +4,8 @@
 
 #include <QtWidgets>
 
-#include "noscrollspinbox.h"
-#include "noscrollcombobox.h"
+#include "edithistoryspinbox.h"
+#include "eventcombobox.h"
 #include "mainwindow.h"
 
 #include "events.h"
@@ -40,8 +40,8 @@ public:
 
     QSpinBox *spinner_id;
 
-    NoScrollSpinBox *spinner_x;
-    NoScrollSpinBox *spinner_y;
+    EditHistorySpinBox *spinner_x;
+    EditHistorySpinBox *spinner_y;
     NoScrollSpinBox *spinner_z;
     QLabel *hideable_label_z;
 
@@ -58,10 +58,10 @@ protected:
     bool connected = false;
     QPointer<Project> project;
 
-    void populateDropdown(NoScrollComboBox * combo, const QStringList &items);
-    void populateScriptDropdown(NoScrollComboBox * combo, Project * project);
-    void populateMapNameDropdown(NoScrollComboBox * combo, Project * project);
-    void populateIdNameDropdown(NoScrollComboBox * combo, Project * project, const QString &mapName, Event::Group group);
+    void populateDropdown(EventComboBox * combo, const QStringList &items);
+    void populateScriptDropdown(EventComboBox * combo, Project * project);
+    void populateMapNameDropdown(EventComboBox * combo, Project * project);
+    void populateIdNameDropdown(EventComboBox * combo, Project * project, const QString &mapName, Event::Group group);
 
 private:
     Event *event;
@@ -83,15 +83,15 @@ public:
 
 public:
     QLineEdit *line_edit_local_id;
-    NoScrollComboBox *combo_sprite;
-    NoScrollComboBox *combo_movement;
+    EventComboBox *combo_sprite;
+    EventComboBox *combo_movement;
     NoScrollSpinBox *spinner_radius_x;
     NoScrollSpinBox *spinner_radius_y;
-    NoScrollComboBox *combo_script;
+    EventComboBox *combo_script;
     QToolButton *button_script;
-    NoScrollComboBox *combo_flag;
-    NoScrollComboBox *combo_trainer_type;
-    NoScrollComboBox *combo_radius_treeid;
+    EventComboBox *combo_flag;
+    EventComboBox *combo_trainer_type;
+    EventComboBox *combo_radius_treeid;
     QCheckBox *check_in_connection;
 
 private:
@@ -114,9 +114,9 @@ public:
 
 public:
     QLineEdit *line_edit_local_id;
-    NoScrollComboBox *combo_sprite;
-    NoScrollComboBox *combo_target_id;
-    NoScrollComboBox *combo_target_map;
+    EventComboBox *combo_sprite;
+    EventComboBox *combo_target_id;
+    EventComboBox *combo_target_map;
 
 private:
     CloneObjectEvent *clone;
@@ -140,8 +140,8 @@ public:
 
 public:
     QLineEdit *line_edit_id;
-    NoScrollComboBox *combo_dest_map;
-    NoScrollComboBox *combo_dest_warp;
+    EventComboBox *combo_dest_map;
+    EventComboBox *combo_dest_warp;
     QPushButton *warning;
 
 private:
@@ -165,9 +165,9 @@ public:
     virtual void populate(Project *project) override;
 
 public:
-    NoScrollComboBox *combo_script;
-    NoScrollComboBox *combo_var;
-    NoScrollComboBox *combo_var_value;
+    EventComboBox *combo_script;
+    EventComboBox *combo_var;
+    EventComboBox *combo_var_value;
 
 private:
     TriggerEvent *trigger;
@@ -188,7 +188,7 @@ public:
     virtual void populate(Project *project) override;
 
 public:
-    NoScrollComboBox *combo_weather;
+    EventComboBox *combo_weather;
 
 private:
     WeatherTriggerEvent *weatherTrigger;
@@ -209,8 +209,8 @@ public:
     virtual void populate(Project *project) override;
 
 public:
-    NoScrollComboBox *combo_facing_dir;
-    NoScrollComboBox *combo_script;
+    EventComboBox *combo_facing_dir;
+    EventComboBox *combo_script;
 
 private:
     SignEvent *sign;
@@ -233,8 +233,8 @@ public:
 public:
     QFrame *hideable_quantity;
     QFrame *hideable_itemfinder;
-    NoScrollComboBox *combo_item;
-    NoScrollComboBox *combo_flag;
+    EventComboBox *combo_item;
+    EventComboBox *combo_flag;
     NoScrollSpinBox *spinner_quantity;
     QCheckBox *check_itemfinder;
 
@@ -257,7 +257,7 @@ public:
     virtual void populate(Project *project) override;
 
 public:
-    NoScrollComboBox *combo_base_id;
+    EventComboBox *combo_base_id;
 
 private:
     SecretBaseEvent *secretBase;
@@ -281,8 +281,8 @@ public:
     QLineEdit *line_edit_id;
     QFrame *hideable_respawn_map;
     QFrame *hideable_respawn_npc;
-    NoScrollComboBox *combo_respawn_map;
-    NoScrollComboBox *combo_respawn_npc;
+    EventComboBox *combo_respawn_map;
+    EventComboBox *combo_respawn_npc;
 
 private:
     HealLocationEvent *healLocation;

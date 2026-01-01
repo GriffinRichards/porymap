@@ -40,6 +40,9 @@
         </item>
         <item row="0" column="1">
          <widget class="NoScrollComboBox" name="comboBox_MapSelection">
+          <property name="editable">
+            <bool>true</bool>
+          </property>
           <property name="insertPolicy">
            <enum>QComboBox::InsertPolicy::NoInsert</enum>
           </property>
@@ -436,12 +439,12 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>NoScrollSpinBox</class>
    <extends>QSpinBox</extends>
-   <header>noscrollspinbox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

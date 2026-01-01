@@ -12,7 +12,7 @@
 
 #include "mapheader.h"
 #include "project.h"
-#include "noscrollcombobox.h"
+#include "combobox.h"
 
 namespace Ui {
 class MapHeaderForm;
@@ -65,7 +65,7 @@ private:
     QPointer<Project> m_project = nullptr;
     bool m_allowProjectChanges = true;
 
-    void setText(NoScrollComboBox *combo, const QString &text) const;
+    void setText(ComboBox *combo, const QString &text) const;
     void setText(QLineEdit *lineEdit, const QString &text) const;
     void setLocations(const QStringList &locations);
     void updateLocationName();

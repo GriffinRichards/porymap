@@ -12,7 +12,7 @@
 #include "metatilelayersitem.h"
 #include "metatileimageexporter.h"
 
-class NoScrollComboBox;
+class ComboBox;
 class Layout;
 
 namespace Ui {
@@ -136,7 +136,7 @@ private:
     void commitMetatileChange(Metatile * prevMetatile);
     void commitMetatileAndLabelChange(Metatile * prevMetatile, QString prevLabel);
     uint32_t attributeNameToValue(Metatile::Attr attribute, const QString &text, bool *ok);
-    void commitAttributeFromComboBox(Metatile::Attr attribute, NoScrollComboBox *combo);
+    void commitAttributeFromComboBox(Metatile::Attr attribute, ComboBox *combo);
     void onRawAttributesEdited();
     void refreshMetatileAttributes();
     void commitMetatileBehavior();

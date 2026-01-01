@@ -1102,10 +1102,10 @@ void RegionMapEditor::on_action_Swap_triggered() {
 
     QFormLayout form(&popup);
 
-    QComboBox *oldSecBox = new QComboBox();
+    auto oldSecBox = new NoScrollComboBox();
     oldSecBox->addItems(this->project->locationNames());
     form.addRow(new QLabel("Map Section 1:"), oldSecBox);
-    QComboBox *newSecBox = new QComboBox();
+    auto newSecBox = new NoScrollComboBox();
     newSecBox->addItems(this->project->locationNames());
     form.addRow(new QLabel("Map Section 2:"), newSecBox);
 
@@ -1141,10 +1141,10 @@ void RegionMapEditor::on_action_Replace_triggered() {
 
     QFormLayout form(&popup);
 
-    QComboBox *oldSecBox = new QComboBox();
+    auto oldSecBox = new NoScrollComboBox();
     oldSecBox->addItems(this->project->locationNames());
     form.addRow(new QLabel("Old Map Section:"), oldSecBox);
-    QComboBox *newSecBox = new QComboBox();
+    auto newSecBox = new NoScrollComboBox();
     newSecBox->addItems(this->project->locationNames());
     form.addRow(new QLabel("New Map Section:"), newSecBox);
 

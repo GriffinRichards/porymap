@@ -16,7 +16,6 @@ ConnectionsListItem::ConnectionsListItem(QWidget *parent, MapConnection * connec
 
     // Direction
     const QSignalBlocker b_Direction(ui->comboBox_Direction);
-    ui->comboBox_Direction->setMinimumContentsLength(0);
     ui->comboBox_Direction->addItems(MapConnection::cardinalDirections);
     ui->comboBox_Direction->installEventFilter(this);
 
@@ -26,7 +25,7 @@ ConnectionsListItem::ConnectionsListItem(QWidget *parent, MapConnection * connec
     const QSignalBlocker b_Map(ui->comboBox_Map);
     ui->comboBox_Map->setMinimumContentsLength(6);
     ui->comboBox_Map->addItems(mapNames);
-    ui->comboBox_Map->setFocusedScrollingEnabled(false); // Scrolling could cause rapid changes to many different maps
+    ui->comboBox_Map->setAllowScrollingIfFocused(false); // Scrolling could cause rapid changes to many different maps
     ui->comboBox_Map->setInsertPolicy(QComboBox::NoInsert);
     ui->comboBox_Map->installEventFilter(this);
 

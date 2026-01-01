@@ -408,9 +408,6 @@
                   </item>
                   <item>
                    <widget class="NoScrollComboBox" name="comboBox_BaseGameVersion">
-                    <property name="editable">
-                     <bool>false</bool>
-                    </property>
                    </widget>
                   </item>
                   <item>
@@ -874,6 +871,9 @@
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The default primary tileset to use for new maps/layouts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                  </property>
+                 <property name="editable">
+                  <bool>true</bool>
+                 </property>
                 </widget>
                </item>
                <item row="1" column="0">
@@ -887,6 +887,9 @@
                 <widget class="NoScrollComboBox" name="comboBox_DefaultSecondaryTileset">
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The default secondary tileset to use for new maps/layouts.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 </property>
+                 <property name="editable">
+                  <bool>true</bool>
                  </property>
                 </widget>
                </item>
@@ -1128,9 +1131,6 @@
                     <property name="toolTip">
                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The number of bytes each metatile has for metatile attributes. This is the metadata about each metatile like behvior, layer type, etc.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                     </property>
-                    <property name="editable">
-                     <bool>false</bool>
-                    </property>
                    </widget>
                   </item>
                   <item row="7" column="0">
@@ -1267,9 +1267,6 @@
                 <widget class="NoScrollComboBox" name="comboBox_EventsTabIcon">
                  <property name="toolTip">
                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The icon that will be displayed for the Events tab in the editor. If 'Automatic' is chosen, the icon will be a random player character from the project's base game version. If 'Custom' is chosen an image file path may be specified.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                 <property name="editable">
-                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -1466,7 +1463,11 @@
                 </widget>
                </item>
                <item row="1" column="0">
-                <widget class="NoScrollComboBox" name="comboBox_WarpBehaviors"/>
+                <widget class="NoScrollComboBox" name="comboBox_WarpBehaviors">
+                 <property name="editable">
+                  <bool>true</bool>
+                 </property>
+                </widget>
                </item>
                <item row="4" column="0" colspan="3">
                 <widget class="NoScrollTextEdit" name="textEdit_WarpBehaviors">
@@ -1892,7 +1893,7 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>UIntSpinBox</class>
@@ -1907,12 +1908,12 @@
   <customwidget>
    <class>NoScrollSpinBox</class>
    <extends>QSpinBox</extends>
-   <header>noscrollspinbox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>NoScrollTextEdit</class>
    <extends>QTextEdit</extends>
-   <header>noscrolltextedit.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <resources>

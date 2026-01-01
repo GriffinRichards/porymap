@@ -17,9 +17,6 @@
    <string>Form</string>
   </property>
   <layout class="QFormLayout" name="formLayout">
-   <property name="fieldGrowthPolicy">
-    <enum>QFormLayout::FieldGrowthPolicy::FieldsStayAtSizeHint</enum>
-   </property>
    <item row="0" column="0">
     <widget class="QLabel" name="label_Song">
      <property name="text">
@@ -239,12 +236,12 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>NoScrollSpinBox</class>
    <extends>QSpinBox</extends>
-   <header>noscrollspinbox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

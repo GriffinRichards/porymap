@@ -1,16 +1,15 @@
 #ifndef UINTSPINBOX_H
 #define UINTSPINBOX_H
 
-#include <QAbstractSpinBox>
+#include "noscrollwidgets.h"
 #include <QLineEdit>
 
 /*
     QSpinBox stores minimum/maximum/value as ints. This class is a version of QAbstractSpinBox for values above 0x7FFFFFFF.
     It minimally implements some QSpinBox-specific features like prefixes to simplify support for hex value input.
-    It also implements the scroll focus requirements of NoScrollSpinBox.
 */
 
-class UIntSpinBox : public QAbstractSpinBox
+class UIntSpinBox : public NoScrollAbstractSpinBox
 {
     Q_OBJECT
 
@@ -48,7 +47,6 @@ private:
     QString stripped(QString input) const;
 
     virtual void stepBy(int steps) override;
-    virtual void wheelEvent(QWheelEvent *event) override;
     virtual void focusOutEvent(QFocusEvent *event) override;
 
 protected:

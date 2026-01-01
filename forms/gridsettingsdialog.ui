@@ -57,14 +57,8 @@
        </item>
        <item row="2" column="1">
         <widget class="NoScrollComboBox" name="comboBox_Style">
-         <property name="editable">
-          <bool>false</bool>
-         </property>
          <property name="sizeAdjustPolicy">
           <enum>QComboBox::SizeAdjustPolicy::AdjustToContentsOnFirstShow</enum>
-         </property>
-         <property name="minimumContentsLength">
-          <number>0</number>
          </property>
         </widget>
        </item>
@@ -254,12 +248,12 @@
   <customwidget>
    <class>NoScrollSpinBox</class>
    <extends>QSpinBox</extends>
-   <header>noscrollspinbox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>ColorInputWidget</class>

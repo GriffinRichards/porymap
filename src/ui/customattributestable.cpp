@@ -1,6 +1,6 @@
 #include "customattributestable.h"
 #include "parseutil.h"
-#include "noscrollspinbox.h"
+#include "noscrollwidgets.h"
 #include "utility.h"
 #include <QHeaderView>
 #include <QScrollBar>

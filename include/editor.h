@@ -245,7 +245,7 @@ private:
     void displayConnection(MapConnection *connection);
     void displayDivingConnection(MapConnection *connection);
     void removeDivingMapPixmap(MapConnection *connection);
-    void onDivingMapEditingFinished(NoScrollComboBox* combo, const QString &direction);
+    void onDivingMapEditingFinished(ComboBox *combo, const QString &direction);
     void updateDivingMapButton(QToolButton* button, const QString &mapName);
     void updateEncounterFields(EncounterFields newFields);
     QString getMovementPermissionText(uint16_t collision, uint16_t elevation);

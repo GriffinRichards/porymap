@@ -1,6 +1,6 @@
 #include "montabwidget.h"
-#include "noscrollcombobox.h"
 #include "editor.h"
+#include "noscrollwidgets.h"
 #include "encountertablemodel.h"
 #include "encountertabledelegates.h"
 #include "eventfilters.h"
@@ -15,7 +15,7 @@ MonTabWidget::MonTabWidget(Editor *editor, QWidget *parent) : QTabWidget(parent)
     connect(this, &MonTabWidget::edited, this->editor, &Editor::wildMonTableEdited);
 
     populate();
-    this->tabBar()->installEventFilter(new WheelFilter(this));
+    this->tabBar()->installEventFilter(new NoScrollFilter(this, false));
 }
 
 MonTabWidget::~MonTabWidget() {

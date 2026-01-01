@@ -11,9 +11,6 @@ MapHeaderForm::MapHeaderForm(QWidget *parent)
     ui->spinBox_FloorNumber->setMinimum(INT_MIN);
     ui->spinBox_FloorNumber->setMaximum(INT_MAX);
 
-    // The layout for this UI keeps fields at their size hint, which is a little short for the line edit.
-    ui->lineEdit_LocationName->setMinimumWidth(ui->comboBox_Location->sizeHint().width());
-
     connect(ui->comboBox_Song,        &QComboBox::currentTextChanged, this, &MapHeaderForm::onSongUpdated);
     connect(ui->comboBox_Location,    &QComboBox::currentTextChanged, this, &MapHeaderForm::onLocationChanged);
     connect(ui->comboBox_Weather,     &QComboBox::currentTextChanged, this, &MapHeaderForm::onWeatherChanged);
@@ -187,7 +184,7 @@ void MapHeaderForm::setAllowsEscaping(bool allowsEscaping) {       ui->checkBox_
 void MapHeaderForm::setFloorNumber(int floorNumber) {              ui->spinBox_FloorNumber->setValue(floorNumber); }
 
 // If we always call setText / setTextItem the user's cursor may move to the end of the text while they're typing.
-void MapHeaderForm::setText(NoScrollComboBox *combo, const QString &text) const {
+void MapHeaderForm::setText(ComboBox *combo, const QString &text) const {
     if (combo->currentText() != text)
         combo->setTextItem(text);
 }

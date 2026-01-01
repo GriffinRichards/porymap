@@ -93,9 +93,6 @@
               </item>
               <item row="4" column="1">
                <widget class="NoScrollComboBox" name="comboBox_ApplicationTheme">
-                <property name="editable">
-                 <bool>false</bool>
-                </property>
                </widget>
               </item>
               <item row="5" column="0">
@@ -109,9 +106,6 @@
                <widget class="NoScrollComboBox" name="comboBox_ColorSpace">
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The color space to use for exported images. If &amp;quot;---&amp;quot; is set, no color space will be used for the exported image. For details on each color space, see Qt's manual page for QColorSpace.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                </property>
-                <property name="editable">
-                 <bool>false</bool>
                 </property>
                </widget>
               </item>
@@ -519,7 +513,7 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

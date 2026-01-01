@@ -403,6 +403,9 @@
                    <property name="insertPolicy">
                     <enum>QComboBox::InsertPolicy::NoInsert</enum>
                    </property>
+                   <property name="editable">
+                    <bool>true</bool>
+                   </property>
                   </widget>
                  </item>
                  <item>
@@ -459,6 +462,9 @@
                    </property>
                    <property name="insertPolicy">
                     <enum>QComboBox::InsertPolicy::NoInsert</enum>
+                   </property>
+                   <property name="editable">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -529,6 +535,9 @@
                    </property>
                    <property name="insertPolicy">
                     <enum>QComboBox::InsertPolicy::NoInsert</enum>
+                   </property>
+                   <property name="editable">
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -1144,7 +1153,7 @@
   <customwidget>
    <class>NoScrollComboBox</class>
    <extends>QComboBox</extends>
-   <header>noscrollcombobox.h</header>
+   <header>noscrollwidgets.h</header>
   </customwidget>
   <customwidget>
    <class>NoScrollGraphicsView</class>

@@ -1,6 +1,5 @@
 #include "preferenceeditor.h"
 #include "ui_preferenceeditor.h"
-#include "noscrollcombobox.h"
 #include "message.h"
 
 #include <QAbstractButton>
@@ -16,9 +15,6 @@ PreferenceEditor::PreferenceEditor(QWidget *parent) :
 {
     ui->setupUi(this);
     setAttribute(Qt::WA_DeleteOnClose);
-
-    ui->comboBox_ColorSpace->setMinimumContentsLength(0);
-    ui->comboBox_ApplicationTheme->setMinimumContentsLength(0);
 
     connect(ui->buttonBox, &QDialogButtonBox::clicked, this, &PreferenceEditor::dialogButtonClicked);
 
