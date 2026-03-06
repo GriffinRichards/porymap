@@ -329,7 +329,6 @@ private:
 
 #ifdef QT_NETWORK_LIB
     QPointer<UpdatePromoter> updatePromoter = nullptr;
-    QPointer<NetworkAccessManager> networkAccessManager = nullptr;
 #endif
 
     QPointer<AboutPorymap> aboutWindow = nullptr;
@@ -429,6 +428,7 @@ private:
     void initMapList();
     void initShortcuts();
     void initExtraShortcuts();
+    void initModuleUI();
     void loadUserSettings();
     void resizeWithinScreen();
     void setTheme(QString);

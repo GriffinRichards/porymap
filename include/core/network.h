@@ -4,18 +4,18 @@
 /*
     The two classes defined here provide a simplified interface for Qt's network classes QNetworkAccessManager and QNetworkReply.
 
-    With the Qt classes, the workflow for a GET is roughly: generate a QNetworkRequest, give this request to QNetworkAccessManager::get,
+    With the Qt classes, the workflow for a GET is roughly: create a QNetworkAccessManager, generate a QNetworkRequest, give this request to the manager,
     connect the returned object to QNetworkReply::finished, and in the slot of that connection handle the various HTTP headers and attributes,
     then manage errors or process the webpage's body.
 
     These classes handle generating the QNetworkRequest with a given URL and manage the HTTP headers in the reply. They will automatically
     respect rate limits and return cached data if the webpage hasn't changed since previous requests. Instead of interacting with a QNetworkReply,
-    callers interact with a simplified NetworkReplyData.
+    callers interact with a simplified NetworkReplyData. Per Qt's manual, a single QNetworkAccessManager instance is sufficient for a whole application,
+    and this manager will be created internally when the first network request is made.
     Example that logs Porymap's description on GitHub:
 
-    NetworkAccessManager * manager = new NetworkAccessManager(this);
-    NetworkReplyData * reply = manager->get("https://api.github.com/repos/huderlem/porymap");
-    connect(reply, &NetworkReplyData::finished, [reply] () {
+    NetworkReplyData * reply = Network::get("https://api.github.com/repos/huderlem/porymap");
+    connect(reply, &NetworkReplyData::received, [reply] () {
         if (!reply->errorString().isEmpty()) {
             logError(QString("Failed to read description: %1").arg(reply->errorString()));
         } else {
@@ -31,6 +31,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QDateTime>
+#include <QPointer>
 #endif
 
 #ifdef QT_NETWORK_LIB
@@ -45,8 +46,9 @@ public:
     QByteArray body() const { return m_body; }
     QString errorString() const { return m_error; }
     QDateTime retryAfter() const { return m_retryAfter; }
-    bool isFinished() const { return m_finished; }
+    bool isReceived() const { return m_received; }
 
+    friend class Network;
     friend class NetworkAccessManager;
 
 private:
@@ -55,15 +57,15 @@ private:
     QByteArray m_body;
     QString m_error;
     QDateTime m_retryAfter;
-    bool m_finished;
+    bool m_received = false;
 
     void finish() {
-        m_finished = true;
-        emit finished();
+        m_received = true;
+        emit received();
     };
 
 signals:
-    void finished();
+    void received();
 };
 
 class NetworkAccessManager : public QNetworkAccessManager
@@ -73,8 +75,10 @@ class NetworkAccessManager : public QNetworkAccessManager
 public:
     NetworkAccessManager(QObject * parent = nullptr);
     ~NetworkAccessManager();
-    NetworkReplyData * get(const QString &url);
-    NetworkReplyData * get(const QUrl &url);
+
+    static QPointer<NetworkAccessManager> instance();
+
+    friend class Network;
 
 private:
     // For a more complex cache we could implement a QAbstractCache for the manager
@@ -86,6 +90,13 @@ private:
     QMap<QUrl, QDateTime> rateLimitTimes;
     void processReply(QNetworkReply * reply, NetworkReplyData * data);
     const QNetworkRequest getRequest(const QUrl &url);
+};
+
+class Network
+{
+public:
+    static NetworkReplyData * get(const QString &url);
+    static NetworkReplyData * get(const QUrl &url);
 };
 
 #endif // QT_NETWORK_LIB

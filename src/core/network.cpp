@@ -17,29 +17,25 @@ NetworkAccessManager::~NetworkAccessManager() {
     qDeleteAll(this->cache);
 }
 
-const QNetworkRequest NetworkAccessManager::getRequest(const QUrl &url) {
-    QNetworkRequest request(url);
-
-    // Set User-Agent to porymap/#.#.#
-    request.setHeader(QNetworkRequest::UserAgentHeader, QString("%1/%2").arg(QCoreApplication::applicationName())
-                                                                        .arg(QCoreApplication::applicationVersion()));
-
-    // If we've made a successful request in this session already, set the If-None-Match header.
-    // We'll only get a full response from the server if the data has changed since this last request.
-    // This helps to avoid hitting rate limits.
-    auto cacheEntry = this->cache.value(url, nullptr);
-    if (cacheEntry)
-        request.setHeader(QNetworkRequest::IfNoneMatchHeader, cacheEntry->eTag);
-
-    return request;
+QPointer<NetworkAccessManager> NetworkAccessManager::instance() {
+    static QPointer<NetworkAccessManager> manager = nullptr;
+    if (!manager) manager = new NetworkAccessManager(qApp);
+    return manager;
 }
 
-NetworkReplyData * NetworkAccessManager::get(const QString &url) {
-    return this->get(QUrl(url));
+NetworkReplyData * Network::get(const QString &url) {
+    return Network::get(QUrl(url));
 }
 
-NetworkReplyData * NetworkAccessManager::get(const QUrl &url) {
-    NetworkReplyData * data = new NetworkReplyData();
+NetworkReplyData * Network::get(const QUrl &url) {
+    auto manager = NetworkAccessManager::instance();
+    if (!manager) {
+        Q_ASSERT("Failed to create NetworkAccessManager");
+        return nullptr;
+    }
+
+    // Caller's responsibility to delete
+    auto data = new NetworkReplyData();
     data->m_url = url;
 
     // If we are rate-limited, don't send a new request.
@@ -56,13 +52,30 @@ NetworkReplyData * NetworkAccessManager::get(const QUrl &url) {
         porymapConfig.rateLimitTimes.remove(url);
     }
 
-    QNetworkReply * reply = QNetworkAccessManager::get(this->getRequest(url));
-    connect(reply, &QNetworkReply::finished, [this, reply, data] {
-        this->processReply(reply, data);
+    QNetworkReply * reply = manager->get(manager->getRequest(url));
+    QObject::connect(reply, &QNetworkReply::finished, [manager, reply, data] {
+        manager->processReply(reply, data);
         data->finish();
     });
 
     return data;
+}
+
+const QNetworkRequest NetworkAccessManager::getRequest(const QUrl &url) {
+    QNetworkRequest request(url);
+
+    // Set User-Agent to porymap/#.#.#
+    request.setHeader(QNetworkRequest::UserAgentHeader, QString("%1/%2").arg(QCoreApplication::applicationName())
+                                                                        .arg(QCoreApplication::applicationVersion()));
+
+    // If we've made a successful request in this session already, set the If-None-Match header.
+    // We'll only get a full response from the server if the data has changed since this last request.
+    // This helps to avoid hitting rate limits.
+    auto cacheEntry = this->cache.value(url, nullptr);
+    if (cacheEntry)
+        request.setHeader(QNetworkRequest::IfNoneMatchHeader, cacheEntry->eTag);
+
+    return request;
 }
 
 void NetworkAccessManager::processReply(QNetworkReply * reply, NetworkReplyData * data) {

@@ -55,17 +55,6 @@
 
 #include <math.h>
 
-// We only publish release binaries for Windows and macOS.
-// This is relevant for the update promoter, which alerts users of a new release.
-#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
-#define RELEASE_PLATFORM
-#endif
-#if defined(QT_NETWORK_LIB) && defined(RELEASE_PLATFORM)
-#define USE_UPDATE_PROMOTER
-#endif
-
-
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
@@ -187,32 +176,37 @@ void MainWindow::setWindowDisabled(bool disabled) {
 void MainWindow::initWindow() {
     porymapConfig = PorymapConfig();
     porymapConfig.load();
-    this->initLogStatusBar();
-    this->initCustomUI();
-    this->initExtraSignals();
-    this->initEditor();
-    this->initMiscHeapObjects();
-    this->initMapList();
-    this->initShortcuts();
+    initLogStatusBar();
+    initCustomUI();
+    initExtraSignals();
+    initEditor();
+    initMiscHeapObjects();
+    initMapList();
+    initShortcuts();
+    initModuleUI();
+    setWindowDisabled(true);
+}
 
-    QStringList missingModules;
+void MainWindow::initModuleUI() {
+        QStringList missingModules;
 
-#ifndef USE_UPDATE_PROMOTER
+// Fully hide "Check for Updates" on platforms we don't publish releases for
+#if !(defined(Q_OS_WIN) || defined(Q_OS_MACOS))
     ui->actionCheck_for_Updates->setVisible(false);
-#ifdef RELEASE_PLATFORM
-    // Only report the network module missing if we would
-    // have otherwise used it (we don't on non-release platforms).
-    missingModules.append(" 'network'");
 #endif
+
+#ifndef QT_NETWORK_LIB
+    ui->actionCheck_for_Updates->setEnabled(false);
+    missingModules.append(" 'network'");
 #endif
 
 #ifndef QT_CHARTS_LIB
-    ui->pushButton_SummaryChart->setVisible(false);
+    ui->pushButton_SummaryChart->setEnabled(false);
     missingModules.append(" 'charts'");
 #endif
 
 #ifndef QT_QML_LIB
-    ui->actionPlugins->setVisible(false);
+    ui->actionPlugins->setEnabled(false);
     missingModules.append(" 'qml'");
 #endif
 
@@ -221,8 +215,6 @@ void MainWindow::initWindow() {
                             .arg(missingModules.length() > 1 ? "s" : "")
                             .arg(missingModules.join(",")));
     }
-
-    setWindowDisabled(true);
 }
 
 void MainWindow::initShortcuts() {
@@ -397,13 +389,10 @@ void MainWindow::on_actionCheck_for_Updates_triggered() {
     checkForUpdates(true);
 }
 
-#ifdef USE_UPDATE_PROMOTER
+#ifdef QT_NETWORK_LIB
 void MainWindow::checkForUpdates(bool requestedByUser) {
-    if (!this->networkAccessManager)
-        this->networkAccessManager = new NetworkAccessManager(this);
-
     if (!this->updatePromoter) {
-        this->updatePromoter = new UpdatePromoter(this, this->networkAccessManager);
+        this->updatePromoter = new UpdatePromoter(this);
         connect(this->updatePromoter, &UpdatePromoter::changedPreferences, [this] {
             if (this->preferenceEditor)
                 this->preferenceEditor->updateFields();
@@ -3065,7 +3054,7 @@ void MainWindow::on_actionPreferences_triggered() {
 void MainWindow::togglePreferenceSpecificUi() {
     ui->actionOpen_Project_in_Text_Editor->setEnabled(!porymapConfig.textEditorOpenFolder.isEmpty());
 
-#ifdef USE_UPDATE_PROMOTER
+#ifdef QT_NETWORK_LIB
     if (this->updatePromoter)
         this->updatePromoter->updatePreferences();
 #endif

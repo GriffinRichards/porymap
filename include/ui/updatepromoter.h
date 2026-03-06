@@ -18,7 +18,7 @@ class UpdatePromoter : public QDialog
     Q_OBJECT
 
 public:
-    explicit UpdatePromoter(QWidget *parent, NetworkAccessManager *manager);
+    explicit UpdatePromoter(QWidget *parent);
     ~UpdatePromoter();
 
     void checkForUpdates();
@@ -26,7 +26,6 @@ public:
 
 private:
     Ui::UpdatePromoter *ui;
-    NetworkAccessManager *const manager;
     QPushButton * button_Downloads;
     QPushButton * button_Retry;
 

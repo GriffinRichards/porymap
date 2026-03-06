@@ -11,10 +11,9 @@
 #include <QDesktopServices>
 #include <QTimer>
 
-UpdatePromoter::UpdatePromoter(QWidget *parent, NetworkAccessManager *manager)
+UpdatePromoter::UpdatePromoter(QWidget *parent)
     : QDialog(parent),
-      ui(new Ui::UpdatePromoter),
-      manager(manager)
+      ui(new Ui::UpdatePromoter)
 {
     ui->setupUi(this);
 
@@ -71,8 +70,8 @@ void UpdatePromoter::checkForUpdates() {
 
 void UpdatePromoter::get(const QUrl &url) {
     this->visitedUrls.insert(url);
-    auto reply = this->manager->get(url);
-    connect(reply, &NetworkReplyData::finished, [this, reply] () {
+    auto reply = Network::get(url);
+    connect(reply, &NetworkReplyData::received, [this, reply] () {
         if (!reply->errorString().isEmpty()) {
             this->error(reply->errorString(), reply->retryAfter());
         } else {
