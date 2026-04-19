@@ -4,11 +4,11 @@
 #include "log.h"
 #include "config.h"
 #include "version.h"
+#include "url.h"
 
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
-#include <QDesktopServices>
 #include <QTimer>
 
 UpdatePromoter::UpdatePromoter(QWidget *parent)
@@ -60,12 +60,7 @@ void UpdatePromoter::checkForUpdates() {
     this->resetDialog();
     this->button_Retry->setEnabled(false);
     ui->label_Status->setText("Checking for updates...");
-
-    // We could use the URL ".../releases/latest" to retrieve less data, but this would run into problems if the
-    // most recent item on the releases page is not actually a new release (like the static windows build).
-    // By getting all releases we can also present a multi-version changelog of all changes since the host release.
-    static const QUrl url("https://api.github.com/repos/huderlem/porymap/releases");
-    this->get(url);
+    this->get(Url::get(Url::ID::Releases));
 }
 
 void UpdatePromoter::get(const QUrl &url) {
@@ -186,7 +181,7 @@ void UpdatePromoter::dialogButtonClicked(QAbstractButton *button) {
     } else if (button == this->button_Retry) {
         this->checkForUpdates();
     } else if (button == this->button_Downloads) {
-        QDesktopServices::openUrl(this->downloadUrl);
+        Url::open(this->downloadUrl);
     }
 }
 

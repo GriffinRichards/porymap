@@ -23,6 +23,10 @@ QPointer<NetworkAccessManager> NetworkAccessManager::instance() {
     return manager;
 }
 
+NetworkReplyData * Network::get(Url::ID id) {
+    return Network::get(Url::get(id));
+}
+
 NetworkReplyData * Network::get(const QString &url) {
     return Network::get(QUrl(url));
 }

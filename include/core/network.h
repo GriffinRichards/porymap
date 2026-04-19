@@ -26,13 +26,16 @@
     });
 */
 
+#include "url.h"
+
 #if __has_include(<QNetworkAccessManager>)
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#endif
+
 #include <QDateTime>
 #include <QPointer>
-#endif
 
 #ifdef QT_NETWORK_LIB
 
@@ -95,6 +98,7 @@ private:
 class Network
 {
 public:
+    static NetworkReplyData * get(Url::ID id);
     static NetworkReplyData * get(const QString &url);
     static NetworkReplyData * get(const QUrl &url);
 };

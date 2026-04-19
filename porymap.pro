@@ -70,6 +70,7 @@ SOURCES += src/config/keyvalueconfigbase.cpp \
     src/core/parseutil.cpp \
     src/core/tile.cpp \
     src/core/tileset.cpp \
+    src/core/url.cpp \
     src/core/utility.cpp \
     src/core/validator.cpp \
     src/core/version.cpp \
@@ -194,6 +195,7 @@ HEADERS  += include/config/keyvalueconfigbase.h \
     include/core/parseutil.h \
     include/core/tile.h \
     include/core/tileset.h \
+    include/core/url.h \
     include/core/utility.h \
     include/core/validator.h \
     include/core/version.h \

@@ -14,9 +14,9 @@
 #include "validator.h"
 #include "message.h"
 #include "eventframes.h"
+#include "url.h"
 
 #include <QCheckBox>
-#include <QDesktopServices>
 #include <QDir>
 #include <QMouseEvent>
 #include <QPainter>
@@ -2355,7 +2355,7 @@ void Editor::openInTextEditor(const QString &path, int lineNum) {
     QString command = porymapConfig.textEditorGotoLine;
     if (command.isEmpty()) {
         // Open map scripts in the system's default editor.
-        QDesktopServices::openUrl(QUrl::fromLocalFile(path));
+        Url::openLocalFile(path);
     } else {
         if (command.contains("%F")) {
             if (command.contains("%L"))

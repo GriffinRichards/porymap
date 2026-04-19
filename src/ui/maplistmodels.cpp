@@ -4,7 +4,6 @@
 #include "filterchildrenproxymodel.h"
 
 #include <QCloseEvent>
-#include <QDesktopServices>
 #include <QLineEdit>
 #include <QMimeData>
 #include <QMouseEvent>

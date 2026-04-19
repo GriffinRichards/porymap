@@ -5,10 +5,10 @@
 #include "newdefinedialog.h"
 #include "utility.h"
 #include "eventfilters.h"
+#include "url.h"
 
 #include <QAbstractButton>
 #include <QCloseEvent>
-#include <QDesktopServices>
 #include <QFormLayout>
 
 /*
@@ -836,13 +836,11 @@ void ProjectSettingsEditor::dialogButtonClicked(QAbstractButton *button) {
 }
 
 void ProjectSettingsEditor::openFilesHelp() {
-    static const QUrl url("https://huderlem.github.io/porymap/manual/project-files.html#files");
-    QDesktopServices::openUrl(url);
+    Url::open(Url::ID::ManualProjectFiles);
 }
 
 void ProjectSettingsEditor::openIdentifiersHelp() {
-    static const QUrl url("https://huderlem.github.io/porymap/manual/project-files.html#identifiers");
-    QDesktopServices::openUrl(url);
+    Url::open(Url::ID::ManualProjectIdentifiers);
 }
 
 // Close event triggered by a project reload. User doesn't need any prompts, just close the window.

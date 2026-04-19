@@ -30,9 +30,9 @@
 #include "newlocationdialog.h"
 #include "loadingscreen.h"
 #include "version.h"
+#include "url.h"
 
 #include <QClipboard>
-#include <QDesktopServices>
 #include <QDialogButtonBox>
 #include <QDirIterator>
 #include <QFont>
@@ -3026,12 +3026,11 @@ void MainWindow::on_actionOpen_Log_File_triggered() {
 }
 
 void MainWindow::on_actionOpen_Config_Folder_triggered() {
-    QDesktopServices::openUrl(QUrl::fromLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)));
+    Url::openLocalFile(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation));
 }
 
 void MainWindow::on_actionOpen_Manual_triggered() {
-    static const QUrl url("https://huderlem.github.io/porymap/");
-    QDesktopServices::openUrl(url);
+    Url::open(Url::ID::Manual);
 }
 
 void MainWindow::on_actionPreferences_triggered() {
