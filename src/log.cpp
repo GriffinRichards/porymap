@@ -15,7 +15,6 @@ namespace Log {
     static QFile file;
     static QTextStream textStream;
     static bool initialized = false;
-    static QtMessageHandler originalHandler = nullptr;
 
     struct Display {
         QPointer<QStatusBar> statusBar;
@@ -47,8 +46,7 @@ QString colorizeTypeName(const QString &message, const QString &typeName, const 
 }
 
 QString colorizeMessage(const QString &message, LogType type) {
-    switch (type)
-    {
+    switch (type) {
     case LogType::LOG_INFO:  return colorizeTypeName(message, "INFO", INFO_COLOR);
     case LogType::LOG_WARN:  return colorizeTypeName(message, "WARN", WARNING_COLOR);
     case LogType::LOG_ERROR: return colorizeTypeName(message, "ERROR", ERROR_COLOR);
@@ -56,8 +54,7 @@ QString colorizeMessage(const QString &message, LogType type) {
 }
 
 QString colorizeMessage(const QString &message, QtMsgType type) {
-    switch (type)
-    {
+    switch (type) {
     case QtDebugMsg:    return colorizeTypeName(message, "QT DEBUG", INFO_COLOR);
     case QtInfoMsg:     return colorizeTypeName(message, "QT INFO", INFO_COLOR);
     case QtWarningMsg:  return colorizeTypeName(message, "QT WARN", WARNING_COLOR);
@@ -209,12 +206,10 @@ void log(const QString &message, T type) {
     updateLogDisplays(message, type);
 
     Log::textStream << fullMessage << Qt::endl;
-    Log::file.flush();
 }
 
 void logQt(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
     log(qFormatLogMessage(type, context, msg), type);
-    if (Log::originalHandler) Log::originalHandler(type, context, msg);
 }
 
 void logInfo(const QString &message) {
