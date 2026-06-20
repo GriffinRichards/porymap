@@ -2824,7 +2824,7 @@
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="LogStatusBar" name="statusBar"/>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
@@ -3346,6 +3346,11 @@
    <extends>QFrame</extends>
    <header>customattributesframe.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>LogStatusBar</class>
+   <extends>QStatusBar</extends>
+   <header>logstatusbar.h</header>
   </customwidget>
  </customwidgets>
  <resources>

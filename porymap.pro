@@ -81,6 +81,10 @@ SOURCES += src/config/keyvalueconfigbase.cpp \
     src/lib/fex/parser.cpp \
     src/lib/collapsiblesection.cpp \
     src/lib/orderedjson.cpp \
+    src/log/log.cpp \
+    src/log/logsignaler.cpp \
+    src/log/logstatusbar.cpp \
+    src/log/logwriter.cpp \
     src/core/regionmapeditcommands.cpp \
     src/api/apimap.cpp \
     src/api/apioverlay.cpp \
@@ -165,7 +169,6 @@ SOURCES += src/config/keyvalueconfigbase.cpp \
     src/mainwindow.cpp \
     src/project.cpp \
     src/settings.cpp \
-    src/log.cpp \
     src/ui/uintspinbox.cpp \
     src/ui/updatepromoter.cpp \
     src/ui/wildmonchart.cpp \
@@ -211,6 +214,10 @@ HEADERS  += include/config/keyvalueconfigbase.h \
     include/lib/collapsiblesection.h \
     include/lib/orderedmap.h \
     include/lib/orderedjson.h \
+    include/log/log.h \
+    include/log/logsignaler.h \
+    include/log/logstatusbar.h \
+    include/log/logwriter.h \
     include/ui/aboutporymap.h \
     include/ui/checkeredbgscene.h \
     include/ui/combobox.h \
@@ -294,7 +301,6 @@ HEADERS  += include/config/keyvalueconfigbase.h \
     include/api/scripting.h \
     include/api/scriptutility.h \
     include/settings.h \
-    include/log.h \
     include/ui/uintspinbox.h \
     include/ui/updatepromoter.h \
     include/ui/wildmonchart.h \
@@ -350,6 +356,7 @@ INCLUDEPATH += include/config
 INCLUDEPATH += include/core
 INCLUDEPATH += include/ui
 INCLUDEPATH += include/lib
+INCLUDEPATH += include/log
 INCLUDEPATH += forms
 
 include(src/vendor/QtGifImage/gifimage/qtgifimage.pri)

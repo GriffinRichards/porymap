@@ -289,10 +289,10 @@ void MainWindow::applyUserShortcuts() {
 }
 
 void MainWindow::initLogStatusBar() {
-    removeLogStatusBar(this->statusBar());
-    if (!porymapConfig.statusBarLogTypes.isEmpty()) {
-        addLogStatusBar(this->statusBar(), porymapConfig.statusBarLogTypes.toQSet());
-    }
+    LogStatusBar* statusBar = qobject_cast<LogStatusBar*>(this->statusBar());
+    if (!statusBar) return;
+
+    statusBar->setLogTypes(porymapConfig.statusBarLogTypes.toQSet());
 }
 
 void MainWindow::initCustomUI() {
