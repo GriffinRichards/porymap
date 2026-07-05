@@ -13,6 +13,7 @@
 #include "customattributesframe.h"
 #include "validator.h"
 #include "message.h"
+#include "eventfactory.h"
 #include "eventframes.h"
 #include "url.h"
 
@@ -2220,7 +2221,7 @@ Event *Editor::addNewEvent(Event::Type type) {
         return nullptr;
     }
 
-    Event *event = Event::create(type);
+    Event *event = EventFactory::create(type);
     if (!event)
         return nullptr;
 

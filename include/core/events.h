@@ -12,32 +12,15 @@
 #include "orderedjson.h"
 #include "parseutil.h"
 
-
 class Project;
 class Map;
-class EventFrame;
-class ObjectFrame;
-class CloneObjectFrame;
-class WarpFrame;
 class EventPixmapItem;
-
-class Event;
-class ObjectEvent;
-class CloneObjectEvent;
-class WarpEvent;
-class CoordEvent;
-class TriggerEvent;
-class WeatherTriggerEvent;
-class BgEvent;
-class SignEvent;
-class HiddenItemEvent;
-class SecretBaseEvent;
-class HealLocationEvent;
 
 ///
 /// Event base class -- purely virtual
 ///
-class Event {
+class Event : public QObject {
+    Q_OBJECT
 public:
     virtual ~Event();
 
@@ -48,7 +31,7 @@ public:
     Event& operator=(const Event &other) = delete;
 
 protected:
-    Event() {}
+    Event(QObject* parent = nullptr) : QObject(parent) {}
 
 // public enums & static methods
 public:
@@ -100,8 +83,6 @@ public:
         }
     }
 
-    static Event* create(Event::Type type);
-
 // standard public methods
 public:
 
@@ -112,22 +93,22 @@ public:
 
     void modify();
 
-    void setX(int newX) { this->x = newX; }
-    void setY(int newY) { this->y = newY; }
-    void setZ(int newZ) { this->elevation = newZ; }
-    void setElevation(int newElevation) { this->elevation = newElevation; }
+    void setX(int newX);
+    void setY(int newY);
+    void setZ(int newZ);
+    void setElevation(int newElevation) {setZ(newElevation);}
+
+    Q_SIGNAL void xChanged(int newX);
+    Q_SIGNAL void yChanged(int newY);
+    Q_SIGNAL void zChanged(int newZ);
 
     int getX() const { return this->x; }
     int getY() const { return this->y; }
-    int getZ() const { return this->elevation; }
-    int getElevation() const { return this->elevation; }
+    int getZ() const { return this->z; }
+    int getElevation() const { return getZ(); }
 
     int getPixelX() const;
     int getPixelY() const;
-
-    virtual EventFrame *getEventFrame();
-    virtual EventFrame *createEventFrame() = 0;
-    void destroyEventFrame();
 
     Event::Group getEventGroup() const { return this->eventGroup; }
     Event::Type getEventType() const { return this->eventType; }
@@ -178,7 +159,7 @@ protected:
     // could be private?
     int x = 0;
     int y = 0;
-    int elevation = 0;
+    int z = 0;
 
     bool usesDefaultPixmap = true;
 
@@ -192,8 +173,6 @@ protected:
     QPixmap pixmap;
     EventPixmapItem *pixmapItem = nullptr;
 
-    QPointer<EventFrame> eventFrame;
-
     static QString readString(QJsonObject *object, const QString &key) { return ParseUtil::jsonToQString(object->take(key)); }
     static int readInt(QJsonObject *object, const QString &key) { return ParseUtil::jsonToInt(object->take(key)); }
     static bool readBool(QJsonObject *object, const QString &key) { return ParseUtil::jsonToBool(object->take(key)); }
@@ -205,16 +184,15 @@ protected:
 /// Object Event
 ///
 class ObjectEvent : public Event {
+    Q_OBJECT
 public:
-    ObjectEvent() : Event() {
+    ObjectEvent(QObject* parent = nullptr) : Event(parent) {
         this->eventGroup = Event::Group::Object;
         this->eventType = Event::Type::Object;
     }
     virtual ~ObjectEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -233,11 +211,13 @@ public:
     void setMovement(QString newMovement) { this->movement = newMovement; }
     QString getMovement() const { return this->movement; }
 
-    void setRadiusX(int newRadiusX) { this->radiusX = newRadiusX; }
+    void setRadiusX(int newRadiusX);
     int getRadiusX() const { return this->radiusX; }
+    Q_SIGNAL void radiusXChanged(int newRadiusX);
 
-    void setRadiusY(int newRadiusY) { this->radiusY = newRadiusY; }
+    void setRadiusY(int newRadiusY);
     int getRadiusY() const { return this->radiusY; }
+    Q_SIGNAL void radiusYChanged(int newRadiusY);
 
     void setTrainerType(QString newTrainerType) { this->trainerType = newTrainerType; }
     QString getTrainerType() const { return this->trainerType; }
@@ -245,8 +225,9 @@ public:
     void setSightRadiusBerryTreeID(QString newValue) { this->sightRadiusBerryTreeID = newValue; }
     QString getSightRadiusBerryTreeID() const { return this->sightRadiusBerryTreeID; }
 
-    void setScript(QString newScript) { this->script = newScript; }
+    void setScript(const QString& newScript);
     QString getScript() const { return this->script; }
+    Q_SIGNAL void scriptChanged(const QString& newScript);
 
     void setFlag(QString newFlag) { this->flag = newFlag; }
     QString getFlag() const { return this->flag; }
@@ -273,17 +254,15 @@ protected:
 /// Clone Object Event
 ///
 class CloneObjectEvent : public ObjectEvent {
-
+    Q_OBJECT
 public:
-    CloneObjectEvent() : ObjectEvent() {
+    CloneObjectEvent(QObject* parent = nullptr) : ObjectEvent(parent) {
         this->eventGroup = Event::Group::Object;
         this->eventType = Event::Type::CloneObject;
     }
     virtual ~CloneObjectEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -311,17 +290,15 @@ private:
 /// Warp Event
 ///
 class WarpEvent : public Event {
-
+    Q_OBJECT
 public:
-    WarpEvent() : Event() {
+    WarpEvent(QObject* parent = nullptr) : Event(parent) {
         this->eventGroup = Event::Group::Warp;
         this->eventType = Event::Type::Warp;
     }
     virtual ~WarpEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -351,14 +328,12 @@ private:
 /// Coord Event
 ///
 class CoordEvent : public Event {
-
+    Q_OBJECT
 public:
-    CoordEvent() : Event() {}
+    CoordEvent(QObject* parent = nullptr) : Event(parent) {}
     virtual ~CoordEvent() {}
 
     virtual Event *duplicate() const override = 0;
-
-    virtual EventFrame *createEventFrame() override = 0;
 
     virtual OrderedJson::object buildEventJson(Project *project) override = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
@@ -374,17 +349,15 @@ public:
 /// Trigger Event
 ///
 class TriggerEvent : public CoordEvent {
-
+    Q_OBJECT
 public:
-    TriggerEvent() : CoordEvent() {
+    TriggerEvent(QObject* parent = nullptr) : CoordEvent(parent) {
         this->eventGroup = Event::Group::Coord;
         this->eventType = Event::Type::Trigger;
     }
     virtual ~TriggerEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -416,17 +389,15 @@ private:
 /// Weather Trigger Event
 ///
 class WeatherTriggerEvent : public CoordEvent {
-
+    Q_OBJECT
 public:
-    WeatherTriggerEvent() : CoordEvent() {
+    WeatherTriggerEvent(QObject* parent = nullptr) : CoordEvent(parent) {
         this->eventGroup = Event::Group::Coord;
         this->eventType = Event::Type::WeatherTrigger;
     }
     virtual ~WeatherTriggerEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -448,16 +419,14 @@ private:
 /// BG Event
 ///
 class BGEvent : public Event {
-
+    Q_OBJECT
 public:
-    BGEvent() : Event() {
+    BGEvent(QObject* parent = nullptr) : Event(parent) {
         this->eventGroup = Event::Group::Bg;
     }
     virtual ~BGEvent() {}
 
     virtual Event *duplicate() const override = 0;
-
-    virtual EventFrame *createEventFrame() override = 0;
 
     virtual OrderedJson::object buildEventJson(Project *project) override = 0;
     virtual bool loadFromJson(QJsonObject json, Project *project) override = 0;
@@ -473,16 +442,14 @@ public:
 /// Sign Event
 ///
 class SignEvent : public BGEvent {
-
+    Q_OBJECT
 public:
-    SignEvent() : BGEvent() {
+    SignEvent(QObject* parent = nullptr) : BGEvent(parent) {
         this->eventType = Event::Type::Sign;
     }
     virtual ~SignEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -510,16 +477,14 @@ private:
 /// Hidden Item Event
 ///
 class HiddenItemEvent : public BGEvent {
-
+    Q_OBJECT
 public:
-    HiddenItemEvent() : BGEvent() {
+    HiddenItemEvent(QObject* parent = nullptr) : BGEvent(parent) {
         this->eventType = Event::Type::HiddenItem;
     }
     virtual ~HiddenItemEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -555,16 +520,14 @@ private:
 /// Secret Base Event
 ///
 class SecretBaseEvent : public BGEvent {
-
+    Q_OBJECT
 public:
-    SecretBaseEvent() : BGEvent() {
+    SecretBaseEvent(QObject* parent = nullptr) : BGEvent(parent) {
         this->eventType = Event::Type::SecretBase;
     }
     virtual ~SecretBaseEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;
@@ -586,17 +549,15 @@ private:
 /// Heal Location Event
 ///
 class HealLocationEvent : public Event {
-
+    Q_OBJECT
 public:
-    HealLocationEvent() : Event() {
+    HealLocationEvent(QObject* parent = nullptr) : Event(parent) {
         this->eventGroup = Event::Group::Heal;
         this->eventType = Event::Type::HealLocation;
     }
     virtual ~HealLocationEvent() {}
 
     virtual Event *duplicate() const override;
-
-    virtual EventFrame *createEventFrame() override;
 
     virtual OrderedJson::object buildEventJson(Project *project) override;
     virtual bool loadFromJson(QJsonObject json, Project *project) override;

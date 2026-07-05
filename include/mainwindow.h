@@ -43,6 +43,7 @@
 #include <QJSValue>
 #endif
 
+class EventFrame;
 
 
 namespace Ui {
@@ -352,6 +353,7 @@ private:
     MapHeaderForm *mapHeaderForm = nullptr;
 
     QMap<Event::Group, Event*> lastSelectedEvent;
+    QHash<Event*, EventFrame*> eventFrameCache;
 
     bool isProgrammaticEventTabChange;
 
@@ -467,6 +469,7 @@ private:
     void setBorderVisibility(bool visible);
     void setMirrorConnectionsEnabled(bool enabled);
     void resizeMapLayout();
+    void clearEventFrameCache();
 };
 
 // These are namespaced in a struct to avoid colliding with e.g. class Map.

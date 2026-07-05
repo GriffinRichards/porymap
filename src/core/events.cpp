@@ -1,27 +1,33 @@
 #include "events.h"
 
-#include "eventframes.h"
 #include "project.h"
 #include "config.h"
 #include "metatile.h"
 
-Event* Event::create(Event::Type type) {
-    switch (type) {
-    case Event::Type::Object: return new ObjectEvent();
-    case Event::Type::CloneObject: return new CloneObjectEvent();
-    case Event::Type::Warp: return new WarpEvent();
-    case Event::Type::Trigger: return new TriggerEvent();
-    case Event::Type::WeatherTrigger: return new WeatherTriggerEvent();
-    case Event::Type::Sign: return new SignEvent();
-    case Event::Type::HiddenItem: return new HiddenItemEvent();
-    case Event::Type::SecretBase: return new SecretBaseEvent();
-    case Event::Type::HealLocation: return new HealLocationEvent();
-    default: return nullptr;
-    }
+Event::~Event() {}
+
+void Event::setX(int newX) {
+    if (this->x == newX) return;
+
+    this->x = newX;
+    modify();
+    Q_EMIT xChanged(this->x);
 }
 
-Event::~Event() {
-    delete this->eventFrame;
+void Event::setY(int newY) {
+    if (this->y == newY) return;
+
+    this->y = newY;
+    modify();
+    Q_EMIT yChanged(this->y);
+}
+
+void Event::setZ(int newZ) {
+    if (this->z == newZ) return;
+
+    this->z = newZ;
+    modify();
+    Q_EMIT zChanged(this->z);
 }
 
 int Event::getPixelX() const {
@@ -32,20 +38,13 @@ int Event::getPixelY() const {
     return (this->y * Metatile::pixelHeight()) - qMax(0, this->pixmap.height() - Metatile::pixelHeight());
 }
 
-EventFrame *Event::getEventFrame() {
-    if (!this->eventFrame) createEventFrame();
-    return this->eventFrame;
-}
-
-void Event::destroyEventFrame() {
-    if (this->eventFrame) delete this->eventFrame;
-    this->eventFrame = nullptr;
-}
-
 void Event::setPixmapItem(EventPixmapItem *item) {
+    if (this->pixmapItem == item) return;
+
+    //if (this->pixmapItem) disconnect(this, nullptr, this->pixmapItem, nullptr);
     this->pixmapItem = item;
-    if (this->eventFrame) {
-        this->eventFrame->invalidateConnections();
+    if (this->pixmapItem) {
+        //connect()
     }
 }
 
@@ -54,13 +53,13 @@ int Event::getEventIndex() {
 }
 
 void Event::setDefaultValues(Project *) {
-    this->setX(0);
-    this->setY(0);
+    this->x = 0;
+    this->y = 0;
     this->setElevation(projectConfig.defaultElevation);
 }
 
 void Event::modify() {
-    this->map->modify();
+    if (this->map) this->map->modify();
 }
 
 QString Event::groupToJsonKey(Event::Group group) {
@@ -138,13 +137,35 @@ QPixmap Event::loadPixmap(Project *project) {
     return this->pixmap;
 }
 
+void ObjectEvent::setRadiusX(int newRadiusX) {
+    if (this->radiusX == newRadiusX) return;
 
+    this->radiusX = newRadiusX;
+    modify();
+    Q_EMIT radiusXChanged(this->radiusX);
+}
+
+void ObjectEvent::setRadiusY(int newRadiusY) {
+    if (this->radiusY == newRadiusY) return;
+
+    this->radiusY = newRadiusY;
+    modify();
+    Q_EMIT radiusYChanged(this->radiusY);
+}
+
+void ObjectEvent::setScript(const QString& newScript) {
+    if (this->script == newScript) return;
+
+    this->script = newScript;
+    modify();
+    Q_EMIT scriptChanged(this->script);
+}
 
 Event *ObjectEvent::duplicate() const {
     ObjectEvent *copy = new ObjectEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setIdName(this->getIdName());
     copy->setGfx(this->getGfx());
@@ -153,19 +174,11 @@ Event *ObjectEvent::duplicate() const {
     copy->setRadiusY(this->getRadiusY());
     copy->setTrainerType(this->getTrainerType());
     copy->setSightRadiusBerryTreeID(this->getSightRadiusBerryTreeID());
-    copy->setScript(this->getScript());
+    copy->script = this->getScript();
     copy->setFlag(this->getFlag());
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *ObjectEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new ObjectFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object ObjectEvent::buildEventJson(Project *) {
@@ -195,8 +208,8 @@ OrderedJson::object ObjectEvent::buildEventJson(Project *) {
 }
 
 bool ObjectEvent::loadFromJson(QJsonObject json, Project *) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setElevation(readInt(&json, "elevation"));
     this->setIdName(readString(&json, "local_id"));
     this->setGfx(readString(&json, "graphics_id"));
@@ -205,7 +218,7 @@ bool ObjectEvent::loadFromJson(QJsonObject json, Project *) {
     this->setRadiusY(readInt(&json, "movement_range_y"));
     this->setTrainerType(readString(&json, "trainer_type"));
     this->setSightRadiusBerryTreeID(readString(&json, "trainer_sight_or_berry_tree_id"));
-    this->setScript(readString(&json, "script"));
+    this->script = readString(&json, "script");
     this->setFlag(readString(&json, "flag"));
     
     this->setCustomAttributes(json);
@@ -215,7 +228,7 @@ bool ObjectEvent::loadFromJson(QJsonObject json, Project *) {
 void ObjectEvent::setDefaultValues(Project *project) {
     this->setGfx(project->gfxDefines.key(0, "0"));
     this->setMovement(project->movementTypes.value(0, "0"));
-    this->setScript("NULL");
+    this->script = "NULL";
     this->setTrainerType(project->trainerTypes.value(0, "0"));
     this->setFlag("0");
     this->setRadiusX(0);
@@ -258,8 +271,8 @@ QPixmap ObjectEvent::loadPixmap(Project *project) {
 Event *CloneObjectEvent::duplicate() const {
     CloneObjectEvent *copy = new CloneObjectEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setIdName(this->getIdName());
     copy->setGfx(this->getGfx());
@@ -268,14 +281,6 @@ Event *CloneObjectEvent::duplicate() const {
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *CloneObjectEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new CloneObjectFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object CloneObjectEvent::buildEventJson(Project *project) {
@@ -298,8 +303,8 @@ OrderedJson::object CloneObjectEvent::buildEventJson(Project *project) {
 }
 
 bool CloneObjectEvent::loadFromJson(QJsonObject json, Project *project) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setIdName(readString(&json, "local_id"));
     this->setGfx(readString(&json, "graphics_id"));
     this->setTargetID(readString(&json, "target_local_id"));
@@ -359,8 +364,8 @@ QPixmap CloneObjectEvent::loadPixmap(Project *project) {
 Event *WarpEvent::duplicate() const {
     WarpEvent *copy = new WarpEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setIdName(this->getIdName());
     copy->setDestinationMap(this->getDestinationMap());
@@ -369,14 +374,6 @@ Event *WarpEvent::duplicate() const {
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *WarpEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new WarpFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object WarpEvent::buildEventJson(Project *project) {
@@ -398,8 +395,8 @@ OrderedJson::object WarpEvent::buildEventJson(Project *project) {
 }
 
 bool WarpEvent::loadFromJson(QJsonObject json, Project *project) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setIdName(readString(&json, "warp_id"));
     this->setElevation(readInt(&json, "elevation"));
     this->setDestinationWarpID(readString(&json, "dest_warp_id"));
@@ -434,11 +431,12 @@ QSet<QString> WarpEvent::getExpectedFields() {
 void WarpEvent::setWarningEnabled(bool enabled) {
     this->warningEnabled = enabled;
 
+    // TODO
     // Don't call getEventFrame here, because it may create the event frame.
     // If the frame hasn't been created yet then we have nothing else to do.
-    auto frame = static_cast<WarpFrame*>(this->eventFrame.data());
-    if (frame && frame->warning)
-        frame->warning->setVisible(enabled);
+    //auto frame = static_cast<WarpFrame*>(this->eventFrame.data());
+    //if (frame && frame->warning)
+    //    frame->warning->setVisible(enabled);
 }
 
 
@@ -446,8 +444,8 @@ void WarpEvent::setWarningEnabled(bool enabled) {
 Event *TriggerEvent::duplicate() const {
     TriggerEvent *copy = new TriggerEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setScriptVar(this->getScriptVar());
     copy->setScriptVarValue(this->getScriptVarValue());
@@ -456,14 +454,6 @@ Event *TriggerEvent::duplicate() const {
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *TriggerEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new TriggerFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object TriggerEvent::buildEventJson(Project *) {
@@ -482,8 +472,8 @@ OrderedJson::object TriggerEvent::buildEventJson(Project *) {
 }
 
 bool TriggerEvent::loadFromJson(QJsonObject json, Project *) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setElevation(readInt(&json, "elevation"));
     this->setScriptVar(readString(&json, "var"));
     this->setScriptVarValue(readString(&json, "var_value"));
@@ -518,22 +508,14 @@ QSet<QString> TriggerEvent::getExpectedFields() {
 Event *WeatherTriggerEvent::duplicate() const {
     WeatherTriggerEvent *copy = new WeatherTriggerEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setWeather(this->getWeather());
 
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *WeatherTriggerEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new WeatherTriggerFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object WeatherTriggerEvent::buildEventJson(Project *) {
@@ -550,8 +532,8 @@ OrderedJson::object WeatherTriggerEvent::buildEventJson(Project *) {
 }
 
 bool WeatherTriggerEvent::loadFromJson(QJsonObject json, Project *) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setElevation(readInt(&json, "elevation"));
     this->setWeather(readString(&json, "weather"));
 
@@ -580,8 +562,8 @@ QSet<QString> WeatherTriggerEvent::getExpectedFields() {
 Event *SignEvent::duplicate() const {
     SignEvent *copy = new SignEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setFacingDirection(this->getFacingDirection());
     copy->setScriptLabel(this->getScriptLabel());
@@ -589,14 +571,6 @@ Event *SignEvent::duplicate() const {
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *SignEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new SignFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object SignEvent::buildEventJson(Project *) {
@@ -614,8 +588,8 @@ OrderedJson::object SignEvent::buildEventJson(Project *) {
 }
 
 bool SignEvent::loadFromJson(QJsonObject json, Project *) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setElevation(readInt(&json, "elevation"));
     this->setFacingDirection(readString(&json, "player_facing_dir"));
     this->setScriptLabel(readString(&json, "script"));
@@ -647,8 +621,8 @@ QSet<QString> SignEvent::getExpectedFields() {
 Event *HiddenItemEvent::duplicate() const {
     HiddenItemEvent *copy = new HiddenItemEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setItem(this->getItem());
     copy->setFlag(this->getFlag());
@@ -658,14 +632,6 @@ Event *HiddenItemEvent::duplicate() const {
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *HiddenItemEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new HiddenItemFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object HiddenItemEvent::buildEventJson(Project *) {
@@ -689,8 +655,8 @@ OrderedJson::object HiddenItemEvent::buildEventJson(Project *) {
 }
 
 bool HiddenItemEvent::loadFromJson(QJsonObject json, Project *) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setElevation(readInt(&json, "elevation"));
     this->setItem(readString(&json, "item"));
     this->setFlag(readString(&json, "flag"));
@@ -739,22 +705,14 @@ QSet<QString> HiddenItemEvent::getExpectedFields() {
 Event *SecretBaseEvent::duplicate() const {
     SecretBaseEvent *copy = new SecretBaseEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setElevation(this->getElevation());
     copy->setBaseID(this->getBaseID());
 
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *SecretBaseEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new SecretBaseFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 OrderedJson::object SecretBaseEvent::buildEventJson(Project *) {
@@ -771,8 +729,8 @@ OrderedJson::object SecretBaseEvent::buildEventJson(Project *) {
 }
 
 bool SecretBaseEvent::loadFromJson(QJsonObject json, Project *) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setElevation(readInt(&json, "elevation"));
     this->setBaseID(readString(&json, "secret_base_id"));
 
@@ -801,8 +759,8 @@ QSet<QString> SecretBaseEvent::getExpectedFields() {
 Event *HealLocationEvent::duplicate() const {
     HealLocationEvent *copy = new HealLocationEvent();
 
-    copy->setX(this->getX());
-    copy->setY(this->getY());
+    copy->x = this->getX();
+    copy->y = this->getY();
     copy->setIdName(this->getIdName());
     copy->setHostMapName(this->getHostMapName());
     copy->setRespawnMapName(this->getRespawnMapName());
@@ -811,14 +769,6 @@ Event *HealLocationEvent::duplicate() const {
     copy->setCustomAttributes(this->getCustomAttributes());
 
     return copy;
-}
-
-EventFrame *HealLocationEvent::createEventFrame() {
-    if (!this->eventFrame) {
-        this->eventFrame = new HealLocationFrame(this);
-        this->eventFrame->setup();
-    }
-    return this->eventFrame;
 }
 
 QString HealLocationEvent::getHostMapName() const {
@@ -843,8 +793,8 @@ OrderedJson::object HealLocationEvent::buildEventJson(Project *project) {
 }
 
 bool HealLocationEvent::loadFromJson(QJsonObject json, Project *project) {
-    this->setX(readInt(&json, "x"));
-    this->setY(readInt(&json, "y"));
+    this->x = readInt(&json, "x");
+    this->y = readInt(&json, "y");
     this->setIdName(readString(&json, "id"));
     this->setHostMapName(readString(&json, "map"));
 

@@ -12,6 +12,7 @@
 #include "orderedjson.h"
 #include "utility.h"
 #include "scripting.h"
+#include "eventfactory.h"
 
 #include <QDir>
 #include <QDirIterator>
@@ -409,7 +410,7 @@ QJsonDocument Project::readMapJson(const QString &mapName, QString *error) {
 bool Project::loadMapEvent(Map *map, QJsonObject json, Event::Type defaultType) {
     QString typeString = ParseUtil::jsonToQString(json.take("type"));
     Event::Type type = typeString.isEmpty() ? defaultType : Event::typeFromJsonKey(typeString);
-    Event* event = Event::create(type);
+    Event* event = EventFactory::create(type);
     if (!event) {
         return false;
     }

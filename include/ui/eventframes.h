@@ -4,62 +4,35 @@
 
 #include <QFrame>
 #include <QLabel>
-#include <QLineEdit>
-#include <QSpinBox>
 
-#include "edithistoryspinbox.h"
 #include "eventcombobox.h"
 #include "mainwindow.h"
 
 #include "events.h"
 
 
-
 class Project;
 
 class EventFrame : public QFrame {
     Q_OBJECT
-
 public:
-    EventFrame(Event *event, QWidget *parent = nullptr)
-        : QFrame(parent), event(event) { }
+    EventFrame(Event *event, QWidget *parent = nullptr);
 
-    virtual void setup();
-    void initCustomAttributesTable();
-    virtual void connectSignals(MainWindow *);
-    virtual void initialize();
     virtual void populate(Project *project);
 
-    void invalidateConnections();
-    void invalidateUi();
     void invalidateValues();
 
-    virtual void setActive(bool active);
-
-public:
-    QLabel *label_id;
-
-    QVBoxLayout *layout_main;
-
-    QSpinBox *spinner_id;
-
-    EditHistorySpinBox *spinner_x;
-    EditHistorySpinBox *spinner_y;
-    NoScrollSpinBox *spinner_z;
-    QLabel *hideable_label_z;
-
-    QLabel *label_icon;
-
-    QFrame *frame_contents;
-    QVBoxLayout *layout_contents;
-
-    CustomAttributesFrame *custom_attributes;
-
 protected:
-    bool populated = false;
-    bool initialized = false;
-    bool connected = false;
-    QPointer<Project> project;
+    // TODO: Privatize
+
+    QVBoxLayout *m_layoutContents = nullptr;
+
+    bool m_populated = false;
+    QPointer<Project> m_project;
+    Event *m_event = nullptr;
+
+    void setElevationEnabled(bool enabled);
+    void setIcon(const QPixmap& pixmap);
 
     void populateDropdown(EventComboBox * combo, const QStringList &items);
     void populateScriptDropdown(EventComboBox * combo, Project * project);
@@ -67,62 +40,40 @@ protected:
     void populateIdNameDropdown(EventComboBox * combo, Project * project, const QString &mapName, Event::Group group);
 
 private:
-    Event *event;
+    QWidget *m_widgetZ = nullptr;
+    QLabel *m_icon = nullptr;
 };
 
 
 
 class ObjectFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    ObjectFrame(ObjectEvent *object, QWidget *parent = nullptr)
-        : EventFrame(object, parent), object(object) {}
+    ObjectFrame(ObjectEvent *object, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    QLineEdit *line_edit_local_id;
-    EventComboBox *combo_sprite;
-    EventComboBox *combo_movement;
-    NoScrollSpinBox *spinner_radius_x;
-    NoScrollSpinBox *spinner_radius_y;
-    EventComboBox *combo_script;
-    QToolButton *button_script;
-    EventComboBox *combo_flag;
-    EventComboBox *combo_trainer_type;
-    EventComboBox *combo_radius_treeid;
-    QCheckBox *check_in_connection;
-
 private:
-    ObjectEvent *object;
+    EventComboBox *m_comboSprite = nullptr;
+    EventComboBox *m_comboMovement = nullptr;
+    EventComboBox *m_comboScript = nullptr;
+    EventComboBox *m_comboFlag = nullptr;
+    EventComboBox *m_comboTrainerType = nullptr;
 };
 
 
 
 class CloneObjectFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    CloneObjectFrame(CloneObjectEvent *clone, QWidget *parent = nullptr)
-        : EventFrame(clone, parent), clone(clone) {}
+    CloneObjectFrame(CloneObjectEvent *clone, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    QLineEdit *line_edit_local_id;
-    EventComboBox *combo_sprite;
-    EventComboBox *combo_target_id;
-    EventComboBox *combo_target_map;
-
 private:
-    CloneObjectEvent *clone;
+    EventComboBox *m_comboSprite = nullptr;
+    EventComboBox *m_comboTargetId = nullptr;
+    EventComboBox *m_comboTargetMap = nullptr;
 
     void tryInvalidateIdDropdown(Map *map);
 };
@@ -131,24 +82,15 @@ private:
 
 class WarpFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    WarpFrame(WarpEvent *warp, QWidget *parent = nullptr)
-        : EventFrame(warp, parent), warp(warp) {}
+    WarpFrame(WarpEvent *warp, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    QLineEdit *line_edit_id;
-    EventComboBox *combo_dest_map;
-    EventComboBox *combo_dest_warp;
-    QPushButton *warning;
-
 private:
-    WarpEvent *warp;
+    EventComboBox *m_comboDestMap = nullptr;
+    EventComboBox *m_comboDestWarp = nullptr;
+    QPushButton *m_warning = nullptr;
 
     void tryInvalidateIdDropdown(Map *map);
 };
@@ -157,138 +99,88 @@ private:
 
 class TriggerFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    TriggerFrame(TriggerEvent *trigger, QWidget *parent = nullptr)
-        : EventFrame(trigger, parent), trigger(trigger) {}
+    TriggerFrame(TriggerEvent *trigger, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    EventComboBox *combo_script;
-    EventComboBox *combo_var;
-    EventComboBox *combo_var_value;
-
 private:
-    TriggerEvent *trigger;
+    EventComboBox *m_comboScript = nullptr;
+    EventComboBox *m_comboVar = nullptr;
 };
 
 
 
 class WeatherTriggerFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    WeatherTriggerFrame(WeatherTriggerEvent *weatherTrigger, QWidget *parent = nullptr)
-        : EventFrame(weatherTrigger, parent), weatherTrigger(weatherTrigger) {}
+    WeatherTriggerFrame(WeatherTriggerEvent *weatherTrigger, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    EventComboBox *combo_weather;
-
 private:
-    WeatherTriggerEvent *weatherTrigger;
+    EventComboBox *m_comboWeather = nullptr;
 };
 
 
 
 class SignFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    SignFrame(SignEvent *sign, QWidget *parent = nullptr)
-        : EventFrame(sign, parent), sign(sign) {}
+    SignFrame(SignEvent *sign, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    EventComboBox *combo_facing_dir;
-    EventComboBox *combo_script;
-
 private:
-    SignEvent *sign;
+    EventComboBox *m_comboFacingDir = nullptr;
+    EventComboBox *m_comboScript = nullptr;
 };
 
 
 
 class HiddenItemFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    HiddenItemFrame(HiddenItemEvent *hiddenItem, QWidget *parent = nullptr)
-        : EventFrame(hiddenItem, parent), hiddenItem(hiddenItem) {}
+    HiddenItemFrame(HiddenItemEvent *hiddenItem, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    QFrame *hideable_quantity;
-    QFrame *hideable_itemfinder;
-    EventComboBox *combo_item;
-    EventComboBox *combo_flag;
-    NoScrollSpinBox *spinner_quantity;
-    QCheckBox *check_itemfinder;
-
 private:
-    HiddenItemEvent *hiddenItem;
+    QFrame *m_quantityFrame = nullptr;
+    QFrame *m_requiresItemfinderFrame = nullptr;
+    EventComboBox *m_comboItem = nullptr;
+    EventComboBox *m_comboFlag = nullptr;
+
+    HiddenItemEvent *hiddenItem = nullptr;
 };
 
 
 
 class SecretBaseFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    SecretBaseFrame(SecretBaseEvent *secretBase, QWidget *parent = nullptr)
-        : EventFrame(secretBase, parent), secretBase(secretBase) {}
+    SecretBaseFrame(SecretBaseEvent *secretBase, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    EventComboBox *combo_base_id;
-
 private:
-    SecretBaseEvent *secretBase;
+    EventComboBox *m_comboBaseId = nullptr;
 };
 
 
 
 class HealLocationFrame : public EventFrame {
     Q_OBJECT
-
 public:
-    HealLocationFrame(HealLocationEvent *healLocation, QWidget *parent = nullptr)
-        : EventFrame(healLocation, parent), healLocation(healLocation) {}
+    HealLocationFrame(HealLocationEvent *healLocation, QWidget *parent = nullptr);
 
-    virtual void setup() override;
-    virtual void initialize() override;
-    virtual void connectSignals(MainWindow *) override;
     virtual void populate(Project *project) override;
 
-public:
-    QLineEdit *line_edit_id;
-    QFrame *hideable_respawn_map;
-    QFrame *hideable_respawn_npc;
-    EventComboBox *combo_respawn_map;
-    EventComboBox *combo_respawn_npc;
-
 private:
-    HealLocationEvent *healLocation;
+    QFrame *m_respawnMapFrame = nullptr;
+    QFrame *m_respawnNPCFrame = nullptr;
+    EventComboBox *m_comboRespawnMap = nullptr;
+    EventComboBox *m_comboRespawnNPC = nullptr;
 
     void tryInvalidateIdDropdown(Map *map);
 };

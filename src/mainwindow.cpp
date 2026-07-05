@@ -4,7 +4,6 @@
 #include "log.h"
 #include "editor.h"
 #include "prefabcreationdialog.h"
-#include "eventframes.h"
 #include "bordermetatilespixmapitem.h"
 #include "currentselectedmetatilespixmapitem.h"
 #include "customattributesframe.h"
@@ -31,6 +30,8 @@
 #include "loadingscreen.h"
 #include "version.h"
 #include "url.h"
+#include "eventfactory.h"
+#include "eventframes.h"
 
 #include <QClipboard>
 #include <QDialogButtonBox>
@@ -1179,6 +1180,7 @@ bool MainWindow::setMap(const QString &mapName) {
     Scripting::cb_MapOpened(mapName);
     prefab.updatePrefabUi(editor->layout);
     updateTilesetEditor();
+    clearEventFrameCache();
 
     emit mapOpened(editor->map);
 
@@ -2193,7 +2195,7 @@ void MainWindow::paste() {
                 for (QJsonValue event : events) {
                     // paste the event to the map
                     Event::Type type = Event::typeFromJsonKey(event["event_type"].toString());
-                    Event *pasteEvent = Event::create(type);
+                    Event *pasteEvent = EventFactory::create(type);
                     if (!pasteEvent)
                         continue;
 
@@ -2544,13 +2546,27 @@ void MainWindow::updateSelectedEvents() {
 
     this->isProgrammaticEventTabChange = false;
 
+    
     QList<QFrame *> frames;
     for (auto event : events) {
-        EventFrame *eventFrame = event->createEventFrame();
-        eventFrame->populate(this->editor->project);
-        eventFrame->initialize();
-        eventFrame->connectSignals(this);
-        frames.append(eventFrame);
+        EventFrame* frame = nullptr;
+
+        // Creating/populating event frames is expensive, so we cache them after loading.
+        auto search = this->eventFrameCache.constFind(event);
+        if (search != this->eventFrameCache.constEnd()) frame = search.value();
+
+        if (!frame) {
+            frame = EventFactory::createFrame(event, this);
+            if (!frame) continue;
+            this->eventFrameCache.insert(event, frame);
+        }
+
+        // Populate even if we loaded the frame from the cache.
+        // The frame may require updates if project data changed.
+        // If no updates are necessary this will be ignored.
+        frame->populate(this->editor->project);
+
+        frames.append(frame);
     }
 
     if (target->layout() && target->children().length()) {
@@ -2592,6 +2608,13 @@ void MainWindow::updateSelectedEvents() {
         }
         ui->label_NoEvents->show();
     }
+}
+
+void MainWindow::clearEventFrameCache() {
+    for (EventFrame* frame : this->eventFrameCache) {
+        delete frame;
+    }
+    this->eventFrameCache.clear();
 }
 
 Event::Group MainWindow::getEventGroupFromTabWidget(QWidget *tab) {

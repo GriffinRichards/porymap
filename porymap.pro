@@ -57,6 +57,7 @@ SOURCES += src/config/keyvalueconfigbase.cpp \
     src/core/block.cpp \
     src/core/bitpacker.cpp \
     src/core/blockdata.cpp \
+    src/core/eventfactory.cpp \
     src/core/events.cpp \
     src/core/filedialog.cpp \
     src/core/imageexport.cpp \
@@ -184,6 +185,7 @@ HEADERS  += include/config/keyvalueconfigbase.h \
     include/core/bitpacker.h \
     include/core/blockdata.h \
     include/core/converter.h \
+    include/core/eventfactory.h \
     include/core/events.h \
     include/core/filedialog.h \
     include/core/history.h \
