@@ -72,7 +72,9 @@ void logInit() {
         Log::writeThread.wait();
     });
 
+#ifdef QT_DEBUG
     qInstallMessageHandler(logQt);
+#endif
     Log::writeThread.start();
 
     initialized = true;
